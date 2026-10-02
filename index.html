@@ -100,11 +100,16 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 </section>
 
 <section class="section">
+<h2>Alle beschikbare RDW-gegevens</h2>
+<div id="allRdw" class="grid"></div>
+</section>
+
+<section class="section">
 <h2>Extra voertuigdata</h2>
 <div class="external-data">
 <div id="extraData" class="external-grid"></div>
 <div id="vinData" class="external-grid" style="margin-top:10px"></div>
-<div class="source-row"><span class="source-chip">RDW carrosserie</span><span class="source-chip">NHTSA vPIC • VIN</span></div>
+<div class="source-row"><span class="source-chip">RDW carrosserie</span><span class="source-chip">CarAPI.dev • VIN</span></div>
 </div>
 </section>
 
@@ -395,6 +400,7 @@ async function go(type='plate'){
     ].join('');
 
     window.carData=x;
+    renderAllRdwData(x);
     loadExtraVehicleData(x);
     calcMRB();
     checkBPM(x);
@@ -557,4 +563,42 @@ q('p').addEventListener('keydown',e=>{if(e.key==='Enter')go('plate')});
 q('vin').addEventListener('keydown',e=>{if(e.key==='Enter')go('vin')});
 </script>
 </body>
-</html>
+</htmlfunction renderAllRdwData(x){
+  const labels={
+    kenteken:'Kenteken',voertuigsoort:'Voertuigsoort',merk:'Merk',handelsbenaming:'Handelsbenaming',
+    inrichting:'Inrichting',aantal_zitplaatsen:'Aantal zitplaatsen',eerste_kleur:'Eerste kleur',tweede_kleur:'Tweede kleur',
+    aantal_cilinders:'Aantal cilinders',cilinderinhoud:'Cilinderinhoud (cc)',massa_ledig_voertuig:'Massa ledig voertuig (kg)',
+    massa_rijklaar:'Massa rijklaar (kg)',toegestane_maximum_massa_voertuig:'Max. massa voertuig (kg)',laadvermogen:'Laadvermogen (kg)',
+    maximum_massa_trekken_geremd:'Max. trekken geremd (kg)',maximum_massa_trekken_ongeremd:'Max. trekken ongeremd (kg)',
+    lengte:'Lengte (mm)',breedte:'Breedte (mm)',hoogte_voertuig:'Hoogte (mm)',wielbasis:'Wielbasis (mm)',
+    aantal_wielen:'Aantal wielen',maximale_constructiesnelheid:'Max. constructiesnelheid (km/u)',
+    vermogen_massarijklaar:'Vermogen/massa rijklaar',vermogen:'Vermogen (kW)',massa:'Massa',
+    brandstof:'Brandstof',co2_emissie:'CO₂-uitstoot (g/km)',emissieklasse:'Emissieklasse',
+    geluidsniveau:'Geluidsniveau (dB)',uitstoot_deeltjes:'Uitstoot deeltjes',roetuitstoot:'Roetuitstoot',
+    verbruik:'Verbruik',elektrisch_verbruik:'Elektrisch verbruik',actieradius:'Actieradius',
+    datum_eerste_toelating:'Eerste toelating',datum_eerste_tenaamstelling_in_nederland:'Eerste tenaamstelling NL',
+    datum_tenaamstelling:'Laatste tenaamstelling',datum_eerste_toelating_gekentekend:'Datum gekentekend',
+    vervaldatum_apk:'APK geldig tot',jaar_laatste_registratie_tellerstand:'Jaar laatste tellerstand',
+    tellerstandoordeel:'Tellerstandoordeel',tenaamstellen_mogelijk:'Tenaamstellen mogelijk',
+    wam_verzekerd:'WAM verzekerd',bruto_bpm:'Bruto BPM',catalogusprijs:'Catalogusprijs',
+    handelsbenaming:'Handelsbenaming',type:'Type',variant:'Variant',uitvoering:'Uitvoering',
+    europese_voertuigcategorie:'Europese voertuigcategorie',typegoedkeuringsnummer:'Typegoedkeuringsnummer',
+    typegoedkeuringsdatum:'Typegoedkeuringsdatum',plaats_chassisnummer:'Plaats chassisnummer',
+    voertuig_identificatienummer:'VIN / chassisnummer',chassisnummer:'Chassisnummer',
+    apk_vervaldatum:'APK vervaldatum',wacht_op_keuren:'Wacht op keuren'
+  };
+  const skip=new Set(['kenteken','merk','handelsbenaming','inrichting','aantal_zitplaatsen','eerste_kleur','tweede_kleur','aantal_cilinders','cilinderinhoud','massa_ledig_voertuig','massa_rijklaar','toegestane_maximum_massa_voertuig','laadvermogen','maximum_massa_trekken_geremd','maximum_massa_trekken_ongeremd','lengte','breedte','brandstof','co2_emissie','emissieklasse','geluidsniveau','vervaldatum_apk','tellerstandoordeel','jaar_laatste_registratie_tellerstand','tenaamstellen_mogelijk','wam_verzekerd','bruto_bpm','catalogusprijs','voertuigsoort','datum_eerste_toelating','datum_eerste_tenaamstelling_in_nederland','datum_tenaamstelling']);
+  const items=[];
+  for(const [key,val] of Object.entries(x)){
+    if(skip.has(key)||val===null||val===undefined||val==='') continue;
+    let display=val;
+    if(/^datum_|datum$|vervaldatum_apk|typegoedkeuringsdatum/.test(key)) display=formatDate(val);
+    else if(['catalogusprijs','bruto_bpm'].includes(key)) display=formatEuro(val);
+    else if(typeof val==='object') display=JSON.stringify(val);
+    const label=labels[key]||key.replace(/_/g,' ').replace(/\\b\\w/g,m=>m.toUpperCase());
+    items.push(it(label,display));
+  }
+  q('allRdw').innerHTML=items.length?items.join(''):'<div class="notice">Geen aanvullende RDW-velden beschikbaar.</div>';
+}
+
+>
