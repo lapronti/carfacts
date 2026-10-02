@@ -226,21 +226,23 @@ async function loadExtraVehicleData(x){
   if(!/^[A-HJ-NPR-Z0-9]{11,17}$/i.test(vin)) return;
   try{
     const modelYear=String(x.datum_eerste_toelating||'').slice(0,4);
-    const u='https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/'+encodeURIComponent(vin)+'?format=json'+(modelYear?'&modelyear='+encodeURIComponent(modelYear):'');
-    const res=await fetch(u);
+    const carApiUrl='https://carfacts-api.nlaghmiri.workers.dev/api/vin?vin='+encodeURIComponent(vin);
+    const res=await fetch(carApiUrl);
     if(!res.ok)return;
     const data=await res.json();
-    const r=data.Results&&data.Results[0];
-    if(!r)return;
+    const r=data.specifications||data.data||data;
+    const m=data.manufacturer||{};
     const fields=[
-      ['NHTSA fabrikant',r.Make],
-      ['NHTSA model',r.Model],
-      ['NHTSA modeljaar',r.ModelYear],
-      ['NHTSA voertuigtype',r.VehicleType],
-      ['NHTSA carrosserie',r.BodyClass],
-      ['NHTSA aandrijving',r.DriveType],
-      ['NHTSA cilinders',r.EngineCylinders],
-      ['NHTSA motorinhoud',r.DisplacementCC]
+      ['CarAPI fabrikant',r.make||r.Make||m.name],
+      ['CarAPI model',r.model||r.Model],
+      ['CarAPI modeljaar',r.year||r.ModelYear],
+      ['CarAPI brandstof',r.fuel||r.fuel_type||r.FuelType],
+      ['CarAPI transmissie',r.transmission],
+      ['CarAPI vermogen',r.enginePower?(r.enginePower+' '+(r.enginePowerUnit||'kW')):null],
+      ['CarAPI carrosserie',r.bodyStyle||r.body_type],
+      ['CarAPI aandrijving',r.drivetrain||r.drive_type],
+      ['CarAPI kleur',r.color],
+      ['Productieland',m.country]
     ].filter(a=>a[1]);
     if(fields.length)vinBox.innerHTML=fields.map(a=>it(a[0],a[1])).join('');
   }catch(e){}
