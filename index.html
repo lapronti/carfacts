@@ -120,7 +120,7 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 <section class="section">
 <h2>Digitale onderhoudshistorie</h2>
 <div class="external-data">
-<div class="service-history-head"><div><div class="service-history-title">OE Service History</div><div class="service-history-text">Geregistreerde onderhoudsbeurten uit fabrikantgegevens op basis van het VIN.</div></div><button class="service-btn" onclick="loadServiceHistory()">Onderhoudshistorie ophalen</button></div>
+<div class="service-history-head"><div><div class="service-history-title">OE Service History</div><div class="service-history-text">Geregistreerde onderhoudsbeurten uit fabrikantgegevens op basis van het VIN.</div></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><a class="anwb-btn" href="https://carfacts-api.nlaghmiri.workers.dev/" target="_blank" rel="noopener">Inloggen</a><button class="service-btn" onclick="loadServiceHistory()">Onderhoudshistorie ophalen</button></div></div>
 <div id="serviceHistoryStatus" class="status"></div><div id="serviceHistory"></div>
 </div>
 </section>
@@ -512,7 +512,7 @@ async function loadServiceHistory(){
     const message=data.data&&data.data.error?data.data.error:'Geen onderhoudshistorie beschikbaar.';
     status.textContent=message; 
   }catch(e){
-    status.innerHTML='<span class="err">Onderhoudshistorie kon niet worden opgehaald. Controleer eerst de Access-login.</span>';
+    status.innerHTML='<span class="err">De beveiligde Carfacts API kon niet worden bereikt. Log eerst in via de knop hierboven en probeer daarna opnieuw.</span>';
   }
 }
 function renderServiceHistory(payload){
