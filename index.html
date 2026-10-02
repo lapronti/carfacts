@@ -259,41 +259,69 @@ async function go(){
 }
 
 function euro(n){return new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n)}
-function calcGrossBPM2026(co2,fuel){
-  co2=Number(co2);if(!Number.isFinite(co2))return null;
-  let base;
-  if(co2<77) base=687+Math.max(0,co2)*2;
-  else if(co2<100) base=841+(co2-77)*82;
-  else if(co2<139) base=2727+(co2-100)*181;
-  else if(co2<155) base=9786+(co2-139)*297;
-  else base=14538+(co2-155)*594;
+function bpmTable(year,co2){
+  co2=Number(co2); if(!Number.isFinite(co2)) return null;
+  const tables={
+    2026:[[0,77,687,2],[77,100,841,82],[100,139,2727,181],[139,155,9786,297],[155,Infinity,14538,594]],
+    2025:[[0,79,667,2],[79,101,825,79],[101,141,2563,173],[141,157,9483,284],[157,Infinity,14027,568]],
+    2024:[[0,80,440,2],[80,104,600,76],[104,145,2424,167],[145,161,9271,274],[161,Infinity,13655,549]]
+  };
+  const t=tables[year]; if(!t)return null;
+  const row=t.find(r=>co2>=r[0]&&co2<r[1])||t[t.length-1];
+  return Math.round(row[2]+Math.max(0,co2-row[0])*row[3]);
+}
+function dieselSurcharge(year,co2){
+  co2=Number(co2); if(!Number.isFinite(co2))return 0;
+  const rates={2026:[69,114.83],2025:[71,109.87],2024:[71,106.07]};
+  const r=rates[year]; if(!r)return null;
+  return Math.max(0,co2-r[0])*r[1];
+}
+function calcHistoricalBPM(year,co2,fuel){
+  const base=bpmTable(year,co2); if(base===null)return null;
   const f=String(fuel||'').toUpperCase();
-  if(f.includes('DIESEL') && co2>69) base+=(co2-69)*114.83;
-  return Math.round(base);
+  const diesel=f.includes('DIESEL');
+  const surcharge=diesel?dieselSurcharge(year,co2):0;
+  if(surcharge===null)return null;
+  return Math.round(base+surcharge);
 }
 function checkBPM(x){
   const rdw=Number(x.bruto_bpm),co2=Number(x.co2_emissie);
-  const first=String(x.datum_eerste_toelating||'');
+  const first=String(x.datum_eerste_toelating||'').replace(/[^0-9]/g,'');
   const year=Number(first.slice(0,4));
   q('bpmRdw').textContent=Number.isFinite(rdw)?euro(rdw):'—';
   if(!rdw||!co2){
     q('bpmCalc').textContent='—';q('bpmDiff').textContent='—';
     q('bpmStatus').className='bpm-status info';
-    q('bpmStatus').textContent='Niet genoeg RDW-gegevens voor een berekening.';
+    q('bpmStatus').textContent='Niet genoeg RDW-gegevens voor een BPM-berekening.';
     return;
   }
-  const calc=calcGrossBPM2026(co2,x.brandstof);
-  q('bpmCalc').textContent=euro(calc);
-  const diff=rdw-calc,pct=Math.abs(diff)/Math.max(calc,1)*100;
-  q('bpmDiff').textContent=euro(diff);
-  q('bpmStatus').className='bpm-status '+(year===2026?(pct<=2?'ok':'warn'):'info');
-  if(year===2026){
-    q('bpmStatus').textContent=pct<=2
-      ?'De RDW-waarde sluit vrijwel aan bij de bruto BPM die met het 2026-tarief en de geregistreerde CO₂-uitstoot is berekend.'
-      :'Er is een verschil met de berekende bruto BPM. Controleer onder andere de CO₂-meetmethode, voertuigcategorie, uitvoering en eventuele historische bijzonderheden.';
-  }else{
-    q('bpmStatus').textContent='Dit voertuig is ouder dan 2026. De weergegeven vergelijking gebruikt het 2026-tarief en is daarom géén bewijs dat de historische RDW-bruto BPM fout is. Voor een correcte historische controle moet het BPM-tarief van de relevante periode worden toegepast.';
+
+  const current=calcHistoricalBPM(2026,co2,x.brandstof);
+  const historical=calcHistoricalBPM(year,co2,x.brandstof);
+  let calc=historical||current;
+  let tariff=historical?year:2026;
+
+  if(year<2024 || year>2026){
+    q('bpmCalc').textContent=current!==null?euro(current):'—';
+    q('bpmDiff').textContent=current!==null?euro(rdw-current):'—';
+    q('bpmStatus').className='bpm-status info';
+    q('bpmStatus').textContent='Voor dit bouwjaar is het historische tarief niet volledig in de automatische controle opgenomen. De 2026-berekening is alleen ter vergelijking.';
+    return;
   }
+
+  const candidates=[{year:2026,value:current},{year:year,value:historical}].filter(a=>a.value!==null);
+  candidates.sort((a,b)=>a.value-b.value);
+  const best=candidates[0];
+  calc=best.value;tariff=best.year;
+  const diff=rdw-calc,pct=Math.abs(diff)/Math.max(calc,1)*100;
+  q('bpmCalc').textContent=euro(calc);
+  q('bpmDiff').textContent=(diff>=0?'+':'')+euro(diff);
+  q('bpmStatus').className='bpm-status '+(pct<=2?'ok':pct<=10?'warn':'warn');
+  q('bpmStatus').textContent=
+    'Vergelijking met '+tariff+'-tarief: '+(pct<=2
+      ?'de RDW-waarde sluit zeer nauw aan.'
+      :'er is een afwijking van '+pct.toFixed(1).replace('.',',')+'%. Dit is een signaal om de CO₂-meetmethode, dieseltoeslag en historische voertuiggegevens te controleren.')
+    +' Dit is een plausibiliteitscontrole, geen bewijs dat de RDW-waarde fout is.';
 }
 function mrbWeightBase(w){
   w=Number(w)||0;
