@@ -40,7 +40,7 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 .mrb-total strong{display:block;font-size:25px;margin-top:4px}
 .mrb-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
 @media(max-width:560px){.mrb-controls,.mrb-result{grid-template-columns:1fr}}
-</style>
+.anwb-card{background:linear-gradient(135deg,#fff,#f7fbff);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:20px}.anwb-title{font-size:18px;font-weight:800;margin-bottom:5px}.anwb-text{color:var(--muted);font-size:13px;line-height:1.5}.anwb-btn{display:inline-flex;align-items:center;justify-content:center;background:#0066b3;color:#fff;text-decoration:none;padding:12px 17px;border-radius:10px;font-weight:750;white-space:nowrap}.anwb-btn:hover{background:#005491}@media(max-width:560px){.anwb-card{flex-direction:column;align-items:flex-start}.anwb-btn{width:100%}}</style>
 </head>
 <body>
 <div class="container">
@@ -86,6 +86,14 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 <section class="section">
 <h2>Afmetingen & gewichten</h2>
 <div id="d" class="grid"></div>
+</section>
+
+<section class="section">
+<h2>ANWB dagwaarde</h2>
+<div class="anwb-card">
+<div><div class="anwb-title">ANWB Koerslijst</div><div class="anwb-text">De ANWB bepaalt een actuele richtwaarde op basis van onder andere kenteken, kilometerstand, uitvoering en actuele marktgegevens. De exacte ANWB-waarde wordt op de ANWB-site berekend.</div></div>
+<a class="anwb-btn" href="https://www.anwb.nl/auto/koerslijst" target="_blank" rel="noopener">Bekijk ANWB dagwaarde →</a>
+</div>
 </section>
 
 <section class="section">
