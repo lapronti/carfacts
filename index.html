@@ -5,29 +5,29 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Carfacts — Kentekencheck</title>
 <style>
-:root{--blue:#1769e0;--blue2:#0f56bd;--bg:#f3f6fa;--text:#172033;--muted:#6b7280;--line:#e6eaf0;--card:#fff;--green:#15803d;--orange:#b45309}
+:root{--ink:#101828;--muted:#667085;--blue:#2563eb;--blue-dark:#1746a2;--bg:#eef2f7;--card:#fff;--line:#e4e7ec;--soft:#f7f9fc;--green:#067647;--orange:#b54708;--shadow:0 10px 30px rgba(16,24,40,.07)}
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
-.container{max-width:1120px;margin:0 auto;padding:28px 18px 60px}
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-.logo{font-size:30px;font-weight:800;letter-spacing:-1px}.logo span{color:var(--blue)}
-.badge{background:#eaf2ff;color:var(--blue);padding:7px 11px;border-radius:999px;font-size:12px;font-weight:700}
-.search-card{background:linear-gradient(135deg,#fff,#f7faff);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 8px 28px rgba(23,32,51,.06)}
-.search-card h1{margin:0 0 8px;font-size:26px}.search-card p{margin:0 0 20px;color:var(--muted)}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.container{max-width:1180px;margin:0 auto;padding:24px 18px 60px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.logo{font-size:28px;font-weight:850;letter-spacing:-1.2px}.logo span{color:var(--blue)}.logo span{color:var(--blue)}
+.badge{background:#e9efff;color:var(--blue-dark);padding:7px 11px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.4px}
+.search-card{background:#111827;color:#fff;border-radius:22px;padding:26px;box-shadow:var(--shadow)}
+.search-card h1{margin:0 0 7px;font-size:25px;letter-spacing:-.5px}.search-card p{margin:0 0 18px;color:#cbd5e1}
 .search-row{display:flex;gap:10px;max-width:720px}
-input{flex:1;padding:16px 18px;font-size:20px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:1px solid #ccd3dd;border-radius:12px;background:#fff;outline:none}
+input{flex:1;padding:15px 17px;font-size:19px;font-weight:750;letter-spacing:2px;text-transform:uppercase;border:0;border-radius:11px;background:#fff;color:var(--ink);outline:none}
 input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,105,224,.12)}
-button{padding:0 24px;border:0;border-radius:12px;background:var(--blue);color:#fff;font-size:16px;font-weight:750;cursor:pointer}
+button{padding:0 22px;border:0;border-radius:11px;background:#3b82f6;color:#fff;font-size:15px;font-weight:800;cursor:pointer}
 button:hover{background:var(--blue2)}
 .status{min-height:22px;margin:12px 0 0;color:var(--muted)}.err{color:#b42318;font-weight:600}
 .hidden{display:none}
-.hero{margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:0 8px 28px rgba(23,32,51,.05)}
-.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.eyebrow{text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-size:11px;font-weight:800}.title{font-size:30px;margin:5px 0 0;letter-spacing:-.7px}.plate{position:relative;background:#f7c948;color:#111827;padding:10px 16px 10px 34px;border:2px solid #171717;border-radius:7px;font-size:20px;font-weight:900;letter-spacing:2px;white-space:nowrap;box-shadow:0 2px 0 rgba(0,0,0,.12);min-width:150px;text-align:center}.plate:before{content:"NL";position:absolute;left:0;top:0;bottom:0;width:24px;background:#1456a0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;letter-spacing:0;border-radius:4px 0 0 4px}
-.model-photo{margin-top:18px;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(240px,.45fr);gap:0;background:#f5f8fc;border:1px solid var(--line);border-radius:18px;overflow:hidden;min-height:300px}.model-photo img{width:100%;height:300px;object-fit:cover;display:block;background:#e9eef5}.model-photo-info{padding:22px;display:flex;flex-direction:column;justify-content:center}.model-photo-info small{color:var(--muted);font-size:12px}.model-photo-info strong{font-size:21px;margin-top:5px}.model-photo-info span{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.5}.value-box{margin-top:22px;padding:18px 20px;border-radius:16px;background:#f5f8fc;border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.value-label{color:var(--muted);font-size:13px}.value{font-size:27px;font-weight:850}
-.section{margin-top:18px}.section h2{font-size:17px;margin:0 0 10px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.item{background:#fff;border:1px solid var(--line);padding:14px 15px;border-radius:14px;min-height:70px}.item small{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.item b{font-size:15px}
+.hero{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:var(--shadow)}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 24px 18px}.eyebrow{text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-size:11px;font-weight:800}.title{font-size:32px;font-weight:850;margin:4px 0 0;letter-spacing:-1px}.plate{position:relative;background:#f7c948;color:#111827;padding:10px 16px 10px 34px;border:2px solid #171717;border-radius:7px;font-size:20px;font-weight:900;letter-spacing:2px;white-space:nowrap;box-shadow:0 2px 0 rgba(0,0,0,.12);min-width:150px;text-align:center}.plate:before{content:"NL";position:absolute;left:0;top:0;bottom:0;width:24px;background:#1456a0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;letter-spacing:0;border-radius:4px 0 0 4px}
+.model-photo{margin:0;display:grid;grid-template-columns:minmax(0,1.65fr) minmax(260px,.55fr);background:#0b1220;overflow:hidden;min-height:330px}.model-photo img{width:100%;height:330px;object-fit:cover;display:block;background:#dfe5ee}.model-photo-info{padding:26px;display:flex;flex-direction:column;justify-content:center;background:#111827;color:#fff}.model-photo-info small{color:#93c5fd;font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:800}.model-photo-info strong{font-size:22px;margin-top:7px}.model-photo-info span{color:#cbd5e1;font-size:12px;margin-top:10px;line-height:1.5}.value-box{margin:0;padding:18px 24px;background:var(--soft);border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.value-label{color:var(--muted);font-size:13px}.value{font-size:27px;font-weight:850}
+.section{margin-top:22px}.section h2{font-size:17px;margin:0 0 10px;letter-spacing:-.2px}.section h2{font-size:17px;margin:0 0 10px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.item{background:var(--card);border:1px solid var(--line);padding:15px 16px;border-radius:14px;min-height:68px;box-shadow:0 2px 8px rgba(16,24,40,.025)}.item small{display:block;color:var(--muted);font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.35px}.item b{font-size:15px}
 .import,.notice{background:#fff;border:1px solid var(--line);padding:16px;border-radius:14px}.import.ok{border-color:#b7e4c7;background:#f3fcf6;color:var(--green)}.import.warn{border-color:#f4d19b;background:#fffaf0;color:var(--orange)}
-footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
+footer{margin-top:30px;color:var(--muted);font-size:12px;text-align:center}
 @media(max-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.container{padding:18px 12px 40px}.search-row{flex-direction:column}button{height:52px}.hero-top{flex-direction:column}.plate{align-self:flex-start}.grid{grid-template-columns:1fr 1fr}.title{font-size:24px}.value{font-size:23px}.model-photo{grid-template-columns:1fr}.model-photo img{min-height:190px}.model-photo-info{padding:16px}}
 
@@ -67,6 +67,11 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 <div><div class="value-label">Cataloguswaarde</div><div class="value" id="price">—</div></div>
 <div style="font-size:24px">€</div>
 </div>
+</section>
+
+<section class="section">
+<h2>In één oogopslag</h2>
+<div id="summary" class="grid"></div>
 </section>
 
 <section class="section">
@@ -202,6 +207,17 @@ async function go(){
     q('plate').textContent=formatPlate(x.kenteken);
     q('price').textContent=formatEuro(x.catalogusprijs);
     loadModelPhoto(x.merk,x.handelsbenaming);
+
+    q('summary').innerHTML=[
+      it('Bouwjaar',formatDate(x.datum_eerste_toelating)),
+      it('Brandstof',x.brandstof),
+      it('Vermogen',x.vermogen?x.vermogen+' kW':null),
+      it('Massa rijklaar',x.massa_rijklaar?Number(x.massa_rijklaar).toLocaleString('nl-NL')+' kg':null),
+      it('CO₂',x.co2_emissie?x.co2_emissie+' g/km':null),
+      it('Emissieklasse',x.emissieklasse),
+      it('APK tot',formatDate(x.vervaldatum_apk)),
+      it('Tellerstandoordeel',x.tellerstandoordeel)
+    ].join('');
 
     q('g').innerHTML=[
       it('Kenteken',formatPlate(x.kenteken)),
