@@ -197,8 +197,7 @@ function formatDate(x){
 function formatPlate(x){
   if(x==null||x==='') return '—';
   const s=String(x).toUpperCase().replace(/[^A-Z0-9]/g,'');
-  const patterns=[
-    [/^[A-Z]{2}[0-9]{2}[0-9]{2}$/,'XX-99-99'],
+  const patterns=[    [/^[A-Z]{2}[0-9]{2}[0-9]{2}$/,'XX-99-99'],
     [/^[0-9]{2}[A-Z]{2}[0-9]{2}$/,'99-XX-99'],
     [/^[0-9]{2}[0-9]{2}[A-Z]{2}$/,'99-99-XX'],
     [/^[A-Z]{2}[0-9]{2}[A-Z]{2}$/,'XX-99-XX'],
@@ -397,8 +396,7 @@ async function go(type='plate'){
       q('m').innerHTML=it('Brandstof',s.fuel||s.fuel_type||s.FuelType)+it('Transmissie',s.transmission)+it('Vermogen',s.enginePower?(s.enginePower+' '+(s.enginePowerUnit||'kW')):null)+it('Carrosserie',s.bodyStyle||s.body_type)+it('Aandrijving',s.drivetrain||s.drive_type);
       loadExtraVehicleData({voertuig_identificatienummer:k,kenteken:d.plateNumber?.plateNumber||''});
       loadModelPhoto(s.make||s.Make,s.model||s.Model,s.registrationDate);
-      return;
-    }
+      return;    }
     const z=await fetch(A+'?kenteken='+encodeURIComponent(k));
     if(!z.ok) throw Error('RDW is tijdelijk niet bereikbaar');
     const a=await z.json();
@@ -491,10 +489,6 @@ async function loadServiceHistory(){
   const confirmed=window.confirm('Weet je het zeker?\n\nHet ophalen van de digitale onderhoudshistorie via One Auto API is een betaalde aanvraag. Er worden kosten in rekening gebracht zodra de aanvraag wordt uitgevoerd.\n\nWil je de onderhoudshistorie nu ophalen?');
   if(!confirmed) return;
   const status=q('serviceHistoryStatus'), box=q('serviceHistory');
-  const vin=String((window.carData&&window.carData.voertuig_identificatienummer)||q('vin').value||'').trim().toUpperCase();
-  if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){
-    status.innerHTML='<span class="err">Er is geen geldig VIN beschikbaar voor de onderhoudshistorie.</span>'; return;
-  }
   status.textContent='Onderhoudshistorie ophalen…'; box.innerHTML='';
   try{
     const res=await fetch('https://carfacts-api.nlaghmiri.workers.dev/api/service-history?vin='+encodeURIComponent(vin),{credentials:'include'});
@@ -535,9 +529,10 @@ function renderServiceHistory(payload){
   }).join('')+'</div>';
 }
 function formatServiceDate(x){
-  const s=String(x||''); const m=s.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/); return m?m[3]+'-'+m[2]+'-'+m[1]:s||'—';
+  const s=String(x||''); const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m?m[3]+'-'+m[2]+'-'+m[1]:s||'—';
 }
-\nfunction euro(n){return new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n)}
+
+function euro(n){return new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n)}
 async function loadModelPhoto(brand,model,firstRegistration){
   const target=q('modelPhoto');
   const brandText=String(brand||'').trim();
@@ -545,7 +540,7 @@ async function loadModelPhoto(brand,model,firstRegistration){
   if(!brandText&&!modelText){target.innerHTML='';return;}
 
   const year=Number(String(firstRegistration||'').replace(/[^0-9]/g,'').slice(0,4));
-  const isCaddy=/\\bcaddy\\b/i.test(modelText)||/\\bcaddy\\b/i.test(brandText+' '+modelText);
+  const isCaddy=/\bcaddy\b/i.test(modelText)||/\bcaddy\b/i.test(brandText+' '+modelText);
   let generation='';
   if(isCaddy&&year>=2015&&year<=2020) generation='IV';
   if(isCaddy&&year>=2021) generation='V';
