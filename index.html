@@ -253,17 +253,17 @@ async function loadExtraVehicleData(x){
   }
 
   const vin=String(x.voertuig_identificatienummer||x.chassisnummer||'').trim();
-  if(!/^[A-HJ-NPR-Z0-9]{11,17}$/i.test(vin)) return;
+  if(!/^[A-HJ-NPR-Z0-9]{17}$/i.test(vin)) return;
+
   try{
-    const modelYear=String(x.datum_eerste_toelating||'').slice(0,4);
-    const carApiUrl='https://carfacts-api.nlaghmiri.workers.dev/api/vin?vin='+encodeURIComponent(vin);
-    const res=await fetch(carApiUrl);
-    if(!res.ok)return;
-    const data=await res.json();
+    const data=x.vinApiData||null;
+    if(!data)return;
     const r=data.specifications||data.data||data;
     const m=data.manufacturer||{};
+    const make=(r.make||r.Make||m.name||'').toString();
+    const normalizedMake=make==='VW'?'Volkswagen':make;
     const fields=[
-      ['CarAPI fabrikant',r.make||r.Make||m.name],
+      ['CarAPI fabrikant',m.name||normalizedMake],
       ['CarAPI model',r.model||r.Model],
       ['CarAPI modeljaar',r.year||r.ModelYear],
       ['CarAPI brandstof',r.fuel||r.fuel_type||r.FuelType],
@@ -272,10 +272,34 @@ async function loadExtraVehicleData(x){
       ['CarAPI carrosserie',r.bodyStyle||r.body_type],
       ['CarAPI aandrijving',r.drivetrain||r.drive_type],
       ['CarAPI kleur',r.color],
-      ['Productieland',m.country]
+      ['Productieland',m.country],
+      ['Regio',m.region]
     ].filter(a=>a[1]);
-    if(fields.length)vinBox.innerHTML=fields.map(a=>it(a[0],a[1])).join('');
-  }catch(e){}
+
+    const features=Array.isArray(data.features)?data.features:[];
+    const featureHtml=features.length
+      ? '<div style="grid-column:1/-1"><div class="notice"><b>VIN-uitrusting / kenmerken</b><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">'+features.map(f=>{
+          const name=String(f.name||'').replace(/_/g,' ').toLowerCase().replace(/\\b\\w/g,c=>c.toUpperCase());
+          return '<span class="source-chip">'+name+'</span>';
+        }).join('')+'</div></div></div>'
+      : '';
+
+    const vinYear=vinModelYear(vin);
+    if(vinYear&&!r.year&&!r.ModelYear) fields.splice(2,0,['Modeljaar volgens VIN-code',vinYear]);
+
+    vinBox.innerHTML=(fields.length?fields.map(a=>it(a[0],a[1])).join(''):'')+featureHtml;
+    if(!fields.length&&!features.length){
+      vinBox.innerHTML='<div class="notice" style="grid-column:1/-1">CarAPI heeft voor deze VIN alleen beperkte identificatiegegevens teruggegeven.</div>';
+    }
+  }catch(e){
+    vinBox.innerHTML='<div class="notice" style="grid-column:1/-1">VIN-verrijking kon niet worden weergegeven.</div>';
+  }
+}
+
+function vinModelYear(vin){
+  const code=String(vin||'').toUpperCase().charAt(9);
+  const map={A:2010,B:2011,C:2012,D:2013,E:2014,F:2015,G:2016,H:2017,J:2018,K:2019,L:2020,M:2021,N:2022,P:2023,R:2024,S:2025,T:2026};
+  return map[code]||null;
 }
 
 function renderAllRdwData(x){
@@ -361,16 +385,19 @@ async function go(type='plate'){
       const d=await z.json();
       const s=d.specifications||d.data||{};
       const m=d.manufacturer||{};
+      const make=s.make||s.Make||m.name||'';
+      const normalizedMake=make==='VW'?'Volkswagen':make;
+      const modelYear=s.year||s.ModelYear||vinModelYear(k);
       q('r').classList.remove('hidden');
       q('s').textContent='';
-      q('t').textContent=[s.make||s.Make,s.model||s.Model].filter(Boolean).join(' ')||'VIN voertuig';
+      q('t').textContent=[normalizedMake,s.model||s.Model].filter(Boolean).join(' ')||'VIN voertuig';
       q('plate').textContent=k;
       q('price').textContent='—';
       q('summary').innerHTML=[
         it('VIN',d.vin||k),
-        it('Merk',s.make||s.Make),
+        it('Merk',normalizedMake),
         it('Model',s.model||s.Model),
-        it('Modeljaar',s.year||s.ModelYear),
+        it('Modeljaar',modelYear),
         it('Brandstof',s.fuel||s.fuel_type||s.FuelType),
         it('Transmissie',s.transmission),
         it('Vermogen',s.enginePower?(s.enginePower+' '+(s.enginePowerUnit||'kW')):null),
@@ -379,7 +406,7 @@ async function go(type='plate'){
       ].join('');
       q('g').innerHTML=[
         it('VIN',d.vin||k),
-        it('Fabrikant',m.name||s.make||s.Make),
+        it('Fabrikant',m.name||normalizedMake),
         it('Model',s.model||s.Model),
         it('Productieland',m.country),
         it('Regio',m.region),
@@ -392,10 +419,10 @@ async function go(type='plate'){
       ].join('');
       q('i').className='import ok';
       q('i').textContent='VIN-controle uitgevoerd via CarAPI.dev.';
-      q('f').innerHTML=it('VIN',d.vin||k)+it('Fabrikant',m.name||s.make||s.Make);
+      q('f').innerHTML=it('VIN',d.vin||k)+it('Fabrikant',m.name||normalizedMake);
       q('m').innerHTML=it('Brandstof',s.fuel||s.fuel_type||s.FuelType)+it('Transmissie',s.transmission)+it('Vermogen',s.enginePower?(s.enginePower+' '+(s.enginePowerUnit||'kW')):null)+it('Carrosserie',s.bodyStyle||s.body_type)+it('Aandrijving',s.drivetrain||s.drive_type);
-      loadExtraVehicleData({voertuig_identificatienummer:k,kenteken:d.plateNumber?.plateNumber||''});
-      loadModelPhoto(s.make||s.Make,s.model||s.Model,s.registrationDate);
+      loadExtraVehicleData({voertuig_identificatienummer:k,kenteken:d.plateNumber?.plateNumber||'',vinApiData:d});
+      loadModelPhoto(normalizedMake,s.model||s.Model,s.registrationDate||modelYear);
       return;    }
     const z=await fetch(A+'?kenteken='+encodeURIComponent(k));
     if(!z.ok) throw Error('RDW is tijdelijk niet bereikbaar');
