@@ -264,19 +264,22 @@ async function go(){
 function euro(n){return new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n)}
 async function loadModelPhoto(brand,model){
   const target=q('modelPhoto');
-  target.innerHTML='';
   const name=[brand,model].filter(Boolean).join(' ').trim();
-  if(!name)return;
+  if(!name){target.innerHTML='';return;}
+  target.innerHTML='<div class="model-photo"><div style="min-height:230px;display:flex;align-items:center;justify-content:center;color:var(--muted);background:#eef2f7">Modelafbeelding laden…</div><div class="model-photo-info"><small>Modelafbeelding</small><strong>'+escapeHtml(name)+'</strong><span>Visuele herkenning van het voertuigmodel.</span></div></div>';
   try{
-    const searchUrl='https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(name)+'&gsrnamespace=0&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=1000&format=json&origin=*';
-    const res=await fetch(searchUrl);
+    const url='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(name+' car')+'&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url&iiurlwidth=1000&format=json&origin=*';
+    const res=await fetch(url);
     if(!res.ok)throw Error('image search failed');
     const data=await res.json();
     const pages=data.query&&data.query.pages?Object.values(data.query.pages):[];
-    const page=pages.find(p=>p.thumbnail&&p.thumbnail.source);
-    if(!page)return;
-    target.innerHTML='<div class="model-photo"><img src="'+page.thumbnail.source+'" alt="'+escapeHtml(name)+'"><div class="model-photo-info"><small>Modelafbeelding</small><strong>'+escapeHtml(name)+'</strong><span>Afbeelding afkomstig uit Wikipedia/Wikimedia. De foto is ter visuele herkenning van het model en is niet gekoppeld aan het specifieke kenteken.</span></div></div>';
-  }catch(e){}
+    const page=pages.find(p=>p.imageinfo&&p.imageinfo[0]&&p.imageinfo[0].thumburl);
+    if(!page)throw Error('no image');
+    const src=page.imageinfo[0].thumburl;
+    target.innerHTML='<div class="model-photo"><img src="'+src+'" alt="'+escapeHtml(name)+'"><div class="model-photo-info"><small>Modelafbeelding</small><strong>'+escapeHtml(name)+'</strong><span>Afbeelding via Wikimedia Commons. Dit is een modelafbeelding en niet noodzakelijk de specifieke auto van het kenteken.</span></div></div>';
+  }catch(e){
+    target.innerHTML='<div class="notice">Geen modelafbeelding beschikbaar voor '+escapeHtml(name)+'.</div>';
+  }
 }
 function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
