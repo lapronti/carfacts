@@ -30,6 +30,16 @@ button:hover{background:var(--blue2)}
 footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
 @media(max-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.container{padding:18px 12px 40px}.search-row{flex-direction:column}button{height:52px}.hero-top{flex-direction:column}.plate{align-self:flex-start}.grid{grid-template-columns:1fr 1fr}.title{font-size:24px}.value{font-size:23px}}
+
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mrb-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}
+.mrb-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;background:#fff;font-size:15px}
+.mrb-result{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mrb-total{background:#f5f8fc;border:1px solid var(--line);border-radius:14px;padding:16px}
+.mrb-total strong{display:block;font-size:25px;margin-top:4px}
+.mrb-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+@media(max-width:560px){.mrb-controls,.mrb-result{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -66,6 +76,30 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
 <section class="section">
 <h2>Importcontrole</h2>
 <div id="i" class="import"></div>
+</section>
+
+<section class="section">
+<h2>Motor & milieu</h2>
+<div id="m" class="grid"></div>
+</section>
+
+<section class="section">
+<h2>Afmetingen & gewichten</h2>
+<div id="d" class="grid"></div>
+</section>
+
+<section class="section">
+<h2>MRB / wegenbelasting 2026</h2>
+<div class="mrb-card">
+<div class="mrb-controls">
+<div><small style="display:block;color:var(--muted);margin-bottom:6px">Provincie</small><select id="prov" onchange="calcMRB()">
+<option value="95.7">Groningen</option><option value="92.1">Friesland</option><option value="92.0">Drenthe</option><option value="82.2">Overijssel</option><option value="84.7">Flevoland</option><option value="98.3">Gelderland</option><option value="86.4">Utrecht</option><option value="82.1">Noord-Holland</option><option value="104.4">Zuid-Holland</option><option value="84.4">Zeeland</option><option value="87.0">Noord-Brabant</option><option value="88.5">Limburg</option>
+</select></div>
+<div><small style="display:block;color:var(--muted);margin-bottom:6px">Berekening</small><div class="notice">Op basis van massa rijklaar + brandstof + provinciale opcenten</div></div>
+</div>
+<div id="mrbResult" class="mrb-result"></div>
+<div class="mrb-note">Indicatieve berekening voor 2026. Sinds 1 juli 2026 gebruikt de Belastingdienst de massa rijklaar. De exacte aanslag kan afwijken door bijzondere tarieven, vrijstellingen of voertuigcategorie. Tarieven worden jaarlijks aangepast.</div>
+</div>
 </section>
 
 <section class="section">
@@ -149,13 +183,16 @@ async function go(){
     q('g').innerHTML=[
       it('Kenteken',formatPlate(x.kenteken)),
       it('Voertuigsoort',x.voertuigsoort),
-      it('Brandstof',x.brandstof),
-      it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null),
-      it('Massa rijklaar',x.massa_rijklaar?Number(x.massa_rijklaar).toLocaleString('nl-NL')+' kg':null),
+      it('Inrichting',x.inrichting),
+      it('Aantal zitplaatsen',x.aantal_zitplaatsen),
+      it('Merk',x.merk),
+      it('Handelsbenaming',x.handelsbenaming),
       it('Eerste toelating',formatDate(x.datum_eerste_toelating)),
       it('Eerste tenaamstelling NL',formatDate(x.datum_eerste_tenaamstelling_in_nederland)),
+      it('Laatste tenaamstelling',formatDate(x.datum_tenaamstelling)),
       it('Bruto BPM',formatEuro(x.bruto_bpm)),
-      it('CO₂-uitstoot',x.co2_emissie?x.co2_emissie+' g/km':null)
+      it('Catalogusprijs',formatEuro(x.catalogusprijs)),
+      it('WAM verzekerd',x.wam_verzekerd)
     ].join('');
 
     const im=x.datum_eerste_toelating&&x.datum_eerste_tenaamstelling_in_nederland&&String(x.datum_eerste_toelating)!==String(x.datum_eerste_tenaamstelling_in_nederland);
@@ -164,15 +201,86 @@ async function go(){
 
     q('f').innerHTML=[
       it('Tellerstandoordeel',x.tellerstandoordeel),
-      it('Laatste geregistreerde tellerstand',x.jaar_laatste_registratie_tellerstand),
+      it('Laatste registratie tellerstand',x.jaar_laatste_registratie_tellerstand),
       it('APK geldig tot',formatDate(x.vervaldatum_apk)),
-      it('Bruto BPM',formatEuro(x.bruto_bpm))
+      it('APK / keuring',x.wacht_op_keuren),
+      it('WAM verzekerd',x.wam_verzekerd),
+      it('Tenaamstellen mogelijk',x.tenaamstellen_mogelijk)
     ].join('');
+
+    q('m').innerHTML=[
+      it('Brandstof',x.brandstof),
+      it('Aantal cilinders',x.aantal_cilinders),
+      it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null),
+      it('CO₂-uitstoot',x.co2_emissie?x.co2_emissie+' g/km':null),
+      it('Emissieklasse',x.emissieklasse),
+      it('Eerste kleur',x.eerste_kleur),
+      it('Tweede kleur',x.tweede_kleur),
+      it('Geluidsniveau',x.geluidsniveau?x.geluidsniveau+' dB':null)
+    ].join('');
+
+    q('d').innerHTML=[
+      it('Massa rijklaar',x.massa_rijklaar?Number(x.massa_rijklaar).toLocaleString('nl-NL')+' kg':null),
+      it('Massa ledig voertuig',x.massa_ledig_voertuig?Number(x.massa_ledig_voertuig).toLocaleString('nl-NL')+' kg':null),
+      it('Max. massa voertuig',x.toegestane_maximum_massa_voertuig?Number(x.toegestane_maximum_massa_voertuig).toLocaleString('nl-NL')+' kg':null),
+      it('Laadvermogen',x.laadvermogen?Number(x.laadvermogen).toLocaleString('nl-NL')+' kg':null),
+      it('Max. trekken geremd',x.maximum_massa_trekken_geremd?Number(x.maximum_massa_trekken_geremd).toLocaleString('nl-NL')+' kg':null),
+      it('Max. trekken ongeremd',x.maximum_massa_trekken_ongeremd?Number(x.maximum_massa_trekken_ongeremd).toLocaleString('nl-NL')+' kg':null),
+      it('Lengte',x.lengte?x.lengte+' mm':null),
+      it('Breedte',x.breedte?x.breedte+' mm':null)
+    ].join('');
+
+    window.carData=x;
+    calcMRB();
   }catch(e){
     q('s').innerHTML='<span class="err">Zoeken mislukt: '+e.message+'</span>';
   }
 }
 
+function euro(n){return new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n)}
+function mrbWeightBase(w){
+  w=Number(w)||0;
+  if(w<=600)return 21.46;
+  if(w<=700)return 29.12;
+  if(w<=800)return 37.00;
+  if(w<=900)return 48.30;
+  if(w<=3300)return 64.24+17.27*Math.ceil((w-900)/100);
+  return 474.12+12.00*Math.ceil((w-3300)/100);
+}
+function historicalBase(w){
+  w=Number(w)||0;
+  if(w<=550)return 57.99;
+  if(w<=650)return 69.34;
+  if(w<=750)return 81.59;
+  if(w<=850)return 107.91;
+  if(w<=950)return 136.50;
+  if(w<=1050)return 183.24;
+  if(w<=1150)return 229.98;
+  if(w<=1250)return 276.72;
+  if(w<=1350)return 323.45;
+  if(w<=1450)return 370.19;
+  if(w<=1550)return 416.93;
+  if(w<=1650)return 463.67;
+  return 463.67+46.74*Math.ceil((w-1650)/100);
+}
+function calcMRB(){
+  const x=window.carData;if(!x||!x.massa_rijklaar)return;
+  const w=Number(x.massa_rijklaar), prov=Number(q('prov').value);
+  let base=mrbWeightBase(w), fuel=String(x.brandstof||'').toUpperCase();
+  let fuelAdd=0, diesel=false, electric=false;
+  if(fuel.includes('DIESEL')){diesel=true;fuelAdd=w<=600?84.14:w<=700?99.59:w<=800?115.03:w<=900?130.76:153.00+16.57*Math.ceil((w-1000)/100);}
+  else if(fuel.includes('LPG')||fuel.includes('CNG')||fuel.includes('LNG')) fuelAdd=w<=800?0:19.05+19.05*Math.ceil((w-900)/100);
+  else if(fuel.includes('ELEKTR')||fuel.includes('ELECTRIC')||fuel.includes('WATERSTOF')||fuel.includes('HYDROGEN')) electric=true;
+  let national=base+fuelAdd;
+  let provincial=historicalBase(w)*(prov/100);
+  let total=national+provincial;
+  if(electric) total*=0.70;
+  q('mrbResult').innerHTML=[
+    '<div class="mrb-total"><small>Per kwartaal</small><strong>'+euro(total)+'</strong></div>',
+    '<div class="mrb-total"><small>Per jaar</small><strong>'+euro(total*4)+'</strong></div>',
+    '<div class="mrb-total"><small>Provinciale opcenten</small><strong>'+prov.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%</strong></div>'
+  ].join('');
+}
 q('p').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
 </script>
 </body>
