@@ -256,7 +256,7 @@ async function loadExtraVehicleData(x){
   if(!/^[A-HJ-NPR-Z0-9]{11,17}$/i.test(vin)) return;
   try{
     const modelYear=String(x.datum_eerste_toelating||'').slice(0,4);
-    const carApiUrl='https://carfacts-api.nlaghmiri.workers.dev/cdn-cgi/access/loginapi/vin?vin='+encodeURIComponent(vin);
+    const carApiUrl='https://carfacts-api.nlaghmiri.workers.dev/api/vin?vin='+encodeURIComponent(vin);
     const res=await fetch(carApiUrl);
     if(!res.ok)return;
     const data=await res.json();
@@ -356,7 +356,7 @@ async function go(type='plate'){
   try{
     const isVin=type==='vin';
     if(isVin){
-      const z=await fetch('https://carfacts-api.nlaghmiri.workers.dev/cdn-cgi/access/loginapi/vin?vin='+encodeURIComponent(k));
+      const z=await fetch('https://carfacts-api.nlaghmiri.workers.dev/api/vin?vin='+encodeURIComponent(k));
       if(!z.ok) throw Error('VIN niet gevonden');
       const d=await z.json();
       const s=d.specifications||d.data||{};
@@ -491,7 +491,7 @@ async function loadServiceHistory(){
   const status=q('serviceHistoryStatus'), box=q('serviceHistory');
   status.textContent='Onderhoudshistorie ophalen…'; box.innerHTML='';
   try{
-    const res=await fetch('https://carfacts-api.nlaghmiri.workers.dev/cdn-cgi/access/loginapi/service-history?vin='+encodeURIComponent(vin),{credentials:'include'});
+    const res=await fetch('https://carfacts-api.nlaghmiri.workers.dev/api/service-history?vin='+encodeURIComponent(vin),{credentials:'include'});
     if(res.status===401||res.status===403){
       status.innerHTML='<span class="err">Log eerst in voor de beveiligde Carfacts API en probeer daarna opnieuw.</span> <a href="https://carfacts-api.nlaghmiri.workers.dev/cdn-cgi/access/login" target="_blank" rel="noopener">Inloggen →</a>'; return;
     }
@@ -500,7 +500,7 @@ async function loadServiceHistory(){
       status.textContent='Aanvraag ontvangen. Onderhoudshistorie wordt opgehaald…';
       for(let i=0;i<30;i++){
         await new Promise(r=>setTimeout(r,2000));
-        const poll=await fetch('https://carfacts-api.nlaghmiri.workers.dev/cdn-cgi/access/loginapi/service-history/status?request_id='+encodeURIComponent(data.request_id),{credentials:'include'});
+        const poll=await fetch('https://carfacts-api.nlaghmiri.workers.dev/api/service-history/status?request_id='+encodeURIComponent(data.request_id),{credentials:'include'});
         if(!poll.ok)continue;
         const p=await poll.json();
         if(p.status==='complete'){renderServiceHistory(p.data);return;}
