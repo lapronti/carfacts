@@ -333,122 +333,50 @@ function mrbBase(w){
   if(w<=3300)return 64.24+17.27*Math.ceil((w-1000)/100);
   return 474.12+12.00*Math.ceil((w-3400)/100);
 }
-function mrbFuelSurcharge(w,fuel){
+function mrbFuelSurcharge(w,fuel){return 0;}
+function mrbDieselParticle(w,van,entrepreneur){
   w=Number(w)||0;
-  const f=String(fuel||'').toUpperCase();
-  if(f.includes('DIESEL')){
-    if(w<=600)return 84.14;
-    if(w<=700)return 99.59;
-    if(w<=800)return 115.03;
-    if(w<=900)return 130.76;
-    return 153.00+16.57*Math.ceil((w-1000)/100);
-  }
-  if(f.includes('LPG')||f.includes('CNG')||f.includes('LNG')){
-    if(w<=800)return 0;
-    return 19.05+19.05*Math.ceil((w-900)/100);
-  }
-  if(f.includes('ELEKTR')||f.includes('ELECTRIC')||f.includes('WATERSTOF')||f.includes('HYDROGEN')) return 0;
-  if(f.includes('BENZINE')||f.includes('PETROL')) return 0;
-  return 98.71+(w<=600?0:w<=700?19.61:w<=800?39.24:58.83+18.22*Math.ceil((w-900)/100));
+  const p=entrepreneur?
+    [[550,7.80],[650,9.53],[750,10.76],[850,11.98],[950,13.20],[1050,14.42],[1150,15.66],[1250,16.98],[1350,18.29],[1450,19.61],[1550,20.92],[1650,22.23],[1750,23.55],[1850,24.86],[1950,26.18],[2050,27.49],[2150,28.87],[2250,30.28],[2350,31.70],[2450,33.11],[2550,34.53],[2650,35.94],[2750,37.36],[2850,38.22],[2950,38.54],[3050,38.86],[3150,39.18],[3250,39.50],[3350,39.82],[3450,40.14],[3550,40.47]]
+    :van?
+    [[550,15.84],[650,19.31],[750,22.80],[850,26.86],[950,32.59],[1050,37.66],[1150,42.74],[1250,47.81],[1350,52.89],[1450,57.97],[1550,63.04],[1650,68.12],[1750,73.19],[1850,78.27],[1950,83.35],[2050,88.42],[2150,93.50],[2250,98.57],[2350,103.65],[2450,108.73],[2550,113.80],[2650,118.88],[2750,123.95],[2850,129.03],[2950,134.11],[3050,139.18],[3150,144.26],[3250,149.33],[3350,153.72],[3450,158.01],[3550,162.29]]
+    :[[550,20.06],[650,24.45],[750,28.89],[850,34.02],[950,41.28],[1050,47.71],[1150,54.13],[1250,60.56],[1350,66.99],[1450,73.42],[1550,79.85],[1650,86.28],[1750,92.71],[1850,99.14],[1950,105.57],[2050,112],[2150,118.43],[2250,124.86],[2350,131.29],[2450,137.72],[2550,144.15],[2650,150.58],[2750,157.01],[2850,163.44],[2950,169.87],[3050,176.30],[3150,182.73],[3250,189.16],[3350,194.71],[3450,200.14],[3550,205.57],[3650,211],[3750,216.43],[3850,221.85],[3950,227.28],[4050,232.71],[4150,238.14],[4250,243.57],[4350,249],[4450,254.42],[4550,259.85],[4650,265.28],[4750,270.71],[4850,276.14],[4950,281.56],[5050,286.99]];
+  for(const [max,val] of p) if(w<=max)return val;
+  return p[p.length-1][1];
 }
-function mrbProvincePrincipal(w){
+function mrbBase(w){
   w=Number(w)||0;
-  if(w<=550)return 57.99;
-  if(w<=650)return 69.34;
-  if(w<=750)return 81.59;
-  if(w<=850)return 107.91;
-  if(w<=950)return 136.50;
-  if(w<=1050)return 183.24;
-  if(w<=1150)return 229.98;
-  if(w<=1250)return 276.72;
-  if(w<=1350)return 323.45;
-  if(w<=1450)return 370.19;
-  if(w<=1550)return 416.93;
-  if(w<=1650)return 463.67;
-  return 463.67+46.74*Math.ceil((w-1650)/100);
-}
-function mrbEntrepreneurBase(w){
-  w=Number(w)||0;
-  if(w<=600)return 25.99;
-  if(w<=1100)return 31.78+4.07*Math.ceil((w-700)/100);
-  if(w<=2100)return 52.21+4.38*Math.ceil((w-1200)/100);
-  if(w<=2800)return 96.23+4.71*Math.ceil((w-2200)/100);
-  return 127.40+1.07*Math.ceil((w-2900)/100);
+  const t=[[550,25.99],[650,31.08],[750,36.17],[850,41.26],[950,52.37],[1050,64.25],[1150,76.13],[1250,88.01],[1350,99.89],[1450,111.77],[1550,123.65],[1650,135.53],[1750,147.41],[1850,159.29],[1950,171.17],[2050,183.05],[2150,194.93],[2250,206.81],[2350,218.69],[2450,230.57],[2550,242.45],[2650,254.33],[2750,266.21],[2850,278.09],[2950,289.97],[3050,301.85],[3150,313.73],[3250,325.61],[3350,337.49],[3450,349.37],[3550,361.25]];
+  for(const [max,val] of t)if(w<=max)return val;
+  return t[t.length-1][1]+Math.ceil((w-3550)/100)*11.88;
 }
 function isBestelauto(x){
   const type=String(x?.voertuigsoort||'').toUpperCase();
   const max=Number(x?.toegestane_maximum_massa_voertuig||0);
-  return (type.includes('BEDRIJF')||type.includes('BESTEL')) && max>0 && max<=3500;
-}
-function hasParticleSurcharge(x, isVan){
-  const fuel=String(x.brandstof||'').toUpperCase();
-  if(!fuel.includes('DIESEL')) return false;
-  const first=String(x.datum_eerste_toelating||'').replace(/[^0-9]/g,'');
-  const year=Number(first.slice(0,4));
-  const pm=Number(x.fijnstof_emissie ?? x.fijnstofuitstoot ?? x.fijnstofuitstoot_mg_km ?? NaN);
-  if(isVan){
-    if(year && year>0 && year<2014 && !Number.isFinite(pm)) return true;
-    return Number.isFinite(pm) && pm>5;
-  }
-  return Number.isFinite(pm) && pm>5;
+  return (type.includes('BEDRIJF')||type.includes('BESTEL'))&&max>0&&max<=3500;
 }
 function calcMRB(){
   const x=window.carData;
-  if(!x||!x.massa_rijklaar){
-    q('mrbResult').innerHTML='<div class="notice">Onvoldoende RDW-gegevens om MRB te berekenen.</div>';
-    return;
-  }
-
-  const w=Number(x.massa_rijklaar);
-  const prov=Number(q('prov').value);
-  const van=isBestelauto(x);
-  const mode=q('mrbType')?.value||'particulier';
-  const fuel=String(x.brandstof||'');
-  const electric=/ELEKTR|ELECTRIC|WATERSTOF|HYDROGEN/i.test(fuel);
-
-  if(!String(x.voertuigsoort||'').toUpperCase().includes('PERSONEN') && !van){
-    q('mrbResult').innerHTML='<div class="notice">Deze voertuigcategorie valt buiten de personenauto-/bestelauto-berekening van Carfacts.</div>';
-    q('mrbDetails').textContent='Gebruik hiervoor de officiële Belastingdienst-rekenhulp.';
-    return;
-  }
-
-  let national;
-  let label='Personenauto particulier';
-  if(van && mode==='ondernemer'){
-    national=mrbEntrepreneurBase(w);
-    label='Bestelauto ondernemer — tijdelijk 2026-tarief';
-  }else{
-    national=mrbBase(w)+mrbFuelSurcharge(w,fuel);
-    label=van?'Bestelauto particulier':'Personenauto particulier';
-  }
-
-  if(electric && !van) national*=0.70;
-
-  const principal=mrbProvincePrincipal(w);
+  if(!x||!x.massa_rijklaar){q('mrbResult').innerHTML='<div class="notice">Onvoldoende RDW-gegevens om MRB te berekenen.</div>';return;}
+  const w=Number(x.massa_rijklaar),prov=Number(q('prov').value);
+  const van=isBestelauto(x), mode=q('mrbType')?.value||'particulier';
+  const fuel=String(x.brandstof||'').toUpperCase();
+  const entrepreneur=van&&mode==='ondernemer';
+  let national=mrbBase(w);
+  let label=van?'Bestelauto particulier':'Personenauto particulier';
+  if(entrepreneur){national/=2;label='Bestelauto ondernemer — tijdelijk half tarief';}
+  if(/DIESEL/.test(fuel))national+=mrbDieselParticle(w,van,entrepreneur);
+  const principal=mrbBase(w);
   const provincial=principal*(prov/100);
-  let subtotal=national+provincial;
-  let particle=false;
-  if(mode!=='ondernemer' && hasParticleSurcharge(x,van)){
-    const pct=van?0.15:0.19;
-    subtotal*=1+pct;
-    particle=true;
-  }
-
-  const details=[
-    'Tarief: '+label,
-    'Massa rijklaar: '+w.toLocaleString('nl-NL')+' kg',
-    'Rijkstarief incl. brandstoftoeslag: '+euro(national),
-    'Provinciale opcenten: '+prov.toLocaleString('nl-NL',{maximumFractionDigits:1})+'% van hoofdsom '+euro(principal)+' = '+euro(provincial)
-  ];
-  if(electric&&!van) details.push('Elektrisch/waterstof: 70% van het personenautotarief in 2026.');
-  if(particle) details.push('Fijnstoftoeslag toegepast: '+(van?'15%':'19%')+'.');
-
+  let total=national+provincial;
+  const electric=/ELEKTR|ELECTRIC|WATERSTOF|HYDROGEN/.test(fuel);
+  if(electric&&!van)total*=0.70;
   q('mrbResult').innerHTML=[
-    '<div class="mrb-total"><small>Per kwartaal</small><strong>'+euro(subtotal)+'</strong></div>',
-    '<div class="mrb-total"><small>Per jaar</small><strong>'+euro(subtotal*4)+'</strong></div>',
+    '<div class="mrb-total"><small>Per kwartaal</small><strong>'+euro(total)+'</strong></div>',
+    '<div class="mrb-total"><small>Per jaar</small><strong>'+euro(total*4)+'</strong></div>',
     '<div class="mrb-total"><small>Provinciale opcenten</small><strong>'+prov.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%</strong></div>'
   ].join('');
-  q('mrbDetails').innerHTML=details.map(s=>'• '+s).join('<br>');
+  q('mrbDetails').innerHTML='Tarief: '+label+'<br>• Massa rijklaar: '+w.toLocaleString('nl-NL')+' kg<br>• Rijkstarief: '+euro(national)+'<br>• Provinciale opcenten: '+euro(provincial)+'<br>• Brandstof: '+v(x.brandstof);
 }
 q('p').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
 </script>
