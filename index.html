@@ -719,7 +719,12 @@ async function loadModelPhoto(brand,model,firstRegistration){
         const pages=data.query&&data.query.pages?Object.values(data.query.pages):[];
         const relevant=pages.filter(p=>{
           const title=String(p.title||'').toLowerCase();
-          return /caddy/.test(title) && (!generation || title.includes(generation.toLowerCase()) || title.includes('volkswagen caddy'));
+          if(isCaddy){
+            return /caddy/.test(title) && (!generation || title.includes(generation.toLowerCase()) || title.includes('volkswagen caddy'));
+          }
+          const wantedBrand=brandText.toLowerCase();
+          const wantedModel=modelText.toLowerCase();
+          return title.includes(wantedModel) && (!wantedBrand || title.includes(wantedBrand));
         });
 
         let src='';
