@@ -151,17 +151,15 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 <section class="section">
 <h2>MRB / wegenbelasting 2026</h2>
 <div class="mrb-card">
-<div class="mrb-controls">
-<div><small style="display:block;color:var(--muted);margin-bottom:6px">Provincie</small><select id="prov" onchange="calcMRB()">
-<option value="95.7">Groningen</option><option value="94.6">Friesland</option><option value="92.0">Drenthe</option><option value="82.2">Overijssel</option><option value="84.7">Flevoland</option><option value="98.3">Gelderland</option><option value="86.4">Utrecht</option><option value="82.1">Noord-Holland</option><option value="104.4">Zuid-Holland</option><option value="84.4">Zeeland</option><option value="87.0">Noord-Brabant</option><option value="85.8">Limburg</option>
-</select></div>
-<div><small style="display:block;color:var(--muted);margin-bottom:6px">Type tarief</small><select id="mrbType" onchange="calcMRB()"><option value="particulier">Particulier</option><option value="ondernemer">Ondernemer (bestelauto)</option></select></div>
+  <div class="mrb-result">
+    <div class="mrb-total"><small>Provincie</small><strong>Zuid-Holland</strong></div>
+    <div class="mrb-total"><small>Bron</small><strong>Belastingdienst</strong></div>
+    <div class="mrb-total"><small>Berekening</small><strong>Officieel</strong></div>
+  </div>
+  <div class="mrb-note">Carfacts rekent de wegenbelasting hier niet zelf uit. Gebruik de officiële rekenhulp van de Belastingdienst; die gebruikt de actuele 2026-tarieven en houdt rekening met onder andere massa rijklaar, brandstof en eventuele fijnstoftoeslag.</div>
+  <a class="anwb-btn" style="margin-top:14px;text-decoration:none" href="https://www.belastingdienst.nl/wps/wcm/connect/nl/auto-en-vervoer/content/hulpmiddel-motorrijtuigenbelasting-berekenen" target="_blank" rel="noopener">Open officiële MRB-berekening →</a>
 </div>
-<div id="mrbResult" class="mrb-result"></div>
-<div id="mrbDetails" class="mrb-note"></div>
-<div class="mrb-note">2026-berekening op basis van de Wet MRB en de officiële 2026-regels. Sinds 1 juli 2026 wordt voor de gewichtsklasse de massa rijklaar gebruikt. Voor bestelauto's is van 1 juli 2026 t/m 31 december 2026 tijdelijk een half tarief voor btw-ondernemers van toepassing. Bij bijzondere tarieven, vrijstellingen of ontbrekende RDW-gegevens kan de werkelijke aanslag afwijken.</div>
-</div>
-</section>
+</section></section>
 
 <section class="section">
 <h2>Kilometerstand & APK</h2>
@@ -568,123 +566,6 @@ function checkBPM(x){
       ?'de RDW-waarde sluit zeer nauw aan.'
       :'er is een afwijking van '+pct.toFixed(1).replace('.',',')+'%. Dit is een signaal om de CO₂-meetmethode, dieseltoeslag en historische voertuiggegevens te controleren.')
     +' Dit is een plausibiliteitscontrole, geen bewijs dat de RDW-waarde fout is.';
-}
-function mrbNationalBase(w){
-  w=Number(w)||0;
-  if(w<=600)return 21.46;
-  if(w<=700)return 29.12;
-  if(w<=800)return 37.00;
-  if(w<=900)return 48.30;
-  if(w<=3300)return 64.24+17.27*Math.ceil((w-1000)/100);
-  return 474.12+12.00*Math.ceil((w-3400)/100);
-}
-function mrbProvincialBase(w){
-  w=Number(w)||0;
-  if(w<=600)return 14.50;
-  if(w<=700)return 17.33;
-  if(w<=800)return 20.40;
-  if(w<=900)return 26.98;
-  if(w<=1000)return 34.12;
-  return 45.81+11.68*Math.ceil((w-1100)/100);
-}
-function mrbDieselFuelSurcharge(w){
-  w=Number(w)||0;
-  if(w<=600)return 84.14;
-  if(w<=700)return 99.59;
-  if(w<=800)return 115.03;
-  if(w<=900)return 130.76;
-  return 153.00+16.57*Math.ceil((w-1000)/100);
-}
-function mrbOtherFuelSurcharge(w){
-  w=Number(w)||0;
-  if(w<=600)return 98.71;
-  if(w<=700)return 118.32;
-  if(w<=800)return 137.95;
-  if(w<=900)return 157.54;
-  return 172.08+18.22*Math.ceil((w-1000)/100);
-}
-function mrbDieselParticle(w,van,entrepreneur){
-  w=Number(w)||0;
-  const p=entrepreneur?
-    [[550,7.80],[650,9.53],[750,10.76],[850,11.98],[950,13.20],[1050,14.42],[1150,15.66],[1250,16.98],[1350,18.29],[1450,19.61],[1550,20.92],[1650,22.23],[1750,23.55],[1850,24.86],[1950,26.18],[2050,27.49],[2150,28.87],[2250,30.28],[2350,31.70],[2450,33.11],[2550,34.53],[2650,35.94],[2750,37.36],[2850,38.22],[2950,38.54],[3050,38.86],[3150,39.18],[3250,39.50],[3350,39.82],[3450,40.14],[3550,40.47]]
-    :van?
-    [[550,15.84],[650,19.31],[750,22.80],[850,26.86],[950,32.59],[1050,37.66],[1150,42.74],[1250,47.81],[1350,52.89],[1450,57.97],[1550,63.04],[1650,68.12],[1750,73.19],[1850,78.27],[1950,83.35],[2050,88.42],[2150,93.50],[2250,98.57],[2350,103.65],[2450,108.73],[2550,113.80],[2650,118.88],[2750,123.95],[2850,129.03],[2950,134.11],[3050,139.18],[3150,144.26],[3250,149.33],[3350,153.72],[3450,158.01],[3550,162.29]]
-    :[[550,20.06],[650,24.45],[750,28.89],[850,34.02],[950,41.28],[1050,47.71],[1150,54.13],[1250,60.56],[1350,66.99],[1450,73.42],[1550,79.85],[1650,86.28],[1750,92.71],[1850,99.14],[1950,105.57],[2050,112],[2150,118.43],[2250,124.86],[2350,131.29],[2450,137.72],[2550,144.15],[2650,150.58],[2750,157.01],[2850,163.44],[2950,169.87],[3050,176.30],[3150,182.73],[3250,189.16],[3350,194.71],[3450,200.14],[3550,205.57],[3650,211],[3750,216.43],[3850,221.85],[3950,227.28],[4050,232.71],[4150,238.14],[4250,243.57],[4350,249],[4450,254.42],[4550,259.85],[4650,265.28],[4750,270.71],[4850,276.14],[4950,281.56],[5050,286.99]];
-  for(const [max,val] of p) if(w<=max)return val;
-  return p[p.length-1][1];
-}
-function isBestelauto(x){
-  const type=String(x?.voertuigsoort||'').toUpperCase();
-  const max=Number(x?.toegestane_maximum_massa_voertuig||0);
-  return (type.includes('BEDRIJF')||type.includes('BESTEL'))&&max>0&&max<=3500;
-}
-function mrbEntrepreneurTariff(w){
-  w=Number(w)||0;
-  if(w<=600)return 51.97;
-  if(w<=1100)return 63.55+8.15*Math.ceil((w-700)/100);
-  if(w<=2100)return 104.42+8.76*Math.ceil((w-1200)/100);
-  if(w<=2800)return 192.46+9.43*Math.ceil((w-2200)/100);
-  return 254.79+2.14*Math.ceil((w-2900)/100);
-}
-function hasDieselParticleSurcharge(x,van){
-  const fuel=String(x?.brandstof||'').toUpperCase();
-  if(!fuel.includes('DIESEL'))return false;
-  const particles=Number(String(x?.uitstoot_deeltjes??'').replace(',','.'));
-  const soot=Number(String(x?.roetuitstoot??'').replace(',','.'));
-  const overLimit=(Number.isFinite(particles)&&particles>5)||(Number.isFinite(soot)&&soot>10);
-  if(overLimit)return true;
-  if(van){
-    const det=String(x?.datum_eerste_toelating||'').replace(/[^0-9]/g,'').slice(0,8);
-    if(det && det<'20090901')return true;
-  }
-  return false;
-}
-function calcMRB(){
-  const x=window.carData;
-  if(!x||!x.massa_rijklaar){
-    q('mrbResult').innerHTML='<div class="notice">Onvoldoende RDW-gegevens om MRB te berekenen.</div>';
-    return;
-  }
-  const w=Number(x.massa_rijklaar);
-  const prov=Number(q('prov').value);
-  const van=isBestelauto(x);
-  const mode=q('mrbType')?.value||'particulier';
-  const fuel=String(x.brandstof||'').toUpperCase();
-  const entrepreneur=van&&mode==='ondernemer';
-  let national;
-  let label;
-
-  if(entrepreneur){
-    national=mrbEntrepreneurTariff(w);
-    label='Bestelauto ondernemer — tijdelijk half tarief (1 juli t/m 31 december 2026)';
-    national/=2;
-    if(/DIESEL/.test(fuel)&&hasDieselParticleSurcharge(x,true)) national*=1.15;
-  }else{
-    national=mrbNationalBase(w);
-    if(/DIESEL/.test(fuel)){
-      national+=mrbDieselFuelSurcharge(w);
-      if(hasDieselParticleSurcharge(x,van)) national*=van?1.15:1.19;
-    }else if(!/BENZINE|PETROL|ELEKTR|ELECTRIC|WATERSTOF|HYDROGEN/.test(fuel)){
-      national+=mrbOtherFuelSurcharge(w);
-    }
-    label=van?'Bestelauto particulier':'Personenauto particulier';
-  }
-
-  let provincial=0;
-  if(!van){
-    provincial=mrbProvincialBase(w)*(prov/100);
-  }
-  let total=national+provincial;
-  const electric=!van&&/ELEKTR|ELECTRIC|WATERSTOF|HYDROGEN/.test(fuel);
-  if(electric) total*=0.70;
-  total=Math.round(total);
-
-  q('mrbResult').innerHTML=[
-    '<div class="mrb-total"><small>Per kwartaal</small><strong>'+euro(total)+'</strong></div>',
-    '<div class="mrb-total"><small>Per jaar</small><strong>'+euro(total*4)+'</strong></div>',
-    '<div class="mrb-total"><small>Provinciale opcenten</small><strong>'+(!van?prov.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%':'Niet van toepassing')+'</strong></div>'
-  ].join('');
-  q('mrbDetails').innerHTML='Tarief: '+label+'<br>• Massa rijklaar: '+w.toLocaleString('nl-NL')+' kg<br>• Rijkstarief: '+euro(national)+'<br>• Provinciale opcenten: '+(van?'€ 0,00 (bestelauto)':euro(provincial))+'<br>• Brandstof: '+v(x.brandstof);
 }
 q('p').addEventListener('keydown',e=>{if(e.key==='Enter')go('plate')});
 q('vin').addEventListener('keydown',e=>{if(e.key==='Enter')go('vin')});
