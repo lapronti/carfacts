@@ -115,10 +115,11 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 <div><small style="display:block;color:var(--muted);margin-bottom:6px">Provincie</small><select id="prov" onchange="calcMRB()">
 <option value="95.7">Groningen</option><option value="92.1">Friesland</option><option value="92.0">Drenthe</option><option value="82.2">Overijssel</option><option value="84.7">Flevoland</option><option value="98.3">Gelderland</option><option value="86.4">Utrecht</option><option value="82.1">Noord-Holland</option><option value="104.4">Zuid-Holland</option><option value="84.4">Zeeland</option><option value="87.0">Noord-Brabant</option><option value="88.5">Limburg</option>
 </select></div>
-<div><small style="display:block;color:var(--muted);margin-bottom:6px">Berekening</small><div class="notice">Op basis van massa rijklaar + brandstof + provinciale opcenten</div></div>
+<div><small style="display:block;color:var(--muted);margin-bottom:6px">Type tarief</small><select id="mrbType" onchange="calcMRB()"><option value="particulier">Particulier</option><option value="ondernemer">Ondernemer (bestelauto)</option></select></div>
 </div>
 <div id="mrbResult" class="mrb-result"></div>
-<div class="mrb-note">Indicatieve berekening voor 2026. Sinds 1 juli 2026 gebruikt de Belastingdienst de massa rijklaar. De exacte aanslag kan afwijken door bijzondere tarieven, vrijstellingen of voertuigcategorie. Tarieven worden jaarlijks aangepast.</div>
+<div id="mrbDetails" class="mrb-note"></div>
+<div class="mrb-note">2026-berekening op basis van de Wet MRB en de officiële 2026-regels. Sinds 1 juli 2026 wordt voor de gewichtsklasse de massa rijklaar gebruikt. Voor bestelauto's is van 1 juli 2026 t/m 31 december 2026 tijdelijk een half tarief voor btw-ondernemers van toepassing. Bij bijzondere tarieven, vrijstellingen of ontbrekende RDW-gegevens kan de werkelijke aanslag afwijken.</div>
 </div>
 </section>
 
@@ -323,16 +324,34 @@ function checkBPM(x){
       :'er is een afwijking van '+pct.toFixed(1).replace('.',',')+'%. Dit is een signaal om de CO₂-meetmethode, dieseltoeslag en historische voertuiggegevens te controleren.')
     +' Dit is een plausibiliteitscontrole, geen bewijs dat de RDW-waarde fout is.';
 }
-function mrbWeightBase(w){
+function mrbBase(w){
   w=Number(w)||0;
   if(w<=600)return 21.46;
   if(w<=700)return 29.12;
   if(w<=800)return 37.00;
   if(w<=900)return 48.30;
-  if(w<=3300)return 64.24+17.27*Math.ceil((w-900)/100);
-  return 474.12+12.00*Math.ceil((w-3300)/100);
+  if(w<=3300)return 64.24+17.27*Math.ceil((w-1000)/100);
+  return 474.12+12.00*Math.ceil((w-3400)/100);
 }
-function historicalBase(w){
+function mrbFuelSurcharge(w,fuel){
+  w=Number(w)||0;
+  const f=String(fuel||'').toUpperCase();
+  if(f.includes('DIESEL')){
+    if(w<=600)return 84.14;
+    if(w<=700)return 99.59;
+    if(w<=800)return 115.03;
+    if(w<=900)return 130.76;
+    return 153.00+16.57*Math.ceil((w-1000)/100);
+  }
+  if(f.includes('LPG')||f.includes('CNG')||f.includes('LNG')){
+    if(w<=800)return 0;
+    return 19.05+19.05*Math.ceil((w-900)/100);
+  }
+  if(f.includes('ELEKTR')||f.includes('ELECTRIC')||f.includes('WATERSTOF')||f.includes('HYDROGEN')) return 0;
+  if(f.includes('BENZINE')||f.includes('PETROL')) return 0;
+  return 98.71+(w<=600?0:w<=700?19.61:w<=800?39.24:58.83+18.22*Math.ceil((w-900)/100));
+}
+function mrbProvincePrincipal(w){
   w=Number(w)||0;
   if(w<=550)return 57.99;
   if(w<=650)return 69.34;
@@ -348,23 +367,88 @@ function historicalBase(w){
   if(w<=1650)return 463.67;
   return 463.67+46.74*Math.ceil((w-1650)/100);
 }
+function mrbEntrepreneurBase(w){
+  w=Number(w)||0;
+  if(w<=600)return 25.99;
+  if(w<=1100)return 31.78+4.07*Math.ceil((w-700)/100);
+  if(w<=2100)return 52.21+4.38*Math.ceil((w-1200)/100);
+  if(w<=2800)return 96.23+4.71*Math.ceil((w-2200)/100);
+  return 127.40+1.07*Math.ceil((w-2900)/100);
+}
+function isBestelauto(x){
+  const type=String(x?.voertuigsoort||'').toUpperCase();
+  const max=Number(x?.toegestane_maximum_massa_voertuig||0);
+  return (type.includes('BEDRIJF')||type.includes('BESTEL')) && max>0 && max<=3500;
+}
+function hasParticleSurcharge(x, isVan){
+  const fuel=String(x.brandstof||'').toUpperCase();
+  if(!fuel.includes('DIESEL')) return false;
+  const first=String(x.datum_eerste_toelating||'').replace(/[^0-9]/g,'');
+  const year=Number(first.slice(0,4));
+  const pm=Number(x.fijnstof_emissie ?? x.fijnstofuitstoot ?? x.fijnstofuitstoot_mg_km ?? NaN);
+  if(isVan){
+    if(year && year>0 && year<2014 && !Number.isFinite(pm)) return true;
+    return Number.isFinite(pm) && pm>5;
+  }
+  return Number.isFinite(pm) && pm>5;
+}
 function calcMRB(){
-  const x=window.carData;if(!x||!x.massa_rijklaar)return;
-  const w=Number(x.massa_rijklaar), prov=Number(q('prov').value);
-  let base=mrbWeightBase(w), fuel=String(x.brandstof||'').toUpperCase();
-  let fuelAdd=0, diesel=false, electric=false;
-  if(fuel.includes('DIESEL')){diesel=true;fuelAdd=w<=600?84.14:w<=700?99.59:w<=800?115.03:w<=900?130.76:153.00+16.57*Math.ceil((w-1000)/100);}
-  else if(fuel.includes('LPG')||fuel.includes('CNG')||fuel.includes('LNG')) fuelAdd=w<=800?0:19.05+19.05*Math.ceil((w-900)/100);
-  else if(fuel.includes('ELEKTR')||fuel.includes('ELECTRIC')||fuel.includes('WATERSTOF')||fuel.includes('HYDROGEN')) electric=true;
-  let national=base+fuelAdd;
-  let provincial=historicalBase(w)*(prov/100);
-  let total=national+provincial;
-  if(electric) total*=0.70;
+  const x=window.carData;
+  if(!x||!x.massa_rijklaar){
+    q('mrbResult').innerHTML='<div class="notice">Onvoldoende RDW-gegevens om MRB te berekenen.</div>';
+    return;
+  }
+
+  const w=Number(x.massa_rijklaar);
+  const prov=Number(q('prov').value);
+  const van=isBestelauto(x);
+  const mode=q('mrbType')?.value||'particulier';
+  const fuel=String(x.brandstof||'');
+  const electric=/ELEKTR|ELECTRIC|WATERSTOF|HYDROGEN/i.test(fuel);
+
+  if(!String(x.voertuigsoort||'').toUpperCase().includes('PERSONEN') && !van){
+    q('mrbResult').innerHTML='<div class="notice">Deze voertuigcategorie valt buiten de personenauto-/bestelauto-berekening van Carfacts.</div>';
+    q('mrbDetails').textContent='Gebruik hiervoor de officiële Belastingdienst-rekenhulp.';
+    return;
+  }
+
+  let national;
+  let label='Personenauto particulier';
+  if(van && mode==='ondernemer'){
+    national=mrbEntrepreneurBase(w);
+    label='Bestelauto ondernemer — tijdelijk 2026-tarief';
+  }else{
+    national=mrbBase(w)+mrbFuelSurcharge(w,fuel);
+    label=van?'Bestelauto particulier':'Personenauto particulier';
+  }
+
+  if(electric && !van) national*=0.70;
+
+  const principal=mrbProvincePrincipal(w);
+  const provincial=principal*(prov/100);
+  let subtotal=national+provincial;
+  let particle=false;
+  if(mode!=='ondernemer' && hasParticleSurcharge(x,van)){
+    const pct=van?0.15:0.19;
+    subtotal*=1+pct;
+    particle=true;
+  }
+
+  const details=[
+    'Tarief: '+label,
+    'Massa rijklaar: '+w.toLocaleString('nl-NL')+' kg',
+    'Rijkstarief incl. brandstoftoeslag: '+euro(national),
+    'Provinciale opcenten: '+prov.toLocaleString('nl-NL',{maximumFractionDigits:1})+'% van hoofdsom '+euro(principal)+' = '+euro(provincial)
+  ];
+  if(electric&&!van) details.push('Elektrisch/waterstof: 70% van het personenautotarief in 2026.');
+  if(particle) details.push('Fijnstoftoeslag toegepast: '+(van?'15%':'19%')+'.');
+
   q('mrbResult').innerHTML=[
-    '<div class="mrb-total"><small>Per kwartaal</small><strong>'+euro(total)+'</strong></div>',
-    '<div class="mrb-total"><small>Per jaar</small><strong>'+euro(total*4)+'</strong></div>',
+    '<div class="mrb-total"><small>Per kwartaal</small><strong>'+euro(subtotal)+'</strong></div>',
+    '<div class="mrb-total"><small>Per jaar</small><strong>'+euro(subtotal*4)+'</strong></div>',
     '<div class="mrb-total"><small>Provinciale opcenten</small><strong>'+prov.toLocaleString('nl-NL',{maximumFractionDigits:1})+'%</strong></div>'
   ].join('');
+  q('mrbDetails').innerHTML=details.map(s=>'• '+s).join('<br>');
 }
 q('p').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
 </script>
