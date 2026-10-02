@@ -40,7 +40,7 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 .mrb-total strong{display:block;font-size:25px;margin-top:4px}
 .mrb-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
 @media(max-width:560px){.mrb-controls,.mrb-result{grid-template-columns:1fr}}
-.anwb-card{background:linear-gradient(135deg,#fff,#f7fbff);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:20px}.anwb-title{font-size:18px;font-weight:800;margin-bottom:5px}.anwb-text{color:var(--muted);font-size:13px;line-height:1.5}.anwb-btn{display:inline-flex;align-items:center;justify-content:center;background:#0066b3;color:#fff;text-decoration:none;padding:12px 17px;border-radius:10px;font-weight:750;white-space:nowrap}.anwb-btn:hover{background:#005491}@media(max-width:560px){.anwb-card{flex-direction:column;align-items:flex-start}.anwb-btn{width:100%}}</style>
+.anwb-card{background:linear-gradient(135deg,#fff,#f7fbff);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:20px}.anwb-title{font-size:18px;font-weight:800;margin-bottom:5px}.anwb-text{color:var(--muted);font-size:13px;line-height:1.5}.anwb-btn{display:inline-flex;align-items:center;justify-content:center;background:#0066b3;color:#fff;text-decoration:none;padding:12px 17px;border-radius:10px;font-weight:750;white-space:nowrap}.anwb-btn:hover{background:#005491}@media(max-width:560px){.anwb-card{flex-direction:column;align-items:flex-start}.anwb-btn{width:100%}}.bpm-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}.bpm-main{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.bpm-number{background:#f5f8fc;border:1px solid var(--line);border-radius:14px;padding:15px}.bpm-number small{color:var(--muted);display:block}.bpm-number strong{display:block;font-size:22px;margin-top:5px}.bpm-status{margin-top:12px;padding:14px;border-radius:12px;font-weight:700}.bpm-status.ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}.bpm-status.warn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}.bpm-status.info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}@media(max-width:560px){.bpm-main{grid-template-columns:1fr}}</style>
 </head>
 <body>
 <div class="container">
@@ -86,6 +86,18 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 <section class="section">
 <h2>Afmetingen & gewichten</h2>
 <div id="d" class="grid"></div>
+</section>
+
+<section class="section">
+<h2>Bruto BPM controle</h2>
+<div class="bpm-card">
+<div class="bpm-main">
+<div class="bpm-number"><small>RDW bruto BPM</small><strong id="bpmRdw">—</strong></div>
+<div class="bpm-number"><small>Indicatieve berekening</small><strong id="bpmCalc">—</strong></div>
+<div class="bpm-number"><small>Verschil</small><strong id="bpmDiff">—</strong></div>
+</div>
+<div id="bpmStatus" class="bpm-status info">Berekening wordt uitgevoerd…</div>
+</div>
 </section>
 
 <section class="section">
@@ -240,12 +252,49 @@ async function go(){
 
     window.carData=x;
     calcMRB();
+    checkBPM(x);
   }catch(e){
     q('s').innerHTML='<span class="err">Zoeken mislukt: '+e.message+'</span>';
   }
 }
 
 function euro(n){return new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n)}
+function calcGrossBPM2026(co2,fuel){
+  co2=Number(co2);if(!Number.isFinite(co2))return null;
+  let base;
+  if(co2<77) base=687+Math.max(0,co2)*2;
+  else if(co2<100) base=841+(co2-77)*82;
+  else if(co2<139) base=2727+(co2-100)*181;
+  else if(co2<155) base=9786+(co2-139)*297;
+  else base=14538+(co2-155)*594;
+  const f=String(fuel||'').toUpperCase();
+  if(f.includes('DIESEL') && co2>69) base+=(co2-69)*114.83;
+  return Math.round(base);
+}
+function checkBPM(x){
+  const rdw=Number(x.bruto_bpm),co2=Number(x.co2_emissie);
+  const first=String(x.datum_eerste_toelating||'');
+  const year=Number(first.slice(0,4));
+  q('bpmRdw').textContent=Number.isFinite(rdw)?euro(rdw):'—';
+  if(!rdw||!co2){
+    q('bpmCalc').textContent='—';q('bpmDiff').textContent='—';
+    q('bpmStatus').className='bpm-status info';
+    q('bpmStatus').textContent='Niet genoeg RDW-gegevens voor een berekening.';
+    return;
+  }
+  const calc=calcGrossBPM2026(co2,x.brandstof);
+  q('bpmCalc').textContent=euro(calc);
+  const diff=rdw-calc,pct=Math.abs(diff)/Math.max(calc,1)*100;
+  q('bpmDiff').textContent=euro(diff);
+  q('bpmStatus').className='bpm-status '+(year===2026?(pct<=2?'ok':'warn'):'info');
+  if(year===2026){
+    q('bpmStatus').textContent=pct<=2
+      ?'De RDW-waarde sluit vrijwel aan bij de bruto BPM die met het 2026-tarief en de geregistreerde CO₂-uitstoot is berekend.'
+      :'Er is een verschil met de berekende bruto BPM. Controleer onder andere de CO₂-meetmethode, voertuigcategorie, uitvoering en eventuele historische bijzonderheden.';
+  }else{
+    q('bpmStatus').textContent='Dit voertuig is ouder dan 2026. De weergegeven vergelijking gebruikt het 2026-tarief en is daarom géén bewijs dat de historische RDW-bruto BPM fout is. Voor een correcte historische controle moet het BPM-tarief van de relevante periode worden toegepast.';
+  }
+}
 function mrbWeightBase(w){
   w=Number(w)||0;
   if(w<=600)return 21.46;
