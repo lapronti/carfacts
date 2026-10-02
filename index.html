@@ -23,13 +23,13 @@ button:hover{background:var(--blue2)}
 .hidden{display:none}
 .hero{margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:0 8px 28px rgba(23,32,51,.05)}
 .hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.eyebrow{text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-size:11px;font-weight:800}.title{font-size:30px;margin:5px 0 0;letter-spacing:-.7px}.plate{position:relative;background:#f7c948;color:#111827;padding:10px 16px 10px 34px;border:2px solid #171717;border-radius:7px;font-size:20px;font-weight:900;letter-spacing:2px;white-space:nowrap;box-shadow:0 2px 0 rgba(0,0,0,.12);min-width:150px;text-align:center}.plate:before{content:"NL";position:absolute;left:0;top:0;bottom:0;width:24px;background:#1456a0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;letter-spacing:0;border-radius:4px 0 0 4px}
-.value-box{margin-top:22px;padding:18px 20px;border-radius:16px;background:#f5f8fc;border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.value-label{color:var(--muted);font-size:13px}.value{font-size:27px;font-weight:850}
+.model-photo{margin-top:18px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:16px;background:#f5f8fc;border:1px solid var(--line);border-radius:18px;overflow:hidden;min-height:230px}.model-photo img{width:100%;height:100%;min-height:230px;object-fit:cover;display:block}.model-photo-info{padding:22px;display:flex;flex-direction:column;justify-content:center}.model-photo-info small{color:var(--muted);font-size:12px}.model-photo-info strong{font-size:21px;margin-top:5px}.model-photo-info span{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.5}.value-box{margin-top:22px;padding:18px 20px;border-radius:16px;background:#f5f8fc;border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.value-label{color:var(--muted);font-size:13px}.value{font-size:27px;font-weight:850}
 .section{margin-top:18px}.section h2{font-size:17px;margin:0 0 10px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .item{background:#fff;border:1px solid var(--line);padding:14px 15px;border-radius:14px;min-height:70px}.item small{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.item b{font-size:15px}
 .import,.notice{background:#fff;border:1px solid var(--line);padding:16px;border-radius:14px}.import.ok{border-color:#b7e4c7;background:#f3fcf6;color:var(--green)}.import.warn{border-color:#f4d19b;background:#fffaf0;color:var(--orange)}
 footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
 @media(max-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:560px){.container{padding:18px 12px 40px}.search-row{flex-direction:column}button{height:52px}.hero-top{flex-direction:column}.plate{align-self:flex-start}.grid{grid-template-columns:1fr 1fr}.title{font-size:24px}.value{font-size:23px}}
+@media(max-width:560px){.container{padding:18px 12px 40px}.search-row{flex-direction:column}button{height:52px}.hero-top{flex-direction:column}.plate{align-self:flex-start}.grid{grid-template-columns:1fr 1fr}.title{font-size:24px}.value{font-size:23px}.model-photo{grid-template-columns:1fr}.model-photo img{min-height:190px}.model-photo-info{padding:16px}}
 
 .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .mrb-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}
@@ -66,6 +66,7 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 <div><div class="value-label">Cataloguswaarde</div><div class="value" id="price">—</div></div>
 <div style="font-size:24px">€</div>
 </div>
+<div id="modelPhoto"></div>
 </section>
 
 <section class="section">
@@ -200,6 +201,7 @@ async function go(){
     q('t').textContent=(v(x.merk)+' '+v(x.handelsbenaming)).trim();
     q('plate').textContent=formatPlate(x.kenteken);
     q('price').textContent=formatEuro(x.catalogusprijs);
+    loadModelPhoto(x.merk,x.handelsbenaming);
 
     q('g').innerHTML=[
       it('Kenteken',formatPlate(x.kenteken)),
@@ -260,6 +262,25 @@ async function go(){
 }
 
 function euro(n){return new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n)}
+async function loadModelPhoto(brand,model){
+  const target=q('modelPhoto');
+  target.innerHTML='';
+  const name=[brand,model].filter(Boolean).join(' ').trim();
+  if(!name)return;
+  try{
+    const searchUrl='https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(name)+'&gsrnamespace=0&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=1000&format=json&origin=*';
+    const res=await fetch(searchUrl);
+    if(!res.ok)throw Error('image search failed');
+    const data=await res.json();
+    const pages=data.query&&data.query.pages?Object.values(data.query.pages):[];
+    const page=pages.find(p=>p.thumbnail&&p.thumbnail.source);
+    if(!page)return;
+    target.innerHTML='<div class="model-photo"><img src="'+page.thumbnail.source+'" alt="'+escapeHtml(name)+'"><div class="model-photo-info"><small>Modelafbeelding</small><strong>'+escapeHtml(name)+'</strong><span>Afbeelding afkomstig uit Wikipedia/Wikimedia. De foto is ter visuele herkenning van het model en is niet gekoppeld aan het specifieke kenteken.</span></div></div>';
+  }catch(e){}
+}
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
 function bpmTable(year,co2){
   co2=Number(co2); if(!Number.isFinite(co2)) return null;
   const tables={
