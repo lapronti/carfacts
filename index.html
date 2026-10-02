@@ -40,7 +40,9 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 .mrb-total strong{display:block;font-size:25px;margin-top:4px}
 .mrb-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
 @media(max-width:560px){.mrb-controls,.mrb-result{grid-template-columns:1fr}}
-.anwb-card{background:linear-gradient(135deg,#fff,#f7fbff);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:20px}.anwb-title{font-size:18px;font-weight:800;margin-bottom:5px}.anwb-text{color:var(--muted);font-size:13px;line-height:1.5}.anwb-btn{display:inline-flex;align-items:center;justify-content:center;background:#0066b3;color:#fff;text-decoration:none;padding:12px 17px;border-radius:10px;font-weight:750;white-space:nowrap}.anwb-btn:hover{background:#005491}@media(max-width:560px){.anwb-card{flex-direction:column;align-items:flex-start}.anwb-btn{width:100%}}.bpm-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}.bpm-main{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.bpm-number{background:#f5f8fc;border:1px solid var(--line);border-radius:14px;padding:15px}.bpm-number small{color:var(--muted);display:block}.bpm-number strong{display:block;font-size:22px;margin-top:5px}.bpm-status{margin-top:12px;padding:14px;border-radius:12px;font-weight:700}.bpm-status.ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}.bpm-status.warn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}.bpm-status.info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}@media(max-width:560px){.bpm-main{grid-template-columns:1fr}}</style>
+.anwb-card{background:linear-gradient(135deg,#fff,#f7fbff);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:20px}.anwb-title{font-size:18px;font-weight:800;margin-bottom:5px}.anwb-text{color:var(--muted);font-size:13px;line-height:1.5}.anwb-btn{display:inline-flex;align-items:center;justify-content:center;background:#0066b3;color:#fff;text-decoration:none;padding:12px 17px;border-radius:10px;font-weight:750;white-space:nowrap}.anwb-btn:hover{background:#005491}@media(max-width:560px){.anwb-card{flex-direction:column;align-items:flex-start}.anwb-btn{width:100%}}.bpm-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}.bpm-main{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.bpm-number{background:#f5f8fc;border:1px solid var(--line);border-radius:14px;padding:15px}.bpm-number small{color:var(--muted);display:block}.bpm-number strong{display:block;font-size:22px;margin-top:5px}.bpm-status{margin-top:12px;padding:14px;border-radius:12px;font-weight:700}.bpm-status.ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}.bpm-status.warn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}.bpm-status.info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}@media(max-width:560px){.bpm-main{grid-template-columns:1fr}}
+.source-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.source-chip{font-size:10px;font-weight:800;padding:5px 8px;border-radius:999px;background:#eef2f7;color:#475467;border:1px solid #e4e7ec}.external-data{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}.external-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}@media(max-width:800px){.external-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.external-grid{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body>
 <div class="container">
@@ -77,6 +79,15 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 <section class="section">
 <h2>Voertuiggegevens</h2>
 <div id="g" class="grid"></div>
+</section>
+
+<section class="section">
+<h2>Extra voertuigdata</h2>
+<div class="external-data">
+<div id="extraData" class="external-grid"></div>
+<div id="vinData" class="external-grid" style="margin-top:10px"></div>
+<div class="source-row"><span class="source-chip">RDW carrosserie</span><span class="source-chip">NHTSA vPIC • VIN</span></div>
+</div>
 </section>
 
 <section class="section">
@@ -189,6 +200,52 @@ function it(a,b){
   return '<div class="item"><small>'+a+'</small><b>'+v(b)+'</b></div>';
 }
 
+async function loadExtraVehicleData(x){
+  const extra=q('extraData'), vinBox=q('vinData');
+  extra.innerHTML='<div class="notice" style="grid-column:1/-1">Extra voertuigdata laden…</div>';
+  vinBox.innerHTML='';
+  const plate=String(x.kenteken||'').replace(/[^A-Z0-9]/gi,'').toUpperCase();
+  try{
+    const u='https://opendata.rdw.nl/resource/jhie-znh9.json?kenteken='+encodeURIComponent(plate)+'&$limit=20';
+    const res=await fetch(u);
+    const rows=res.ok?await res.json():[];
+    if(rows.length){
+      extra.innerHTML=rows.map(r=>[
+        it('Carrosseriecode',r.carrosseriecode),
+        it('Europese carrosserie',r.carrosserie_voertuig_nummer_europese_omschrijving),
+        it('Carrosserie volgnummer',r.carrosserie_volgnummer)
+      ].join('')).join('');
+    }else{
+      extra.innerHTML='<div class="notice" style="grid-column:1/-1">Geen aanvullende carrosseriegegevens gevonden.</div>';
+    }
+  }catch(e){
+    extra.innerHTML='<div class="notice" style="grid-column:1/-1">RDW carrosseriedata tijdelijk niet beschikbaar.</div>';
+  }
+
+  const vin=String(x.voertuig_identificatienummer||x.chassisnummer||'').trim();
+  if(!/^[A-HJ-NPR-Z0-9]{11,17}$/i.test(vin)) return;
+  try{
+    const modelYear=String(x.datum_eerste_toelating||'').slice(0,4);
+    const u='https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/'+encodeURIComponent(vin)+'?format=json'+(modelYear?'&modelyear='+encodeURIComponent(modelYear):'');
+    const res=await fetch(u);
+    if(!res.ok)return;
+    const data=await res.json();
+    const r=data.Results&&data.Results[0];
+    if(!r)return;
+    const fields=[
+      ['NHTSA fabrikant',r.Make],
+      ['NHTSA model',r.Model],
+      ['NHTSA modeljaar',r.ModelYear],
+      ['NHTSA voertuigtype',r.VehicleType],
+      ['NHTSA carrosserie',r.BodyClass],
+      ['NHTSA aandrijving',r.DriveType],
+      ['NHTSA cilinders',r.EngineCylinders],
+      ['NHTSA motorinhoud',r.DisplacementCC]
+    ].filter(a=>a[1]);
+    if(fields.length)vinBox.innerHTML=fields.map(a=>it(a[0],a[1])).join('');
+  }catch(e){}
+}
+
 async function go(){
   const k=q('p').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(!k){q('s').innerHTML='<span class="err">Vul eerst een kenteken in.</span>';return}
@@ -270,6 +327,7 @@ async function go(){
     ].join('');
 
     window.carData=x;
+    loadExtraVehicleData(x);
     calcMRB();
     checkBPM(x);
   }catch(e){
