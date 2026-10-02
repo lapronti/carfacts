@@ -464,7 +464,6 @@ async function go(type='plate'){
     window.carData=x;
     renderAllRdwData(x);
     loadExtraVehicleData(x);
-    calcMRB();
     checkBPM(x);
   }catch(e){
     q('s').innerHTML='<span class="err">Zoeken mislukt: '+e.message+'</span>';
