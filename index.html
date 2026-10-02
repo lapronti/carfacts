@@ -279,7 +279,7 @@ async function loadExtraVehicleData(x){
     const features=Array.isArray(data.features)?data.features:[];
     const featureHtml=features.length
       ? '<div style="grid-column:1/-1"><div class="notice"><b>VIN-uitrusting / kenmerken</b><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">'+features.map(f=>{
-          const name=String(f.name||'').replace(/_/g,' ').toLowerCase().replace(/\\b\\w/g,c=>c.toUpperCase());
+          const name=String(f.name||'').replace(/_/g,' ').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
           return '<span class="source-chip">'+name+'</span>';
         }).join('')+'</div></div></div>'
       : '';
