@@ -50,10 +50,10 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 
 <section class="search-card">
 <h1>Controleer een voertuig</h1>
-<p>Vul een Nederlands kenteken in en bekijk de beschikbare voertuiggegevens.</p>
+<p>Vul een Nederlands kenteken of 17-cijferig VIN in en bekijk de beschikbare voertuiggegevens.</p>
 <div class="search-row">
-<input id="p" placeholder="12-AB-34" maxlength="8" autocomplete="off" placeholder="Kenteken of VIN" autocomplete="off">
-<button onclick="go()">Kenteken zoeken</button>
+<input id="p" placeholder="Kenteken of VIN" autocomplete="off" autocapitalize="characters" spellcheck="false">
+<button onclick="go()">Voertuig zoeken</button>
 </div>
 <div id="s" class="status"></div>
 </section>
