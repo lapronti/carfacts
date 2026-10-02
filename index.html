@@ -15,6 +15,12 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .search-card{background:#111827;color:#fff;border-radius:22px;padding:26px;box-shadow:var(--shadow)}
 .search-card h1{margin:0 0 7px;font-size:25px;letter-spacing:-.5px}.search-card p{margin:0 0 18px;color:#cbd5e1}
 .search-row{display:flex;gap:10px;max-width:720px}
+.search-boxes{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:900px}
+.search-box{background:#1f2937;border:1px solid #374151;border-radius:14px;padding:14px}
+.search-box label{display:block;color:#d1d5db;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin:0 0 8px}
+.search-box .search-row{max-width:none}
+.search-box input{width:100%;min-width:0}
+@media(max-width:700px){.search-boxes{grid-template-columns:1fr}} 
 input{flex:1;padding:15px 17px;font-size:19px;font-weight:750;letter-spacing:2px;text-transform:uppercase;border:0;border-radius:11px;background:#fff;color:var(--ink);outline:none}
 input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,105,224,.12)}
 button{padding:0 22px;border:0;border-radius:11px;background:#3b82f6;color:#fff;font-size:15px;font-weight:800;cursor:pointer}
@@ -50,10 +56,22 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 
 <section class="search-card">
 <h1>Controleer een voertuig</h1>
-<p>Vul een Nederlands kenteken of 17-cijferig VIN in en bekijk de beschikbare voertuiggegevens.</p>
-<div class="search-row">
-<input id="p" placeholder="Kenteken of VIN" autocomplete="off" autocapitalize="characters" spellcheck="false">
-<button onclick="go()">Voertuig zoeken</button>
+<p>Zoek op kenteken of VIN. Gebruik het aparte zoekvak voor het type gegevens dat je hebt.</p>
+<div class="search-boxes">
+  <div class="search-box">
+    <label for="p">Kenteken</label>
+    <div class="search-row">
+      <input id="p" placeholder="Bijv. 12-AB-34" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8">
+      <button onclick="go('plate')">Zoeken</button>
+    </div>
+  </div>
+  <div class="search-box">
+    <label for="vin">VIN / chassisnummer</label>
+    <div class="search-row">
+      <input id="vin" placeholder="17-cijferig VIN" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="17">
+      <button onclick="go('vin')">VIN zoeken</button>
+    </div>
+  </div>
 </div>
 <div id="s" class="status"></div>
 </section>
@@ -248,13 +266,17 @@ async function loadExtraVehicleData(x){
   }catch(e){}
 }
 
-async function go(){
-  const k=q('p').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
-  if(!k){q('s').innerHTML='<span class="err">Vul eerst een kenteken in.</span>';return}
+async function go(type='plate'){
+  const input=type==='vin'?q('vin'):q('p');
+  const k=input.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(!k){q('s').innerHTML='<span class="err">'+(type==='vin'?'Vul eerst een VIN in.':'Vul eerst een kenteken in.')+'</span>';return}
+  if(type==='vin' && !/^[A-HJ-NPR-Z0-9]{17}$/.test(k)){
+    q('s').innerHTML='<span class="err">Een VIN moet precies 17 tekens bevatten.</span>';return;
+  }
   q('s').textContent='Voertuiggegevens ophalen…';
   q('r').classList.add('hidden');
   try{
-    const isVin=/^[A-HJ-NPR-Z0-9]{17}$/.test(k);
+    const isVin=type==='vin';
     if(isVin){
       const z=await fetch('https://carfacts-api.nlaghmiri.workers.dev/api/vin?vin='+encodeURIComponent(k));
       if(!z.ok) throw Error('VIN niet gevonden');
@@ -531,7 +553,8 @@ function calcMRB(){
   ].join('');
   q('mrbDetails').innerHTML='Tarief: '+label+'<br>• Massa rijklaar: '+w.toLocaleString('nl-NL')+' kg<br>• Rijkstarief: '+euro(national)+'<br>• Provinciale opcenten: '+euro(provincial)+'<br>• Brandstof: '+v(x.brandstof);
 }
-q('p').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+q('p').addEventListener('keydown',e=>{if(e.key==='Enter')go('plate')});
+q('vin').addEventListener('keydown',e=>{if(e.key==='Enter')go('vin')});
 </script>
 </body>
 </html>
