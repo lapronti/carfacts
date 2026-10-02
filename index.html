@@ -52,7 +52,7 @@ select{width:100%;padding:13px 14px;border:1px solid #ccd3dd;border-radius:10px;
 <h1>Controleer een voertuig</h1>
 <p>Vul een Nederlands kenteken in en bekijk de beschikbare voertuiggegevens.</p>
 <div class="search-row">
-<input id="p" placeholder="12-AB-34" maxlength="8" autocomplete="off">
+<input id="p" placeholder="12-AB-34" maxlength="8" autocomplete="off" placeholder="Kenteken of VIN" autocomplete="off">
 <button onclick="go()">Kenteken zoeken</button>
 </div>
 <div id="s" class="status"></div>
@@ -251,9 +251,53 @@ async function loadExtraVehicleData(x){
 async function go(){
   const k=q('p').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(!k){q('s').innerHTML='<span class="err">Vul eerst een kenteken in.</span>';return}
-  q('s').textContent='RDW gegevens ophalen…';
+  q('s').textContent='Voertuiggegevens ophalen…';
   q('r').classList.add('hidden');
   try{
+    const isVin=/^[A-HJ-NPR-Z0-9]{17}$/.test(k);
+    if(isVin){
+      const z=await fetch('https://carfacts-api.nlaghmiri.workers.dev/api/vin?vin='+encodeURIComponent(k));
+      if(!z.ok) throw Error('VIN niet gevonden');
+      const d=await z.json();
+      const s=d.specifications||d.data||{};
+      const m=d.manufacturer||{};
+      q('r').classList.remove('hidden');
+      q('s').textContent='';
+      q('t').textContent=[s.make||s.Make,s.model||s.Model].filter(Boolean).join(' ')||'VIN voertuig';
+      q('plate').textContent=k;
+      q('price').textContent='—';
+      q('summary').innerHTML=[
+        it('VIN',d.vin||k),
+        it('Merk',s.make||s.Make),
+        it('Model',s.model||s.Model),
+        it('Modeljaar',s.year||s.ModelYear),
+        it('Brandstof',s.fuel||s.fuel_type||s.FuelType),
+        it('Transmissie',s.transmission),
+        it('Vermogen',s.enginePower?(s.enginePower+' '+(s.enginePowerUnit||'kW')):null),
+        it('Carrosserie',s.bodyStyle||s.body_type),
+        it('Aandrijving',s.drivetrain||s.drive_type)
+      ].join('');
+      q('g').innerHTML=[
+        it('VIN',d.vin||k),
+        it('Fabrikant',m.name||s.make||s.Make),
+        it('Model',s.model||s.Model),
+        it('Productieland',m.country),
+        it('Regio',m.region),
+        it('Eerste registratie',s.registrationDate?formatDate(String(s.registrationDate).slice(0,10)):null),
+        it('Brandstof',s.fuel||s.fuel_type||s.FuelType),
+        it('Transmissie',s.transmission),
+        it('Carrosserie',s.bodyStyle||s.body_type),
+        it('Aandrijving',s.drivetrain||s.drive_type),
+        it('Kleur',s.color)
+      ].join('');
+      q('i').className='import ok';
+      q('i').textContent='VIN-controle uitgevoerd via CarAPI.dev.';
+      q('f').innerHTML=it('VIN',d.vin||k)+it('Fabrikant',m.name||s.make||s.Make);
+      q('m').innerHTML=it('Brandstof',s.fuel||s.fuel_type||s.FuelType)+it('Transmissie',s.transmission)+it('Vermogen',s.enginePower?(s.enginePower+' '+(s.enginePowerUnit||'kW')):null)+it('Carrosserie',s.bodyStyle||s.body_type)+it('Aandrijving',s.drivetrain||s.drive_type);
+      loadExtraVehicleData({voertuig_identificatienummer:k,kenteken:d.plateNumber?.plateNumber||''});
+      loadModelPhoto(s.make||s.Make,s.model||s.Model);
+      return;
+    }
     const z=await fetch(A+'?kenteken='+encodeURIComponent(k));
     if(!z.ok) throw Error('RDW is tijdelijk niet bereikbaar');
     const a=await z.json();
