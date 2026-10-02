@@ -484,6 +484,12 @@ async function go(type='plate'){
 
 
 async function loadServiceHistory(){
+  const vin=String((window.carData&&window.carData.voertuig_identificatienummer)||q('vin').value||'').trim().toUpperCase();
+  if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){
+    q('serviceHistoryStatus').innerHTML='<span class="err">Er is geen geldig VIN beschikbaar voor de onderhoudshistorie.</span>'; return;
+  }
+  const confirmed=window.confirm('Weet je het zeker?\n\nHet ophalen van de digitale onderhoudshistorie via One Auto API is een betaalde aanvraag. Er worden kosten in rekening gebracht zodra de aanvraag wordt uitgevoerd.\n\nWil je de onderhoudshistorie nu ophalen?');
+  if(!confirmed) return;
   const status=q('serviceHistoryStatus'), box=q('serviceHistory');
   const vin=String((window.carData&&window.carData.voertuig_identificatienummer)||q('vin').value||'').trim().toUpperCase();
   if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){
