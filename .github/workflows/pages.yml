@@ -65,6 +65,13 @@ jobs:
             if (errors.length) throw new Error('Browser JavaScript error: '+errors.join(' | '));
             if (await page.locator('#r').evaluate(el => el.classList.contains('hidden'))) throw new Error('Kentekenzoekopdracht heeft geen resultaat opgeleverd.');
             if (await page.locator('#advancedTools').evaluate(el => el.classList.contains('hidden'))) throw new Error('Analyseblokken blijven verborgen.');
+            await page.locator('#askingPrice').fill('3400');
+            await page.locator('#askingPrice').press('Enter');
+            await page.waitForFunction(() => document.getElementById('marketGrid')?.textContent?.includes('€3.400'));
+            await page.locator('#annualKm').fill('144000');
+            await page.locator('#annualKm').press('Enter');
+            await page.waitForFunction(() => document.getElementById('ownershipCost')?.textContent?.includes('Brandstof'));
+            console.log('MARKET INPUT TEST OK: vraagprijs en km reageren op Enter.');
             console.log('SMOKE TEST OK: kenteken zoeken werkt en analyseblokken verschijnen.');
             await browser.close();
           })().catch(async e => { console.error(e); process.exit(1); });
