@@ -708,67 +708,50 @@ async function loadModelPhoto(brand,model,firstRegistration){
   const brandText=String(brand||'').trim();
   const modelText=String(model||'').trim();
   if(!brandText&&!modelText){target.innerHTML='';return;}
-
   const year=Number(String(firstRegistration||'').replace(/[^0-9]/g,'').slice(0,4));
   const isCaddy=/\bcaddy\b/i.test(modelText)||/\bcaddy\b/i.test(brandText+' '+modelText);
+  const isPolo=/\bpolo\b/i.test(modelText);
   let generation='';
-  if(isCaddy&&year>=2015&&year<=2020) generation='IV';
-  if(isCaddy&&year>=2021) generation='V';
-
-  const searchName=isCaddy
-    ? 'Volkswagen Caddy '+generation
-    : [brandText,modelText].filter(Boolean).join(' ').trim();
-
-  target.innerHTML='<div class="model-photo"><div style="min-height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);background:#eef2f7">Modelafbeelding laden…</div><div class="model-photo-info"><small>Modelafbeelding</small><strong>'+escapeHtml(searchName)+'</strong><span>Afbeelding van de juiste modelgeneratie, niet noodzakelijk van de specifieke auto.</span></div></div>';
-
-  const queries=[
-    searchName+' van',
-    searchName+' cargo',
-    searchName
-  ];
-
+  if(isCaddy&&year>=2015&&year<=2020)generation='IV';
+  if(isCaddy&&year>=2021)generation='V';
+  if(isPolo&&year>=2021)generation='VI facelift';
+  else if(isPolo&&year>=2017)generation='VI';
+  else if(isPolo&&year>=2009)generation='V';
+  const searchName=(isCaddy?'Volkswagen Caddy '+generation:isPolo?'Volkswagen Polo '+generation:[brandText,modelText].filter(Boolean).join(' ').trim());
+  target.innerHTML='<div class="model-photo"><div style="min-height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);background:#eef2f7">Modelafbeelding laden…</div><div class="model-photo-info"><small>Modelafbeelding</small><strong>'+escapeHtml(searchName)+'</strong><span>Afbeelding geselecteerd op modelgeneratie en bouwjaar.</span></div></div>';
+  const queries=isPolo?[searchName+' Volkswagen',searchName, 'Volkswagen Polo '+generation]:[searchName+' van',searchName+' cargo',searchName];
   for(const query of queries){
     const attempts=[
-      'https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(query)+'&gsrnamespace=6&gsrlimit=20&prop=imageinfo&iiprop=url&iiurlwidth=1400&format=json&origin=*',
-      'https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(query)+'&gsrnamespace=0&gsrlimit=10&prop=pageimages&piprop=thumbnail&pithumbsize=1400&format=json&origin=*'
+      'https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(query)+'&gsrnamespace=6&gsrlimit=30&prop=imageinfo&iiprop=url&iiurlwidth=1400&format=json&origin=*',
+      'https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(query)+'&gsrnamespace=0&gsrlimit=15&prop=pageimages&piprop=thumbnail&pithumbsize=1400&format=json&origin=*'
     ];
-
     for(const url of attempts){
       try{
-        const res=await fetch(url);
-        if(!res.ok)continue;
+        const res=await fetch(url);if(!res.ok)continue;
         const data=await res.json();
         const pages=data.query&&data.query.pages?Object.values(data.query.pages):[];
         const relevant=pages.filter(p=>{
           const title=String(p.title||'').toLowerCase();
-          if(isCaddy){
-            return /caddy/.test(title) && (!generation || title.includes(generation.toLowerCase()) || title.includes('volkswagen caddy'));
+          if(isCaddy)return /caddy/.test(title)&&(!generation||title.includes(generation.toLowerCase())||title.includes('volkswagen caddy'));
+          if(isPolo){
+            if(!/polo/.test(title)||!/volkswagen/.test(title))return false;
+            if(generation==='VI facelift')return /(2021|2022|2023|2024|2025|2026|facelift|mk6|vi)/.test(title);
+            if(generation==='VI')return /(2017|2018|2019|2020|mk6|vi)/.test(title)&&!/199/.test(title);
+            return /(2009|2010|2011|2012|2013|2014|2015|2016|mk5|v)/.test(title);
           }
-          const wantedBrand=brandText.toLowerCase();
-          const wantedModel=modelText.toLowerCase();
-          return title.includes(wantedModel) && (!wantedBrand || title.includes(wantedBrand));
+          const wantedBrand=brandText.toLowerCase(),wantedModel=modelText.toLowerCase();
+          return title.includes(wantedModel)&&(!wantedBrand||title.includes(wantedBrand));
         });
-
-        let src='';
         for(const p of relevant){
-          if(p.imageinfo&&p.imageinfo[0]){
-            src=p.imageinfo[0].thumburl||p.imageinfo[0].url||'';
-            if(src)break;
+          const src=(p.imageinfo&&p.imageinfo[0]&&(p.imageinfo[0].thumburl||p.imageinfo[0].url))||(p.thumbnail&&p.thumbnail.source)||'';
+          if(src){
+            target.innerHTML='<div class="model-photo"><img src="'+src+'" alt="'+escapeHtml(searchName)+'" onerror="this.parentElement.outerHTML=\'<div class=&quot;notice&quot;>Modelafbeelding kon niet worden geladen.</div>\'"><div class="model-photo-info"><small>Modelafbeelding</small><strong>'+escapeHtml(searchName)+'</strong><span>Afbeelding geselecteerd op modelgeneratie en bouwjaar.</span></div></div>';
+            return;
           }
-          if(p.thumbnail&&p.thumbnail.source){
-            src=p.thumbnail.source;
-            if(src)break;
-          }
-        }
-
-        if(src){
-          target.innerHTML='<div class="model-photo"><img src="'+src+'" alt="'+escapeHtml(searchName)+'" onerror="this.parentElement.outerHTML=\'<div class=&quot;notice&quot;>Modelafbeelding kon niet worden geladen.</div>\'"><div class="model-photo-info"><small>Modelafbeelding</small><strong>'+escapeHtml(searchName)+'</strong><span>Dit is een afbeelding van de juiste modelgeneratie, niet noodzakelijk van de specifieke auto.</span></div></div>';
-          return;
         }
       }catch(e){}
     }
   }
-
   target.innerHTML='<div class="notice">Geen betrouwbare afbeelding van deze modelgeneratie gevonden.</div>';
 }
 function escapeHtml(s){
