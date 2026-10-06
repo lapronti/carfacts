@@ -28,3 +28,33 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Test live Carfacts search
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({headless:true});
+            const page = await browser.newPage();
+            const errors = [];
+            page.on('pageerror', e => errors.push(String(e)));
+            await page.goto('https://lapronti.github.io/carfacts/?smoke=1', {waitUntil:'networkidle', timeout:60000});
+            await page.locator('#p').fill('T971VV');
+            await page.locator('button[onclick="go(\'plate\')"]').click();
+            await page.locator('#t').waitFor({state:'visible', timeout:30000});
+            await page.waitForFunction(() => document.getElementById('t')?.textContent?.includes('VOLKSWAGEN'));
+            await page.waitForFunction(() => !document.getElementById('advancedTools')?.classList.contains('hidden'));
+            if (errors.length) throw new Error('Browser JavaScript error: '+errors.join(' | '));
+            console.log('SMOKE TEST OK: kenteken zoeken werkt en analyseblokken verschijnen.');
+            await browser.close();
+          })().catch(async e => { console.error(e); process.exit(1); });
+          NODE
