@@ -171,6 +171,11 @@ footer{opacity:.8}
   .search-card{padding:20px}
   .title{font-size:25px}
 }
+
+/* Carfacts Intelligence */
+.intel-card{background:linear-gradient(135deg,#08111f,#102d55 58%,#0b5b73);color:#fff;border-radius:20px;padding:20px;box-shadow:0 18px 40px rgba(10,30,55,.18);overflow:hidden}
+.intel-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.14)}
+.intel-kicker{font-size:10px;font-weight:900;letter-spacing:1.2px;color:#8bdcf0}.intel-score{font-size:58px;line-height:1;font-weight:950;letter-spacing:-3px;margin-top:4px}.intel-score-label{font-size:13px;color:#cbd5e1;margin-top:5px}.intel-verdict{font-size:19px;font-weight:900;padding:13px 16px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);text-align:center;min-width:190px}.intel-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:16px}.intel-metric{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);border-radius:13px;padding:12px}.intel-metric small{display:block;color:#a9bfd7;font-size:10px;text-transform:uppercase;font-weight:800}.intel-metric strong{display:block;font-size:20px;margin-top:4px}.intel-cost{margin-top:14px;background:rgba(255,255,255,.96);color:#101828;border-radius:14px;padding:14px 16px}.intel-cost div{display:flex;align-items:center;justify-content:space-between;gap:12px}.intel-cost strong{font-size:22px;color:#1746a2}.intel-cost small{display:block;color:#667085;margin-top:4px}.intel-advice{margin-top:12px;color:#dbeafe;font-size:13px;line-height:1.55}.intel-advice b{color:#fff}@media(max-width:800px){.intel-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.intel-hero{align-items:flex-start;flex-direction:column}.intel-verdict{width:100%}.intel-grid{grid-template-columns:1fr 1fr}.intel-score{font-size:50px}}
 </style>
 </head>
 <body>
@@ -215,6 +220,22 @@ footer{opacity:.8}
 <section class="section">
 <h2>In één oogopslag</h2>
 <div id="summary" class="grid"></div>
+</section>
+
+<section class="section" id="carfactsIntelligence">
+<h2>Carfacts Intelligence</h2>
+<div class="intel-card">
+  <div class="intel-hero">
+    <div><div class="intel-kicker">CARFACTS AUTOSCORE</div><div id="autoScore" class="intel-score">—</div><div id="autoScoreLabel" class="intel-score-label">Voertuig analyseren…</div></div>
+    <div id="buyAdvice" class="intel-verdict">—</div>
+  </div>
+  <div id="intelGrid" class="intel-grid"></div>
+  <div class="intel-cost">
+    <div><span>Verwachte kosten komende 12 maanden</span><strong id="futureCost">—</strong></div>
+    <small id="futureCostText">Schatting op basis van leeftijd, kilometerstand en bekende voertuigdata.</small>
+  </div>
+  <div id="intelAdvice" class="intel-advice"></div>
+</div>
 </section>
 
 <section class="section">
@@ -620,6 +641,7 @@ async function go(type='plate'){
     ].join('');
 
     window.carData=x;
+    calculateCarfactsIntelligence(x);
     renderAllRdwData(x);
     loadExtraVehicleData(x);
     checkBPM(x);
@@ -777,7 +799,52 @@ function calcHistoricalBPM(year,co2,fuel){
   if(surcharge===null)return null;
   return Math.round(base+surcharge);
 }
-function checkBPM(x){
+
+function calculateCarfactsIntelligence(x){
+  const year=Number(String(x.datum_eerste_toelating||'').replace(/[^0-9]/g,'').slice(0,4))||0;
+  const now=new Date().getFullYear();
+  const age=Math.max(0,now-year);
+  const mass=Number(x.massa_rijklaar)||0;
+  const co2=Number(x.co2_emissie)||0;
+  const price=Number(x.catalogusprijs)||0;
+  const fuel=String(x.brandstof||'').toLowerCase();
+  const apk=String(x.vervaldatum_apk||'');
+  let score=78;
+  if(age>=12)score-=10; else if(age>=8)score-=6; else if(age>=5)score-=2;
+  if(/diesel/.test(fuel)&&age>=10)score-=5;
+  if(/geen|nee|niet/.test(String(x.tellerstandoordeel||'').toLowerCase()))score-=12;
+  if(String(x.tellerstandoordeel||'').toLowerCase().includes('logisch'))score+=5;
+  if(co2>220)score-=5; else if(co2>160)score-=2;
+  if(price>0)score+=3;
+  if(!x.wam_verzekerd)score-=3;
+  score=Math.max(35,Math.min(97,score));
+  const reliability=Math.max(40,Math.min(98,score+(age<=5?8:age>=10?-5:2)));
+  const maintenance=Math.max(35,Math.min(98,100-age*4-(fuel.includes('diesel')?3:0)));
+  const market=Math.max(35,Math.min(98,82-(age*2)+(price>0?4:0)));
+  const risk=Math.max(5,Math.min(95,100-score));
+  const kmText=x.tellerstandoordeel||'Onbekend';
+  let verdict=score>=85?'STERKE KEUZE':score>=70?'INTERESSANT':score>=55?'OPPASSEN':'HOOG RISICO';
+  let monthly=age>=12?105:age>=8?85:age>=5?70:55;
+  if(fuel.includes('diesel'))monthly+=20;
+  if(mass>1800)monthly+=15;
+  const low=Math.round(monthly*12*.8/10)*10, high=Math.round(monthly*12*1.35/10)*10;
+  q('autoScore').textContent=score+'/100';
+  q('autoScoreLabel').textContent=score>=85?'Bovengemiddeld voertuigprofiel':score>=70?'Gezond profiel met aandachtspunten':score>=55?'Meerdere aandachtspunten':'Verhoogd aankooprisico';
+  q('buyAdvice').textContent=verdict;
+  q('intelGrid').innerHTML=[
+    ['Betrouwbaarheid',reliability],['Onderhoud',maintenance],['Marktprofiel',market],['Risico',risk]
+  ].map(([n,val])=>'<div class="intel-metric"><small>'+n+'</small><strong>'+val+'/100</strong></div>').join('');
+  q('futureCost').textContent='€'+low.toLocaleString('nl-NL')+' – €'+high.toLocaleString('nl-NL');
+  q('futureCostText').textContent='Indicatieve reservering voor onderhoud, slijtage en leeftijdsgerelateerde kosten; geen offerte of garantie.';
+  const notes=[];
+  if(age>=8)notes.push('<b>Leeftijd:</b> '+age+' jaar — reserveer extra voor slijtage en ouderdomsreparaties.');
+  if(fuel.includes('diesel')&&age>=8)notes.push('<b>Diesel:</b> bij hogere leeftijd kunnen emissie- en uitlaatsystemen duurder worden.');
+  if(String(kmText).toLowerCase().includes('onlogisch'))notes.push('<b>Kilometerstand:</b> RDW geeft een aandachtssignaal.');
+  if(apk){const d=new Date(apk.slice(0,4)+'-'+apk.slice(4,6)+'-'+apk.slice(6,8));if(d<new Date())notes.push('<b>APK:</b> controleer direct de geldigheid.');}
+  if(!notes.length)notes.push('<b>Carfacts advies:</b> op basis van de beschikbare RDW-data zijn geen zware rode vlaggen zichtbaar. Controleer altijd onderhoudshistorie en fysieke staat.');
+  q('intelAdvice').innerHTML=notes.join('<br>');
+}
+\nfunction checkBPM(x){
   const rdw=Number(x.bruto_bpm),co2=Number(x.co2_emissie);
   const first=String(x.datum_eerste_toelating||'').replace(/[^0-9]/g,'');
   const year=Number(first.slice(0,4));
