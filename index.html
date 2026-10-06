@@ -844,7 +844,7 @@ function calculateCarfactsIntelligence(x){
   if(!notes.length)notes.push('<b>Carfacts advies:</b> op basis van de beschikbare RDW-data zijn geen zware rode vlaggen zichtbaar. Controleer altijd onderhoudshistorie en fysieke staat.');
   q('intelAdvice').innerHTML=notes.join('<br>');
 }
-\nfunction checkBPM(x){
+function checkBPM(x){
   const rdw=Number(x.bruto_bpm),co2=Number(x.co2_emissie);
   const first=String(x.datum_eerste_toelating||'').replace(/[^0-9]/g,'');
   const year=Number(first.slice(0,4));
