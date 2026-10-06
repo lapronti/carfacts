@@ -317,9 +317,13 @@ footer{opacity:.8}
 <h2>Kilometerstand & APK</h2>
 <div id="f" class="grid"></div>
 </section>
+
+<div id="advancedTools" class="hidden">
+<section class="section" id="carfactsMarket"><h2>Carfacts Markt & Koopadvies</h2><div class="market-panel"><div class="sim-controls"><div><label>Vraagprijs van de auto</label><input id="askingPrice" type="number" min="0" placeholder="Bijv. 14950"></div><div><label>Jaarlijks aantal kilometers</label><input id="annualKm" type="number" min="0" placeholder="Bijv. 20000"></div></div><div id="marketGrid" class="market-grid"></div><div id="marketRisk"></div></div></section><section class="section"><h2>Carfacts Vehicle Lifecycle</h2><div class="market-panel"><div class="forecast" id="valueForecast"></div><div id="ownershipCost" class="market-grid" style="margin-top:10px"></div></div></section><section class="section"><h2>Carfacts Reparatie-risicoscanner</h2><div class="market-panel"><div id="repairRisks" class="risk-list"></div></div></section><section class="section"><h2>Carfacts Fraude Radar</h2><div class="market-panel"><div id="fraudRadar" class="market-grid"></div><div id="fraudDetails" class="risk-list"></div></div></section><section class="section"><h2>Carfacts Verkoopadvies</h2><div class="market-panel"><div id="sellAdvice" class="market-grid"></div><div id="sellText" class="garage-answer" style="margin-top:12px"></div></div></section><section class="section"><h2>Carfacts AI Garage</h2><div class="market-panel"><div class="sim-controls"><div><label>Wat merk je aan de auto?</label><input id="garageQuestion" placeholder="Bijv. trilt bij 80 km/u"></div><div style="display:flex;align-items:end"><button onclick="carfactsGarage()">Analyseer klacht</button></div></div><div id="garageAnswer"></div></div></section><section class="section"><h2>Carfacts Auto Vergelijken</h2><div class="market-panel"><p style="color:#667085;font-size:13px;margin-top:0">Voer een tweede auto in om de huidige auto met een andere RDW-auto te vergelijken.</p><div class="sim-controls"><div><label>Tweede kenteken</label><input id="comparePlate" maxlength="8" placeholder="Bijv. AB-12-CD"></div><div style="display:flex;align-items:end"><button onclick="compareCarfacts()">Vergelijk</button></div></div><div id="compareResult"></div></div></section><footer>Bron: RDW Open Data · Carfacts</footer>
+</div>
 </div>
 
-<section class="section" id="carfactsMarket"><h2>Carfacts Markt & Koopadvies</h2><div class="market-panel"><div class="sim-controls"><div><label>Vraagprijs van de auto</label><input id="askingPrice" type="number" min="0" placeholder="Bijv. 14950"></div><div><label>Jaarlijks aantal kilometers</label><input id="annualKm" type="number" min="0" placeholder="Bijv. 20000"></div></div><div id="marketGrid" class="market-grid"></div><div id="marketRisk"></div></div></section><section class="section"><h2>Carfacts Vehicle Lifecycle</h2><div class="market-panel"><div class="forecast" id="valueForecast"></div><div id="ownershipCost" class="market-grid" style="margin-top:10px"></div></div></section><section class="section"><h2>Carfacts Reparatie-risicoscanner</h2><div class="market-panel"><div id="repairRisks" class="risk-list"></div></div></section><section class="section"><h2>Carfacts Fraude Radar</h2><div class="market-panel"><div id="fraudRadar" class="market-grid"></div><div id="fraudDetails" class="risk-list"></div></div></section><section class="section"><h2>Carfacts Verkoopadvies</h2><div class="market-panel"><div id="sellAdvice" class="market-grid"></div><div id="sellText" class="garage-answer" style="margin-top:12px"></div></div></section><section class="section"><h2>Carfacts AI Garage</h2><div class="market-panel"><div class="sim-controls"><div><label>Wat merk je aan de auto?</label><input id="garageQuestion" placeholder="Bijv. trilt bij 80 km/u"></div><div style="display:flex;align-items:end"><button onclick="carfactsGarage()">Analyseer klacht</button></div></div><div id="garageAnswer"></div></div></section><section class="section"><h2>Carfacts Auto Vergelijken</h2><div class="market-panel"><p style="color:#667085;font-size:13px;margin-top:0">Voer een tweede auto in om de huidige auto met een andere RDW-auto te vergelijken.</p><div class="sim-controls"><div><label>Tweede kenteken</label><input id="comparePlate" maxlength="8" placeholder="Bijv. AB-12-CD"></div><div style="display:flex;align-items:end"><button onclick="compareCarfacts()">Vergelijk</button></div></div><div id="compareResult"></div></div></section><footer>Bron: RDW Open Data · Carfacts</footer>
+
 </div>
 
 <script>
@@ -519,6 +523,7 @@ async function go(type='plate'){
   }
   q('s').textContent='Voertuiggegevens ophalen…';
   q('r').classList.add('hidden');
+  if(q('advancedTools')) q('advancedTools').classList.add('hidden');
   try{
     const isVin=type==='vin';
     if(isVin){
@@ -642,6 +647,8 @@ async function go(type='plate'){
 
     window.carData=x;
     calculateCarfactsIntelligence(x);
+    carfactsLifecycle(x);
+    q('advancedTools').classList.remove('hidden');
     renderAllRdwData(x);
     loadExtraVehicleData(x);
     checkBPM(x);
