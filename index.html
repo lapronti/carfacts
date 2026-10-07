@@ -922,13 +922,13 @@ q('lastTimingKm').addEventListener('input',()=>{if(window.carData)carfactsDistri
   const last=Number(q('lastTimingKm').value)||0;
   const text=(brand+' '+model+' '+fuel).toLowerCase();
   let type='Onbekend', intervalKm=null, intervalYears=null, note='Het exacte distributiesysteem en interval zijn motorvariant-afhankelijk.', confidence='Controle nodig';
-  if(/ford/.test(brand)&&/focus/.test(model)&&/1\.0|1000/.test(text)&&year>=2012&&year<=2020){
+  if(/ford/.test(brand)&&/focus/.test(model)&&((/1\.0|1000/.test(text))||cc>=950&&cc<=1100)&&year>=2012&&year<=2020){
     type='Natte distributieriem'; intervalKm=240000; intervalYears=10; confidence='Sterke modelmatch';
     note='Bij de Focus 1.0 EcoBoost van deze generatie wordt een natte distributieriem gebruikt. Het genoemde interval is een technische referentie; de exacte fabrieksopgave van de motorvariant blijft leidend.';
-  }else if(/volkswagen|vw/.test(brand)&&/caddy/.test(model)&&/2\.0/.test(text)&&/diesel/.test(fuel)&&year>=2015&&year<=2020){
+  }else if(/volkswagen|vw/.test(brand)&&/caddy/.test(model)&&/diesel/.test(fuel)&&cc>=1900&&cc<=2000&&year>=2015&&year<=2020){
     type='Distributieriem'; intervalKm=210000; intervalYears=null; confidence='Sterke modelmatch';
-    note='Voor de Caddy IV 2.0 TDI wordt 210.000 km als vervangingsinterval genoemd. Controleer de exacte motorcode en onderhoudshistorie.';
-  }else if(/peugeot|citroen|opel|ds/.test(brand)&&/1\.2/.test(text)&&/puretech/.test(text)){
+    note='Voor de Caddy IV 2.0 TDI wordt 210.000 km als referentie-vervangingsinterval gebruikt. Controleer de exacte motorcode en onderhoudshistorie.';
+  }else if(/peugeot|citroen|opel|ds/.test(brand)&&(/1\.2/.test(text)||cc>=1150&&cc<=1250)&&/puretech/.test(text)){
     type='Natte distributieriem'; intervalKm=100000; intervalYears=6; confidence='Motorfamilie-match';
     note='Bij 1.2 PureTech-motoren is de natte distributieriem een belangrijk aandachtspunt. Exact interval kan per motor/jaar verschillen.';
   }else if(/ketting/.test(text)){
