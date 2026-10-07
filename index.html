@@ -997,52 +997,77 @@ q('lastTimingKm').addEventListener('input',()=>{if(window.carData)carfactsDistri
   const fuel=String(x.brandstof||'').toLowerCase();
   const year=carfactsYear(x);
   const cc=Number(x.cilinderinhoud)||0;
-  const power=Number(x.vermogen)||0;
   const current=Number(q('currentKm').value)||0;
   const last=Number(q('lastTimingKm').value)||0;
   const text=(brand+' '+model+' '+fuel).toLowerCase();
-  let type='Onbekend', intervalKm=null, intervalYears=null, note='Het exacte distributiesysteem en interval zijn motorvariant-afhankelijk.', confidence='Controle nodig';
-  if(/ford/.test(brand)&&/focus/.test(model)&&((/1\.0|1000/.test(text))||cc>=950&&cc<=1100)&&year>=2012&&year<=2020){
+
+  let type='Onbekend', intervalKm=null, intervalYears=null;
+  let note='Het exacte distributiesysteem is niet betrouwbaar genoeg uit de beschikbare voertuigdata af te leiden.';
+  let confidence='Controle nodig';
+
+  if(/ford/.test(brand)&&/focus/.test(model)&&((/1\\.0|1000/.test(text))||(cc>=950&&cc<=1100))&&year>=2012&&year<=2020){
     type='Natte distributieriem'; intervalKm=240000; intervalYears=10; confidence='Sterke modelmatch';
-    note='Bij de Focus 1.0 EcoBoost van deze generatie wordt een natte distributieriem gebruikt. Het genoemde interval is een technische referentie; de exacte fabrieksopgave van de motorvariant blijft leidend.';
-  }else if(/volkswagen|vw/.test(brand)&&/caddy/.test(model)&&/diesel/.test(fuel)&&cc>=1900&&cc<=2000&&year>=2015&&year<=2020){
-    type='Distributieriem'; intervalKm=210000; intervalYears=null; confidence='Sterke modelmatch';
-    note='Voor de Caddy IV 2.0 TDI wordt 210.000 km als referentie-vervangingsinterval gebruikt. Controleer de exacte motorcode en onderhoudshistorie.';
-  }else if(/peugeot|citroen|opel|ds/.test(brand)&&(/1\.2/.test(text)||cc>=1150&&cc<=1250)&&/puretech/.test(text)){
+    note='Focus 1.0 EcoBoost van deze generatie: natte distributieriem. Het interval is een technische referentie; de exacte motorvariant/fabrieksopgave blijft leidend.';
+  }else if(/volkswagen|vw/.test(brand)&&/caddy/.test(model)&&((/diesel/.test(fuel))||(cc>=1900&&cc<=2000))&&cc>=1900&&cc<=2000&&year>=2015&&year<=2020){
+    type='Distributieriem'; intervalKm=210000; confidence='Sterke modelmatch';
+    note='Caddy IV 2.0 TDI: 210.000 km wordt hier als referentie gebruikt. Controleer motorcode en onderhoudshistorie.';
+  }else if(/peugeot|citroen|opel|ds/.test(brand)&&(/1\\.2/.test(text)||cc>=1150&&cc<=1250)&&/puretech/.test(text)){
     type='Natte distributieriem'; intervalKm=100000; intervalYears=6; confidence='Motorfamilie-match';
-    note='Bij 1.2 PureTech-motoren is de natte distributieriem een belangrijk aandachtspunt. Exact interval kan per motor/jaar verschillen.';
+    note='1.2 PureTech: natte distributieriem is een belangrijk aandachtspunt. Exact interval verschilt per motor/jaar.';
   }else if(/ketting/.test(text)){
     type='Distributieketting'; confidence='Indicatie';
-    note='Geen preventief vast interval vastgesteld. Let vooral op ratelen bij koude start en controleer de onderhoudshistorie.';
+    note='Geen vast preventief vervangingsinterval vastgesteld. Let vooral op ratelen bij koude start en controleer de onderhoudshistorie.';
   }
-  let status='Vul huidige km-stand in voor advies', statusClass='';
-  if(current && type!=='Onbekend'){
-    if(type.includes('Ketting')){
-      status='Geen vast vervangingsinterval — ketting laten controleren bij ratelen, foutcodes of twijfel.';
+
+  let status=current?'Kilometerstand verwerkt — controle wordt bijgewerkt.':'Vul de huidige km-stand in voor een concreet advies.';
+  let statusClass=current?'distribution-ok':'distribution-warn';
+  let remaining=null;
+
+  if(current && type==='Distributieketting'){
+    status='Geen vast vervangingsinterval — laat de ketting controleren bij ratelen, foutcodes of twijfel.';
+    statusClass='distribution-warn';
+  }else if(current && intervalKm){
+    const driven=last>0?Math.max(0,current-last):current;
+    remaining=last>0?intervalKm-driven:intervalKm-current;
+    if(remaining<=0){
+      status='INTERVAL BEREIKT / OVERSCHREDEN — bewijs van vervanging controleren.';
+      statusClass='distribution-bad';
+    }else if(remaining<=15000){
+      status='BIJNA AAN DE BEURT — nog circa '+Math.round(remaining).toLocaleString('nl-NL')+' km.';
       statusClass='distribution-warn';
-    }else if(intervalKm){
-      const basis=last>0?last:0;
-      const driven=last>0?Math.max(0,current-last):current;
-      const remaining=last>0?intervalKm-driven:intervalKm-current;
-      if(remaining<=0) {status='INTERVAL BEREIKT / OVERSCHREDEN — controleer bewijs van vervanging en plan vervanging indien onbekend.';statusClass='distribution-bad';}
-      else if(remaining<=15000){status='BIJNA AAN DE BEURT — minder dan 15.000 km resterend.';statusClass='distribution-warn';}
-      else status='Nog circa '+Math.round(remaining/1000).toLocaleString('nl-NL')+' duizend km tot het referentie-interval.'; 
-      if(intervalYears){
-        const age=new Date().getFullYear()-year;
-        if(age>=intervalYears && (!last || current>=0)){status+=' Leeftijdsgrens van '+intervalYears+' jaar is ook bereikt; vervanging/bewijs controleren.';statusClass='distribution-bad';}
+    }else{
+      status='Nog circa '+Math.round(remaining/1000).toLocaleString('nl-NL')+' duizend km tot het referentie-interval.';
+      statusClass='distribution-ok';
+    }
+    if(intervalYears){
+      const age=new Date().getFullYear()-year;
+      if(age>=intervalYears){
+        status+=' Leeftijdsgrens van '+intervalYears+' jaar is ook bereikt; vervanging/bewijs controleren.';
+        statusClass='distribution-bad';
       }
     }
+  }else if(current && type==='Onbekend'){
+    status='Kilometerstand '+current.toLocaleString('nl-NL')+' km geregistreerd, maar Carfacts kan het distributie-interval van deze motorvariant nog niet betrouwbaar bepalen.';
+    statusClass='distribution-warn';
   }
+
   const currentText=current?current.toLocaleString('nl-NL')+' km':'Niet ingevuld';
-  const intervalText=intervalKm?(intervalKm.toLocaleString('nl-NL')+' km'+(intervalYears?' / '+intervalYears+' jaar':'')):type==='Distributieketting'?'Geen vast preventief interval':'Onbekend';
+  const intervalText=intervalKm?(intervalKm.toLocaleString('nl-NL')+' km'+(intervalYears?' / '+intervalYears+' jaar':'')):type==='Distributieketting'?'Geen vast preventief interval':'Nog niet betrouwbaar vastgesteld';
   const lastText=last?last.toLocaleString('nl-NL')+' km':'Niet bekend';
+  const progress=intervalKm&&current?Math.max(0,Math.min(100,(last>0?(current-last):current)/intervalKm*100)):0;
+
   q('distributionGrid').innerHTML=[
     ['Systeem',type,type==='Onbekend'?'distribution-warn':''],
     ['Referentie-interval',intervalText,''],
     ['Huidige km-stand',currentText,''],
     ['Laatste wissel',lastText,'']
   ].map(a=>'<div class="distribution-box"><small>'+a[0]+'</small><strong class="'+a[2]+'">'+a[1]+'</strong></div>').join('');
-  q('distributionAdvice').innerHTML='<b>Carfacts advies:</b> '+status+'<br><span style="color:#667085;font-size:12px">'+note+' Betrouwbaar bewijs van vervanging is een factuur, onderhoudsboek of registratiesticker. Ontbreekt bewijs, behandel de distributie als een openstaand aankooprisico.</span>';
+
+  q('distributionAdvice').innerHTML=
+    '<div class="distribution-status '+statusClass+'"><strong>'+status+'</strong></div>'+
+    (intervalKm&&current?
+      '<div style="margin:12px 0 8px"><div style="display:flex;justify-content:space-between;font-size:12px;color:#667085"><span>Verbruik van referentie-interval</span><b>'+Math.round(progress)+'%</b></div><div style="height:8px;background:#eef2f6;border-radius:999px;overflow:hidden"><div style="height:100%;width:'+Math.round(progress)+'%;background:currentColor;border-radius:999px"></div></div></div>':'')+
+    '<div style="color:#667085;font-size:12px;line-height:1.55">'+note+' Betrouwbaar bewijs van vervanging is een factuur, onderhoudsboek of registratiesticker. Ontbreekt bewijs, behandel de distributie als een openstaand aankooprisico.</div>';
 }
 function applyReportSelection(){
   document.querySelectorAll('[data-report-section]').forEach(section=>{
