@@ -232,7 +232,8 @@ footer{opacity:.8}
 <div id="s" class="status"></div>
 </section>
 
-<div id="printHeader" class="print-only"><h1>Carfacts aankooprapport</h1><p id="printHeaderText">Voertuiganalyse</p></div>\n<div id="r" class="hidden">
+<div id="printHeader" class="print-only"><h1>Carfacts aankooprapport</h1><p id="printHeaderText">Voertuiganalyse</p></div>
+<div id="r" class="hidden">
 <section class="hero">
 <div class="hero-top">
 <div><div class="eyebrow">Voertuig</div><div id="t" class="title"></div></div>
@@ -693,7 +694,11 @@ async function loadServiceHistory(){
   if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){
     q('serviceHistoryStatus').innerHTML='<span class="err">Er is geen geldig VIN beschikbaar voor de onderhoudshistorie.</span>'; return;
   }
-  const confirmed=window.confirm('Weet je het zeker?\n\nHet ophalen van de digitale onderhoudshistorie via One Auto API is een betaalde aanvraag. Er worden kosten in rekening gebracht zodra de aanvraag wordt uitgevoerd.\n\nWil je de onderhoudshistorie nu ophalen?');
+  const confirmed=window.confirm('Weet je het zeker?
+
+Het ophalen van de digitale onderhoudshistorie via One Auto API is een betaalde aanvraag. Er worden kosten in rekening gebracht zodra de aanvraag wordt uitgevoerd.
+
+Wil je de onderhoudshistorie nu ophalen?');
   if(!confirmed) return;
   const status=q('serviceHistoryStatus'), box=q('serviceHistory');
   status.textContent='Onderhoudshistorie ophalen…'; box.innerHTML='';
