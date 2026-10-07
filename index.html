@@ -190,20 +190,58 @@ footer{opacity:.8}
 @media(max-width:800px){.distribution-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.distribution-grid{grid-template-columns:1fr 1fr}.pdf-actions{justify-content:stretch}.pdf-btn{width:100%}}
 @media print{
-  @page{size:A4;margin:12mm}
-  body{background:#fff!important;color:#111!important}
-  .container{max-width:none;padding:0}
+  @page{size:A4;margin:10mm 11mm}
+  body{background:#fff!important;color:#172033!important;font-size:10.5px;line-height:1.4}
+  .container{max-width:none!important;padding:0!important}
   header,.search-card,.pdf-actions,.service-btn,.anwb-btn,button{display:none!important}
-  .hero,.section,.market-panel,.distribution-card,.intel-card,.external-data,.mrb-card,.bpm-card,.anwb-card{box-shadow:none!important;break-inside:avoid}
-  .hero{border:1px solid #bbb}
-  .section{margin-top:14px}
   .advancedTools{display:block!important}
-  .print-only{display:block}
-  .print-only h1{font-size:22px;margin:0 0 4px}
-  .print-only p{margin:0 0 12px;color:#555;font-size:11px}
-  .model-photo{min-height:180px}
-  .model-photo img{height:180px}
-  footer{display:block!important;margin-top:15px}
+  .print-only{display:block!important;border-bottom:2px solid #173f75;padding:0 0 8px;margin-bottom:10px}
+  .print-only h1{font-size:24px;line-height:1.1;margin:0 0 3px;color:#123b75}
+  .print-only p{margin:0;color:#667085;font-size:10px}
+  .hero{border:1px solid #cbd5e1!important;border-radius:10px!important;padding:12px!important;margin:0 0 10px!important;box-shadow:none!important;break-inside:avoid}
+  .hero-top{margin-bottom:7px!important}
+  .hero .title{font-size:20px!important}
+  .hero .eyebrow{font-size:9px!important}
+  .hero .plate{font-size:16px!important}
+  .model-photo{min-height:95px!important;height:95px!important;margin:5px 0!important}
+  .model-photo img{height:95px!important;max-height:95px!important;object-fit:cover}
+  .model-photo-info{display:none!important}
+  .value-box{padding:8px!important}
+  .value-box .value{font-size:18px!important}
+  .section{margin:0 0 10px!important;padding:0!important;break-inside:avoid}
+  .section h2{font-size:13px!important;margin:0 0 5px!important;padding:5px 8px!important;background:#eef4fb;border-left:3px solid #1769aa;border-radius:4px;color:#123b75}
+  .grid,.intel-grid,.market-grid,.distribution-grid{gap:5px!important}
+  .grid{grid-template-columns:repeat(3,1fr)!important}
+  .intel-grid{grid-template-columns:repeat(4,1fr)!important}
+  .market-grid{grid-template-columns:repeat(3,1fr)!important}
+  .distribution-grid{grid-template-columns:repeat(4,1fr)!important}
+  .intel-card,.market-panel,.distribution-card,.external-data,.mrb-card,.bpm-card,.anwb-card{padding:8px!important;border-radius:7px!important;box-shadow:none!important;border:1px solid #d9e1ea!important}
+  .intel-hero{padding:7px!important}
+  .intel-score{font-size:22px!important}
+  .intel-cost{padding:7px!important}
+  .intel-metric,.market-box,.distribution-box{padding:7px!important;border-radius:5px!important}
+  .intel-metric strong,.market-box strong,.distribution-box strong{font-size:12px!important}
+  .distribution-advice{padding:7px!important;margin-top:5px!important;font-size:10px!important}
+  .risk-row{padding:5px 0!important}
+  .garage-answer{padding:7px!important}
+  table{font-size:9px!important}
+  th,td{padding:4px 5px!important}
+  .section:has(h2:nth-child(1)):has(h2) {break-inside:avoid}
+  /* Keep the report focused: raw/technical data remains available on the website, not in the PDF. */
+  .section:has(h2:first-child:nth-last-child(1)){ }
+  .section:has(h2) h2{break-after:avoid}
+  .section:has(h2) > div{break-inside:avoid}
+  .section:has(h2) { }
+  .section:nth-of-type(4),
+  .section:nth-of-type(5),
+  .section:nth-of-type(6),
+  .section:nth-of-type(7),
+  .section:nth-of-type(8),
+  .section:nth-of-type(9),
+  .section:nth-of-type(10){display:none!important}
+  .section:nth-of-type(13){page-break-before:always}
+  .section:nth-of-type(16){page-break-before:always}
+  footer{display:block!important;margin-top:8px!important;padding-top:5px;border-top:1px solid #d9e1ea;font-size:8px;color:#667085}
 }</style>
 </head>
 <body>
