@@ -189,6 +189,7 @@ footer{opacity:.8}
 .print-only{display:none}
 @media(max-width:800px){.distribution-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.distribution-grid{grid-template-columns:1fr 1fr}.pdf-actions{justify-content:stretch}.pdf-btn{width:100%}}
+.report-chooser{background:#f8fafc;border:1px solid #dbe3ec;border-radius:14px;padding:18px;margin-top:14px}.chooser-intro{margin:0 0 12px;color:#667085;font-size:13px}.chooser-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.chooser-actions button{padding:8px 12px}.chooser-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}.chooser-grid label{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e1e7ef;border-radius:9px;padding:10px 11px;cursor:pointer;font-size:13px}.chooser-grid label:hover{border-color:#9ab6d5}.chooser-grid input{accent-color:#1769aa}.report-hidden{display:none!important}
 @media print{
   @page{size:A4;margin:10mm 11mm}
   body{background:#fff!important;color:#172033!important;font-size:10.5px;line-height:1.4}
@@ -284,12 +285,40 @@ footer{opacity:.8}
 </div>
 </section>
 
-<section class="section">
+<section id="reportChooser" class="section report-chooser hidden">
+<h2>Wat wil je bekijken?</h2>
+<p class="chooser-intro">Kies welke onderdelen na de kentekencheck zichtbaar moeten zijn.</p>
+<div class="chooser-actions"><button type="button" onclick="setReportSelection(true)">Alles tonen</button><button type="button" onclick="setReportSelection(false)">Alles uit</button></div>
+<div class="chooser-grid">
+<label><input type="checkbox" data-report="summary" checked onchange="applyReportSelection()"> <span>In één oogopslag</span></label>
+<label><input type="checkbox" data-report="intelligence" checked onchange="applyReportSelection()"> <span>Carfacts Intelligence</span></label>
+<label><input type="checkbox" data-report="vehicle" onchange="applyReportSelection()"> <span>Voertuiggegevens</span></label>
+<label><input type="checkbox" data-report="rdw" onchange="applyReportSelection()"> <span>RDW-voertuigdetails</span></label>
+<label><input type="checkbox" data-report="extra" onchange="applyReportSelection()"> <span>Extra voertuigdata / VIN</span></label>
+<label><input type="checkbox" data-report="history" onchange="applyReportSelection()"> <span>Onderhoud & importcontrole</span></label>
+<label><input type="checkbox" data-report="engine" onchange="applyReportSelection()"> <span>Motor & milieu</span></label>
+<label><input type="checkbox" data-report="dimensions" onchange="applyReportSelection()"> <span>Afmetingen & gewichten</span></label>
+<label><input type="checkbox" data-report="bpm" onchange="applyReportSelection()"> <span>Bruto BPM controle</span></label>
+<label><input type="checkbox" data-report="anwb" onchange="applyReportSelection()"> <span>ANWB dagwaarde</span></label>
+<label><input type="checkbox" data-report="mrb" onchange="applyReportSelection()"> <span>MRB / wegenbelasting</span></label>
+<label><input type="checkbox" data-report="apk" onchange="applyReportSelection()"> <span>Kilometerstand & APK</span></label>
+<label><input type="checkbox" data-report="market" onchange="applyReportSelection()"> <span>Markt & koopadvies</span></label>
+<label><input type="checkbox" data-report="distribution" onchange="applyReportSelection()"> <span>Distributie-check</span></label>
+<label><input type="checkbox" data-report="lifecycle" onchange="applyReportSelection()"> <span>Vehicle Lifecycle</span></label>
+<label><input type="checkbox" data-report="repair" onchange="applyReportSelection()"> <span>Reparatie-risicoscanner</span></label>
+<label><input type="checkbox" data-report="fraud" onchange="applyReportSelection()"> <span>Fraude Radar</span></label>
+<label><input type="checkbox" data-report="sell" onchange="applyReportSelection()"> <span>Verkoopadvies</span></label>
+<label><input type="checkbox" data-report="garage" onchange="applyReportSelection()"> <span>AI Garage</span></label>
+<label><input type="checkbox" data-report="compare" onchange="applyReportSelection()"> <span>Auto vergelijken</span></label>
+</div>
+</section>
+
+<section class="section report-section" data-report-section="summary">
 <h2>In één oogopslag</h2>
 <div id="summary" class="grid"></div>
 </section>
 
-<section class="section" id="carfactsIntelligence">
+<section class="section report-section" id="carfactsIntelligence" data-report-section="intelligence">
 <h2>Carfacts Intelligence</h2>
 <div class="intel-card">
   <div class="intel-hero">
@@ -305,17 +334,17 @@ footer{opacity:.8}
 </div>
 </section>
 
-<section class="section">
+<section class="section report-section" data-report-section="vehicle">
 <h2>Voertuiggegevens</h2>
 <div id="g" class="grid"></div>
 </section>
 
-<section class="section">
+<section class="section report-section" data-report-section="rdw">
 <h2>RDW-voertuigdetails</h2>
 <div id="allRdw" class="grid"></div>
 </section>
 
-<section class="section">
+<section class="section report-section" data-report-section="extra">
 <h2>Extra voertuigdata</h2>
 <div class="external-data">
 <div id="extraData" class="external-grid"></div>
@@ -326,7 +355,7 @@ footer{opacity:.8}
 
 <section class="section">
 
-<section class="section">
+<section class="section report-section" data-report-section="history">
 <h2>Digitale onderhoudshistorie</h2>
 <div class="external-data">
 <div class="service-history-head"><div><div class="service-history-title">OE Service History</div><div class="service-history-text">Geregistreerde onderhoudsbeurten uit fabrikantgegevens op basis van het VIN.</div></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><a class="anwb-btn" href="https://carfacts-api.nlaghmiri.workers.dev/" target="_blank" rel="noopener">Inloggen</a><button class="service-btn" onclick="loadServiceHistory()">Onderhoudshistorie ophalen</button></div></div>
@@ -337,17 +366,17 @@ footer{opacity:.8}
 <div id="i" class="import"></div>
 </section>
 
-<section class="section">
+<section class="section report-section" data-report-section="engine">
 <h2>Motor & milieu</h2>
 <div id="m" class="grid"></div>
 </section>
 
-<section class="section">
+<section class="section report-section" data-report-section="dimensions">
 <h2>Afmetingen & gewichten</h2>
 <div id="d" class="grid"></div>
 </section>
 
-<section class="section">
+<section class="section report-section" data-report-section="bpm">
 <h2>Bruto BPM controle</h2>
 <div class="bpm-card">
 <div class="bpm-main">
@@ -359,7 +388,7 @@ footer{opacity:.8}
 </div>
 </section>
 
-<section class="section">
+<section class="section report-section" data-report-section="anwb">
 <h2>ANWB dagwaarde</h2>
 <div class="anwb-card">
 <div><div class="anwb-title">ANWB Koerslijst</div><div class="anwb-text">De ANWB bepaalt een actuele richtwaarde op basis van onder andere kenteken, kilometerstand, uitvoering en actuele marktgegevens. De exacte ANWB-waarde wordt op de ANWB-site berekend.</div></div>
@@ -367,7 +396,7 @@ footer{opacity:.8}
 </div>
 </section>
 
-<section class="section">
+<section class="section report-section" data-report-section="mrb">
 <h2>MRB / wegenbelasting 2026</h2>
 <div class="mrb-card">
   <div class="mrb-result">
@@ -380,13 +409,13 @@ footer{opacity:.8}
 </div>
 </section></section>
 
-<section class="section">
+<section class="section report-section" data-report-section="apk">
 <h2>Kilometerstand & APK</h2>
 <div id="f" class="grid"></div>
 </section>
 
 <div id="advancedTools" class="hidden">
-<section class="section" id="carfactsMarket"><h2>Carfacts Markt & Koopadvies</h2><div class="market-panel"><div class="sim-controls"><div><label>Vraagprijs van de auto</label><input id="askingPrice" type="number" min="0" placeholder="Bijv. 14950"></div><div><label>Jaarlijks aantal kilometers</label><input id="annualKm" type="number" min="0" placeholder="Bijv. 20000"></div></div><div id="marketGrid" class="market-grid"></div><div id="marketRisk"></div></div></section><section class="section"><h2>Carfacts Distributie-check</h2><div class="distribution-card"><div class="sim-controls"><div><label>Huidige kilometerstand</label><input id="currentKm" type="number" min="0" placeholder="Bijv. 144000"></div><div><label>Laatste distributiewissel (km)</label><input id="lastTimingKm" type="number" min="0" placeholder="Optioneel"></div></div><div id="distributionGrid" class="distribution-grid"></div><div id="distributionAdvice" class="distribution-advice"></div><div class="source-row"><span class="source-chip">Motorvariant bepaalt interval</span><span class="source-chip">Onderhoudsboek/factuur leidend</span></div></div></section><section class="section"><h2>Carfacts Vehicle Lifecycle</h2><div class="market-panel"><div class="forecast" id="valueForecast"></div><div id="ownershipCost" class="market-grid" style="margin-top:10px"></div></div></section><section class="section"><h2>Carfacts Reparatie-risicoscanner</h2><div class="market-panel"><div id="repairRisks" class="risk-list"></div></div></section><section class="section"><h2>Carfacts Fraude Radar</h2><div class="market-panel"><div id="fraudRadar" class="market-grid"></div><div id="fraudDetails" class="risk-list"></div></div></section><section class="section"><h2>Carfacts Verkoopadvies</h2><div class="market-panel"><div id="sellAdvice" class="market-grid"></div><div id="sellText" class="garage-answer" style="margin-top:12px"></div></div></section><section class="section"><h2>Carfacts AI Garage</h2><div class="market-panel"><div class="sim-controls"><div><label>Wat merk je aan de auto?</label><input id="garageQuestion" placeholder="Bijv. trilt bij 80 km/u"></div><div style="display:flex;align-items:end"><button onclick="carfactsGarage()">Analyseer klacht</button></div></div><div id="garageAnswer"></div></div></section><section class="section"><h2>Carfacts Auto Vergelijken</h2><div class="market-panel"><p style="color:#667085;font-size:13px;margin-top:0">Voer een tweede auto in om de huidige auto met een andere RDW-auto te vergelijken.</p><div class="sim-controls"><div><label>Tweede kenteken</label><input id="comparePlate" maxlength="8" placeholder="Bijv. AB-12-CD"></div><div style="display:flex;align-items:end"><button onclick="compareCarfacts()">Vergelijk</button></div></div><div id="compareResult"></div></div></section><div class="pdf-actions"><button class="pdf-btn" onclick="generateCarfactsPdf()">📄 PDF-rapport maken</button></div><footer>Bron: RDW Open Data · Carfacts</footer>
+<section class="section report-section" id="carfactsMarket" data-report-section="market"><h2>Carfacts Markt & Koopadvies</h2><div class="market-panel"><div class="sim-controls"><div><label>Vraagprijs van de auto</label><input id="askingPrice" type="number" min="0" placeholder="Bijv. 14950"></div><div><label>Jaarlijks aantal kilometers</label><input id="annualKm" type="number" min="0" placeholder="Bijv. 20000"></div></div><div id="marketGrid" class="market-grid"></div><div id="marketRisk"></div></div></section><section class="section report-section" data-report-section="distribution"><h2>Carfacts Distributie-check</h2><div class="distribution-card"><div class="sim-controls"><div><label>Huidige kilometerstand</label><input id="currentKm" type="number" min="0" placeholder="Bijv. 144000"></div><div><label>Laatste distributiewissel (km)</label><input id="lastTimingKm" type="number" min="0" placeholder="Optioneel"></div></div><div id="distributionGrid" class="distribution-grid"></div><div id="distributionAdvice" class="distribution-advice"></div><div class="source-row"><span class="source-chip">Motorvariant bepaalt interval</span><span class="source-chip">Onderhoudsboek/factuur leidend</span></div></div></section><section class="section report-section" data-report-section="lifecycle"><h2>Carfacts Vehicle Lifecycle</h2><div class="market-panel"><div class="forecast" id="valueForecast"></div><div id="ownershipCost" class="market-grid" style="margin-top:10px"></div></div></section><section class="section report-section" data-report-section="repair"><h2>Carfacts Reparatie-risicoscanner</h2><div class="market-panel"><div id="repairRisks" class="risk-list"></div></div></section><section class="section report-section" data-report-section="fraud"><h2>Carfacts Fraude Radar</h2><div class="market-panel"><div id="fraudRadar" class="market-grid"></div><div id="fraudDetails" class="risk-list"></div></div></section><section class="section report-section" data-report-section="sell"><h2>Carfacts Verkoopadvies</h2><div class="market-panel"><div id="sellAdvice" class="market-grid"></div><div id="sellText" class="garage-answer" style="margin-top:12px"></div></div></section><section class="section report-section" data-report-section="garage"><h2>Carfacts AI Garage</h2><div class="market-panel"><div class="sim-controls"><div><label>Wat merk je aan de auto?</label><input id="garageQuestion" placeholder="Bijv. trilt bij 80 km/u"></div><div style="display:flex;align-items:end"><button onclick="carfactsGarage()">Analyseer klacht</button></div></div><div id="garageAnswer"></div></div></section><section class="section report-section" data-report-section="compare"><h2>Carfacts Auto Vergelijken</h2><div class="market-panel"><p style="color:#667085;font-size:13px;margin-top:0">Voer een tweede auto in om de huidige auto met een andere RDW-auto te vergelijken.</p><div class="sim-controls"><div><label>Tweede kenteken</label><input id="comparePlate" maxlength="8" placeholder="Bijv. AB-12-CD"></div><div style="display:flex;align-items:end"><button onclick="compareCarfacts()">Vergelijk</button></div></div><div id="compareResult"></div></div></section><div class="pdf-actions"><button class="pdf-btn" onclick="generateCarfactsPdf()">📄 PDF-rapport maken</button></div><footer>Bron: RDW Open Data · Carfacts</footer>
 </div>
 </div>
 
@@ -718,6 +747,8 @@ async function go(type='plate'){
     carfactsDistribution(x);
     carfactsLifecycle(x);
     q('advancedTools').classList.remove('hidden');
+  q('reportChooser').classList.remove('hidden');
+  resetReportSelection();
     renderAllRdwData(x);
     loadExtraVehicleData(x);
     checkBPM(x);
@@ -1001,6 +1032,25 @@ q('lastTimingKm').addEventListener('input',()=>{if(window.carData)carfactsDistri
     ['Laatste wissel',lastText,'']
   ].map(a=>'<div class="distribution-box"><small>'+a[0]+'</small><strong class="'+a[2]+'">'+a[1]+'</strong></div>').join('');
   q('distributionAdvice').innerHTML='<b>Carfacts advies:</b> '+status+'<br><span style="color:#667085;font-size:12px">'+note+' Betrouwbaar bewijs van vervanging is een factuur, onderhoudsboek of registratiesticker. Ontbreekt bewijs, behandel de distributie als een openstaand aankooprisico.</span>';
+}
+function applyReportSelection(){
+  document.querySelectorAll('[data-report-section]').forEach(section=>{
+    const key=section.dataset.reportSection;
+    const box=document.querySelector('[data-report="'+key+'"]');
+    section.classList.toggle('report-hidden',!(box&&box.checked));
+  });
+}
+function setReportSelection(all){
+  document.querySelectorAll('[data-report]').forEach(box=>box.checked=all);
+  applyReportSelection();
+}
+function resetReportSelection(){
+  document.querySelectorAll('[data-report]').forEach(box=>box.checked=false);
+  ['summary','intelligence'].forEach(key=>{
+    const box=document.querySelector('[data-report="'+key+'"]');
+    if(box)box.checked=true;
+  });
+  applyReportSelection();
 }
 function generateCarfactsPdf(){
   if(!window.carData){alert('Zoek eerst een voertuig op.');return;}
