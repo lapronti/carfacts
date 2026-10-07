@@ -227,21 +227,9 @@ footer{opacity:.8}
   .garage-answer{padding:7px!important}
   table{font-size:9px!important}
   th,td{padding:4px 5px!important}
-  .section:has(h2:nth-child(1)):has(h2) {break-inside:avoid}
-  /* Keep the report focused: raw/technical data remains available on the website, not in the PDF. */
-  .section:has(h2:first-child:nth-last-child(1)){ }
-  .section:has(h2) h2{break-after:avoid}
-  .section:has(h2) > div{break-inside:avoid}
-  .section:has(h2) { }
-  .section:nth-of-type(4),
-  .section:nth-of-type(5),
-  .section:nth-of-type(6),
-  .section:nth-of-type(7),
-  .section:nth-of-type(8),
-  .section:nth-of-type(9),
-  .section:nth-of-type(10){display:none!important}
-  .section:nth-of-type(13){page-break-before:always}
-  .section:nth-of-type(16){page-break-before:always}
+  .report-chooser{display:none!important}
+  .section h2{break-after:avoid}
+  .section > div{break-inside:avoid}
   footer{display:block!important;margin-top:8px!important;padding-top:5px;border-top:1px solid #d9e1ea;font-size:8px;color:#667085}
 }</style>
 </head>
