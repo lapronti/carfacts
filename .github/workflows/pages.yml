@@ -65,6 +65,10 @@ jobs:
             if (errors.length) throw new Error('Browser JavaScript error: '+errors.join(' | '));
             if (await page.locator('#r').evaluate(el => el.classList.contains('hidden'))) throw new Error('Kentekenzoekopdracht heeft geen resultaat opgeleverd.');
             if (await page.locator('#advancedTools').evaluate(el => el.classList.contains('hidden'))) throw new Error('Analyseblokken blijven verborgen.');
+            if (!(await page.locator('#reportChooser').isVisible())) throw new Error('Keuzelijst voor rapportonderdelen is niet zichtbaar na de kentekencheck.');
+            if (await page.locator('[data-report-section]:visible').count()) throw new Error('Analyseonderdelen worden al getoond voordat de gebruiker een keuze maakt.');
+            await page.locator('[data-report="market"]').check();
+            if (!(await page.locator('[data-report-section="market"]').isVisible())) throw new Error('Gekozen onderdeel Markt & koopadvies wordt niet getoond.');
             await page.locator('#askingPrice').fill('3400');
             await page.locator('#askingPrice').press('Enter');
             await page.waitForFunction(() => document.getElementById('marketGrid')?.textContent?.includes('€3.400'));
