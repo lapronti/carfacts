@@ -1034,10 +1034,6 @@ function setReportSelection(all){
 }
 function resetReportSelection(){
   document.querySelectorAll('[data-report]').forEach(box=>box.checked=false);
-  ['summary','intelligence'].forEach(key=>{
-    const box=document.querySelector('[data-report="'+key+'"]');
-    if(box)box.checked=true;
-  });
   applyReportSelection();
 }
 function generateCarfactsPdf(){
