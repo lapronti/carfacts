@@ -240,7 +240,7 @@ footer{opacity:.8}
 
 <section class="search-card">
 <h1>Controleer een voertuig</h1>
-<p>Zoek op kenteken of VIN. Gebruik het aparte zoekvak voor het type gegevens dat je hebt.</p>
+<p>Bekijk beschikbare RDW-gegevens en controleer onderhoud. Ontbrekende gegevens worden niet ingevuld met aannames.</p>
 <div class="search-boxes">
   <div class="search-box">
     <label for="p">Kenteken</label>
@@ -269,7 +269,7 @@ footer{opacity:.8}
 </div>
 <div id="modelPhoto"></div>
 <div class="value-box">
-<div><div class="value-label">Cataloguswaarde</div><div class="value" id="price">—</div></div>
+<div><div class="value-label">RDW-catalogusprijs (geen actuele marktwaarde)</div><div class="value" id="price">—</div></div>
 <div style="font-size:24px">€</div>
 </div>
 </section>
@@ -279,26 +279,10 @@ footer{opacity:.8}
 <p class="chooser-intro">Kies welke onderdelen na de kentekencheck zichtbaar moeten zijn.</p>
 <div class="chooser-actions"><button type="button" onclick="setReportSelection(true)">Alles tonen</button><button type="button" onclick="setReportSelection(false)">Alles uit</button></div>
 <div class="chooser-grid">
-<label><input type="checkbox" data-report="summary" checked onchange="applyReportSelection()"> <span>In één oogopslag</span></label>
-<label><input type="checkbox" data-report="intelligence" checked onchange="applyReportSelection()"> <span>Carfacts Intelligence</span></label>
-<label><input type="checkbox" data-report="vehicle" onchange="applyReportSelection()"> <span>Voertuiggegevens</span></label>
-<label><input type="checkbox" data-report="rdw" onchange="applyReportSelection()"> <span>RDW-voertuigdetails</span></label>
-<label><input type="checkbox" data-report="extra" onchange="applyReportSelection()"> <span>Extra voertuigdata / VIN</span></label>
-<label><input type="checkbox" data-report="history" onchange="applyReportSelection()"> <span>Onderhoud & importcontrole</span></label>
-<label><input type="checkbox" data-report="engine" onchange="applyReportSelection()"> <span>Motor & milieu</span></label>
-<label><input type="checkbox" data-report="dimensions" onchange="applyReportSelection()"> <span>Afmetingen & gewichten</span></label>
-<label><input type="checkbox" data-report="bpm" onchange="applyReportSelection()"> <span>Bruto BPM controle</span></label>
-<label><input type="checkbox" data-report="anwb" onchange="applyReportSelection()"> <span>ANWB dagwaarde</span></label>
-<label><input type="checkbox" data-report="mrb" onchange="applyReportSelection()"> <span>MRB / wegenbelasting</span></label>
-<label><input type="checkbox" data-report="apk" onchange="applyReportSelection()"> <span>Kilometerstand & APK</span></label>
-<label><input type="checkbox" data-report="market" onchange="applyReportSelection()"> <span>Markt & koopadvies</span></label>
-<label><input type="checkbox" data-report="distribution" onchange="applyReportSelection()"> <span>Distributie-check</span></label>
-<label><input type="checkbox" data-report="lifecycle" onchange="applyReportSelection()"> <span>Vehicle Lifecycle</span></label>
-<label><input type="checkbox" data-report="repair" onchange="applyReportSelection()"> <span>Reparatie-risicoscanner</span></label>
-<label><input type="checkbox" data-report="fraud" onchange="applyReportSelection()"> <span>Fraude Radar</span></label>
-<label><input type="checkbox" data-report="sell" onchange="applyReportSelection()"> <span>Verkoopadvies</span></label>
-<label><input type="checkbox" data-report="garage" onchange="applyReportSelection()"> <span>AI Garage</span></label>
-<label><input type="checkbox" data-report="compare" onchange="applyReportSelection()"> <span>Auto vergelijken</span></label><label><input type="checkbox" data-report="pro" onchange="applyReportSelection()"> <span>Carfacts Pro — koopbeslissing</span></label>
+<label><input type="checkbox" data-report="summary" checked onchange="applyReportSelection()"> <span>Kerngegevens</span></label>
+<label><input type="checkbox" data-report="apk" checked onchange="applyReportSelection()"> <span>APK & tellerstand</span></label>
+<label><input type="checkbox" data-report="history" checked onchange="applyReportSelection()"> <span>Onderhoudshistorie</span></label>
+<label><input type="checkbox" data-report="rdw" onchange="applyReportSelection()"> <span>Alle beschikbare RDW-gegevens</span></label>
 </div>
 </section>
 
@@ -347,7 +331,7 @@ footer{opacity:.8}
 <section class="section report-section" data-report-section="history">
 <h2>Digitale onderhoudshistorie</h2>
 <div class="external-data">
-<div class="service-history-head"><div><div class="service-history-title">OE Service History</div><div class="service-history-text">Geregistreerde onderhoudsbeurten uit fabrikantgegevens op basis van het VIN.</div></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><a class="anwb-btn" href="https://carfacts-api.nlaghmiri.workers.dev/" target="_blank" rel="noopener">Inloggen</a><button class="service-btn" onclick="loadServiceHistory()">Onderhoudshistorie ophalen</button></div></div>
+<div class="service-history-head"><div><div class="service-history-title">Onderhoudsgegevens op VIN</div><div class="service-history-text">Deze betaalde gegevensbron kan alleen onderhoud tonen dat in de aangesloten systemen beschikbaar is. Een lege uitkomst bewijst niet dat de auto geen onderhoud heeft gehad.</div></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><a class="anwb-btn" href="https://carfacts-api.nlaghmiri.workers.dev/" target="_blank" rel="noopener">Inloggen</a><button class="service-btn" onclick="loadServiceHistory()">Onderhoudshistorie ophalen</button></div></div>
 <div id="serviceHistoryStatus" class="status"></div><div id="serviceHistory"></div>
 </div>
 </section>
@@ -686,14 +670,10 @@ async function go(type='plate'){
     loadModelPhoto(x.merk,x.handelsbenaming,x.datum_eerste_toelating);
 
     q('summary').innerHTML=[
-      it('Bouwjaar',formatDate(x.datum_eerste_toelating)),
+      it('Eerste toelating',formatDate(x.datum_eerste_toelating)),
       it('Brandstof',x.brandstof),
       it('Vermogen',x.vermogen?x.vermogen+' kW':null),
-      it('Massa rijklaar',x.massa_rijklaar?Number(x.massa_rijklaar).toLocaleString('nl-NL')+' kg':null),
-      it('CO₂',x.co2_emissie?x.co2_emissie+' g/km':null),
-      it('Emissieklasse',x.emissieklasse),
-      it('APK tot',formatDate(x.vervaldatum_apk)),
-      it('Tellerstandoordeel',x.tellerstandoordeel)
+      it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null)
     ].join('');
 
     q('g').innerHTML=[
@@ -768,7 +748,7 @@ async function go(type='plate'){
 async function loadServiceHistory(){
   const vin=String((window.carData&&window.carData.voertuig_identificatienummer)||q('vin').value||'').trim().toUpperCase();
   if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){
-    q('serviceHistoryStatus').innerHTML='<span class="err">Er is geen geldig VIN beschikbaar voor de onderhoudshistorie.</span>'; return;
+    q('serviceHistoryStatus').innerHTML='<span class="err">Er is geen geldig VIN beschikbaar. De onderhoudsbron kan alleen zoeken met het volledige chassisnummer (VIN).</span>'; return;
   }
   const confirmed=window.confirm('Weet je het zeker?\n\nHet ophalen van de digitale onderhoudshistorie via One Auto API is een betaalde aanvraag. Er worden kosten in rekening gebracht zodra de aanvraag wordt uitgevoerd.\n\nWil je de onderhoudshistorie nu ophalen?');
   if(!confirmed) return;
@@ -805,7 +785,7 @@ function renderServiceHistory(payload){
   if(typeof data==='string'){try{data=JSON.parse(data)}catch{}}
   const result=data&&data.result?data.result:data;
   const events=Array.isArray(result&&result.service_events)?result.service_events:[];
-  if(!events.length){status.textContent='Geen geregistreerde onderhoudsbeurten gevonden in de beschikbare fabrikantgegevens.';box.innerHTML='';return;}
+  if(!events.length){status.textContent='Geen onderhoudsrecords teruggegeven door de gekoppelde databron. Dit betekent niet dat er geen onderhoud is uitgevoerd; vraag facturen of het onderhoudsboek op.';box.innerHTML='<div class="notice">De databron heeft voor deze VIN geen bruikbare onderhoudsbeurten teruggegeven. Controleer onderhoud rechtstreeks bij de garage/dealer en vraag bewijsstukken op.</div>';return;}
   status.textContent=events.length+' onderhoudsbeurten gevonden.';
   box.innerHTML='<div class="service-history-list">'+events.map(e=>{
     const actions=Array.isArray(e.service_actions)?'<ul class="service-event-actions">'+e.service_actions.map(a=>'<li>'+escapeHtml(a)+'</li>').join('')+'</ul>':'';
@@ -1081,7 +1061,8 @@ function setReportSelection(all){
   applyReportSelection();
 }
 function resetReportSelection(){
-  document.querySelectorAll('[data-report]').forEach(box=>box.checked=false);
+  const defaults=new Set(['summary','apk','history']);
+  document.querySelectorAll('[data-report]').forEach(box=>box.checked=defaults.has(box.dataset.report));
   applyReportSelection();
 }
 function carfactsPro(x){
