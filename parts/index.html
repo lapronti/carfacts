@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Zoek gebruikte auto-onderdelen over meerdere internationale platforms vanuit één plek.">
+<title>PartFinder — internationale onderdelenzoeker</title>
+<style>
+:root{--ink:#142033;--muted:#64748b;--blue:#2563eb;--blue2:#1d4ed8;--cyan:#06b6d4;--bg:#f3f6fb;--card:#fff;--line:#dce4ef;--soft:#edf4ff;--green:#047857;--shadow:0 18px 48px rgba(19,42,79,.10)}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 5% 0%,#dceaff 0,transparent 30rem),radial-gradient(circle at 95% 8%,#d9fbf7 0,transparent 26rem),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:26px 18px 60px}header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:26px}.brand{font-size:25px;font-weight:900;letter-spacing:-1px}.brand span{color:var(--blue)}.tag{font-size:12px;font-weight:800;color:#1746a2;background:#e4edff;padding:8px 11px;border-radius:999px}
+.hero{background:#111c30;color:white;padding:30px;border-radius:24px;box-shadow:var(--shadow);position:relative;overflow:hidden}.hero:after{content:"";position:absolute;width:280px;height:280px;border:1px solid #ffffff1c;border-radius:50%;right:-70px;top:-100px;box-shadow:0 0 0 35px #ffffff08,0 0 0 70px #ffffff05;pointer-events:none}.eyebrow{text-transform:uppercase;letter-spacing:1.5px;color:#93c5fd;font-size:11px;font-weight:850}.hero h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-1.8px;margin:10px 0}.hero p{color:#cbd5e1;max-width:670px;line-height:1.6;margin:0 0 22px}.search-form{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:10px;max-width:850px;position:relative;z-index:1}.search-form input,.search-form select{min-width:0;border:1px solid #ffffff22;border-radius:12px;background:white;color:var(--ink);padding:16px;font:inherit}.search-form button,.primary{border:0;border-radius:12px;background:#3b82f6;color:white;font:inherit;font-weight:850;padding:15px 18px;cursor:pointer}.search-form button:hover,.primary:hover{background:#2563eb}.search-hint{font-size:12px;color:#cbd5e1;margin-top:11px}.section{margin-top:24px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:12px}.section h2{font-size:18px;margin:0;letter-spacing:-.3px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}.filters{display:grid;grid-template-columns:1fr 1fr;gap:16px}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:19px;box-shadow:0 4px 15px #102a4b05}.panel h3{font-size:14px;margin:0 0 12px}.country-options,.source-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.choice{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--line);border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;background:#fff}.choice:has(input:checked){border-color:#86aafc;background:#f0f5ff;color:#1746a2}.choice input{accent-color:var(--blue)}.source-options{grid-template-columns:repeat(2,minmax(0,1fr))}.source-note{font-size:11px;color:var(--muted);font-weight:500}.row-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.text-btn{border:0;background:transparent;color:var(--blue);font:inherit;font-size:12px;font-weight:800;cursor:pointer;padding:5px 0}.results-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.status{color:var(--muted);font-size:13px}.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.result{background:white;border:1px solid var(--line);border-radius:16px;padding:17px;display:flex;flex-direction:column;gap:12px}.result-title{display:flex;align-items:flex-start;gap:12px}.source-icon{width:42px;height:42px;border-radius:12px;background:#eaf1ff;color:#1746a2;display:grid;place-items:center;font-weight:900;flex-shrink:0}.result h3{margin:0;font-size:15px}.result p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.result-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:auto}.pill{font-size:10px;font-weight:850;background:#eef2f7;color:#475569;border-radius:999px;padding:6px 8px}.link-btn{display:inline-flex;justify-content:center;align-items:center;gap:7px;background:var(--blue);color:white;text-decoration:none;border-radius:10px;padding:10px 13px;font-size:12px;font-weight:850}.link-btn:hover{background:var(--blue2)}.notice{border:1px solid #f3d49b;background:#fff9e9;color:#854d0e;padding:14px 16px;border-radius:13px;font-size:12px;line-height:1.55;margin-top:15px}.notice strong{display:block;margin-bottom:3px}.empty{background:#fff;border:1px dashed #cbd5e1;border-radius:16px;padding:30px;text-align:center;color:var(--muted);grid-column:1/-1}.footer{margin-top:26px;color:var(--muted);font-size:11px;line-height:1.6;text-align:center}.footer a{color:var(--blue)}.hidden{display:none!important}
+@media(max-width:760px){.filters{grid-template-columns:1fr}.country-options{grid-template-columns:repeat(2,minmax(0,1fr))}.results{grid-template-columns:1fr}.hero{padding:23px}.search-form{grid-template-columns:1fr}.search-form button{min-height:50px}.wrap{padding:18px 12px 40px}.section-head{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="brand">Part<span>Finder</span></div><div class="tag">INTERNATIONALE ONDERDELENZOEKER</div></header>
+<main>
+<section class="hero">
+<div class="eyebrow">Eén zoekopdracht · meerdere markten</div>
+<h1>Vind het juiste onderdeel.<br>Vergelijk over grenzen heen.</h1>
+<p>Start een zoekopdracht voor gebruikte auto-onderdelen en open relevante zoekresultaten bij meerdere platforms vanuit één overzicht.</p>
+<form id="searchForm" class="search-form">
+<input id="query" type="search" placeholder="Bijv. VW Golf 7 koplamp links of OEM-nummer" required aria-label="Onderdeel of OEM-nummer">
+<select id="scope" aria-label="Zoekgebied"><option value="NL">Nederland</option><option value="DE">Duitsland</option><option value="PL">Polen</option><option value="LT">Litouwen</option><option value="BE">België</option><option value="EU">Europa</option><option value="INT" selected>Internationaal</option><option value="CUSTOM">Zelf landen kiezen</option></select>
+<button type="submit">Zoek onderdelen ↗</button>
+</form>
+<div class="search-hint">MVP-versie: opent geselecteerde bronnen via zoekmachine-indexen. Er worden nog geen live advertenties uit de platforms opgehaald.</div>
+</section>
+
+<section class="section filters">
+<div class="panel" id="countryPanel">
+<h3>1. Landen om te doorzoeken</h3>
+<div class="country-options" id="countries">
+<label class="choice"><input type="checkbox" value="NL" checked> Nederland</label>
+<label class="choice"><input type="checkbox" value="DE" checked> Duitsland</label>
+<label class="choice"><input type="checkbox" value="PL" checked> Polen</label>
+<label class="choice"><input type="checkbox" value="LT" checked> Litouwen</label>
+<label class="choice"><input type="checkbox" value="BE" checked> België</label>
+<label class="choice"><input type="checkbox" value="GB" checked> Verenigd Koninkrijk</label>
+<label class="choice"><input type="checkbox" value="FR" checked> Frankrijk</label>
+<label class="choice"><input type="checkbox" value="IT" checked> Italië</label>
+<label class="choice"><input type="checkbox" value="ES" checked> Spanje</label>
+</div>
+<div class="row-actions"><button type="button" class="text-btn" id="allCountries">Selecteer alle landen</button><button type="button" class="text-btn" id="clearCountries">Wis selectie</button></div>
+</div>
+<div class="panel">
+<h3>2. Bronnen selecteren</h3>
+<div class="source-options" id="sources">
+<label class="choice"><input type="checkbox" value="onderdelenlijn" checked> Onderdelenlijn</label>
+<label class="choice"><input type="checkbox" value="schadeautos" checked> Schadeautos.nl</label>
+<label class="choice"><input type="checkbox" value="marktplaats" checked> Marktplaats</label>
+<label class="choice"><input type="checkbox" value="eurostock" checked> Eurostock</label>
+<label class="choice"><input type="checkbox" value="rrr" checked> RRR.lt</label>
+<label class="choice"><input type="checkbox" value="kleinanzeigen" checked> Kleinanzeigen</label>
+<label class="choice"><input type="checkbox" value="ebay" checked> eBay</label>
+<label class="choice"><input type="checkbox" value="allegro" checked> Allegro.pl</label>
+</div>
+<div class="row-actions"><button type="button" class="text-btn" id="allSources">Selecteer alle bronnen</button><button type="button" class="text-btn" id="clearSources">Wis selectie</button></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-head"><div><h2 id="resultsHeading">Start je zoekopdracht</h2><p id="resultsSub">Selecteer landen en bronnen en voer een onderdeel in.</p></div><div class="status" id="status" role="status" aria-live="polite"></div></div>
+<div class="results" id="results"><div class="empty">Je zoeklinks verschijnen hier. Je wordt doorgestuurd naar de gekozen bronzoekopdrachten; aankopen en advertenties blijven bij de oorspronkelijke websites.</div></div>
+<div class="notice"><strong>Wat deze MVP wel en niet doet</strong>Deze versie maakt zoeklinks per bron en land. Het is nog geen geïntegreerde live-resultatenfeed en toont daarom geen verzonnen advertenties, prijzen of beschikbaarheid. Rechtstreekse automatische resultaten volgen pas na officiële API- of partner-toegang en controle van de gebruiksvoorwaarden.</div>
+</section>
+</main>
+<div class="footer">PartFinder is een werktitel. Onafhankelijk concept; geen officiële samenwerking met de genoemde platforms. Bronlogo's en merknamen blijven eigendom van hun respectieve eigenaren.</div>
+</div>
+<script>
+const sourceInfo={
+ onderdelenlijn:{name:"Onderdelenlijn",domain:"onderdelenlijn.nl",country:["NL"],note:"Nederlandse onderdelenvoorraad"},
+ schadeautos:{name:"Schadeautos.nl",domain:"schadeautos.nl",country:["NL"],note:"Onderdelenrubriek en schadeauto-aanbod"},
+ marktplaats:{name:"Marktplaats",domain:"marktplaats.nl",country:["NL"],note:"Nederlandse advertenties"},
+ eurostock:{name:"Eurostock",domain:"eurostock.nl",country:["NL","BE","DE"],note:"Domein en integratiemogelijkheden nog verifiëren"},
+ rrr:{name:"RRR.lt",domain:"rrr.lt",country:["LT","PL","DE","NL"],note:"Internationale gebruikte onderdelen"},
+ kleinanzeigen:{name:"Kleinanzeigen",domain:"kleinanzeigen.de",country:["DE"],note:"Duitse advertenties"},
+ ebay:{name:"eBay",domain:"ebay.com",country:["NL","DE","PL","BE","GB","FR","IT","ES","LT"],note:"Internationale marktplaats"},
+ allegro:{name:"Allegro.pl",domain:"allegro.pl",country:["PL"],note:"Poolse marktplaats"}
+};
+const countryNames={NL:"Nederland",DE:"Duitsland",PL:"Polen",LT:"Litouwen",BE:"België",GB:"Verenigd Koninkrijk",FR:"Frankrijk",IT:"Italië",ES:"Spanje"};
+const scope=document.getElementById("scope"),countryPanel=document.getElementById("countryPanel"),queryInput=document.getElementById("query");
+function checks(id){return [...document.querySelectorAll("#"+id+" input[type=checkbox]")]}
+function setChecks(id,value){checks(id).forEach(x=>x.checked=value)}
+function selectedCountries(){return checks("countries").filter(x=>x.checked).map(x=>x.value)}
+function selectedSources(){return checks("sources").filter(x=>x.checked).map(x=>x.value)}
+function syncScope(){countryPanel.classList.toggle("hidden",scope.value!=="CUSTOM");if(scope.value==="INT"||scope.value==="EU")setChecks("countries",true);else if(scope.value!=="CUSTOM"){setChecks("countries",false);const c=document.querySelector('#countries input[value="'+scope.value+'"]');if(c)c.checked=true}}
+scope.addEventListener("change",syncScope);syncScope();
+document.getElementById("allCountries").addEventListener("click",()=>setChecks("countries",true));
+document.getElementById("clearCountries").addEventListener("click",()=>setChecks("countries",false));
+document.getElementById("allSources").addEventListener("click",()=>setChecks("sources",true));
+document.getElementById("clearSources").addEventListener("click",()=>setChecks("sources",false));
+function makeUrl(domain,term,country){const countryText=country&&country!=="INT"?" "+countryNames[country]:"";const q="site:"+domain+" "+term+countryText+" auto onderdeel";return "https://www.google.com/search?q="+encodeURIComponent(q)}
+function createCard(sourceKey,country,term){const s=sourceInfo[sourceKey];const countryLabel=country==="INT"?"Internationaal":countryNames[country];const url=makeUrl(s.domain,term,country);const card=document.createElement("article");card.className="result";const top=document.createElement("div");top.className="result-title";const icon=document.createElement("div");icon.className="source-icon";icon.textContent=s.name.split(/[. ]/)[0].slice(0,2).toUpperCase();const text=document.createElement("div");const title=document.createElement("h3");title.textContent=s.name;const desc=document.createElement("p");desc.textContent=s.note+" · zoekgebied: "+countryLabel; text.append(title,desc);top.append(icon,text);const foot=document.createElement("div");foot.className="result-footer";const pill=document.createElement("span");pill.className="pill";pill.textContent="Externe zoeklink";const a=document.createElement("a");a.className="link-btn";a.href=url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Open zoekresultaten ↗";foot.append(pill,a);card.append(top,foot);return card}
+document.getElementById("searchForm").addEventListener("submit",e=>{e.preventDefault();const term=queryInput.value.trim();if(!term)return;const src=selectedSources();let countries=selectedCountries();if(scope.value==="NL"||scope.value==="DE"||scope.value==="PL"||scope.value==="LT"||scope.value==="BE")countries=[scope.value];if(scope.value==="EU"||scope.value==="INT")countries=["INT"];if(scope.value==="CUSTOM"&&!countries.length){document.getElementById("status").textContent="Selecteer minimaal één land.";return}if(!src.length){document.getElementById("status").textContent="Selecteer minimaal één bron.";return}const root=document.getElementById("results");root.replaceChildren();let count=0;src.forEach(k=>{const s=sourceInfo[k];const relevant=countries.filter(c=>c==="INT"||s.country.includes(c));if(relevant.length){relevant.forEach(c=>{root.append(createCard(k,c,term));count++})}else if(countries.includes("INT")){root.append(createCard(k,"INT",term));count++}});document.getElementById("resultsHeading").textContent="Zoekopdracht: "+term;document.getElementById("resultsSub").textContent="Selecteer een bron om de zoekresultaten in een nieuw tabblad te openen.";document.getElementById("status").textContent=count+" zoeklinks aangemaakt.";if(!count)root.innerHTML='<div class="empty">Geen bron/land-combinaties gevonden. Kies andere landen of bronnen.</div>';document.getElementById("resultsHeading").scrollIntoView({behavior:"smooth",block:"start"})});
+</script>
+</body>
+</html>
