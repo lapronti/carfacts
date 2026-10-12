@@ -68,7 +68,9 @@ module.exports = async function handler(req, res) {
     const searchUrl = new URL(apiHost + "/buy/browse/v1/item_summary/search");
     searchUrl.searchParams.set("q", q);
     searchUrl.searchParams.set("limit", "12");
-    searchUrl.searchParams.set("filter", "buyingOptions:{FIXED_PRICE}");
+    // Keep the selected eBay marketplace separate from the actual item location.
+    // This ensures choosing NL returns items located in the Netherlands, not merely listings visible on eBay NL.
+    searchUrl.searchParams.set("filter", "buyingOptions:{FIXED_PRICE},itemLocationCountry:" + country);
     const requestedSort = String(req.query.sort || "relevance");
     const apiSort = {
       "price-asc": "price",
