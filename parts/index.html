@@ -95,11 +95,10 @@ document.getElementById("clearSources").addEventListener("click",()=>setChecks("
 let liveEbayItems=[];
 function sortEbayItems(items){
  const mode=document.getElementById("sortResults").value;
- const price=item=>{const n=Number(item.price);return Number.isFinite(n)&&item.price!==""?n:Number.POSITIVE_INFINITY};
+ const price=item=>{const n=Number(item.price);return Number.isFinite(n)&&item.price!==""?n:null};
  const date=item=>{const n=Date.parse(item.uploadedAt||"");return Number.isFinite(n)?n:0};
  return [...items].sort((a,b)=>{
-  if(mode==="price-asc")return price(a)-price(b);
-  if(mode==="price-desc")return price(b)-price(a);
+  if(mode==="price-asc"||mode==="price-desc"){const pa=price(a),pb=price(b);if(pa===null)return pb===null?0:1;if(pb===null)return -1;return mode==="price-asc"?pa-pb:pb-pa;}
   if(mode==="newest")return date(b)-date(a);
   if(mode==="oldest")return date(a)-date(b);
   return 0;
