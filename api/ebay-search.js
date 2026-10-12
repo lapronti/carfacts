@@ -60,7 +60,7 @@ module.exports = async function handler(req, res) {
       const details = await tokenResponse.text();
       console.error("eBay OAuth failed:", tokenResponse.status, details.slice(0, 500));
       return send(res, 502, {
-        error: "eBay kon geen toegangstoken geven. Controleer of de Sandbox-gegevens bij de Sandbox-API horen."
+        error: "eBay kon geen toegangstoken geven. Controleer of de Production- of Sandbox-sleutels bij de gekozen API-omgeving horen."
       });
     }
 
@@ -69,6 +69,14 @@ module.exports = async function handler(req, res) {
     searchUrl.searchParams.set("q", q);
     searchUrl.searchParams.set("limit", "12");
     searchUrl.searchParams.set("filter", "buyingOptions:{FIXED_PRICE}");
+    const requestedSort = String(req.query.sort || "relevance");
+    const apiSort = {
+      "price-asc": "price",
+      "price-desc": "-price",
+      "newest": "newlyListed",
+      "relevance": "bestMatch"
+    }[requestedSort];
+    if (apiSort) searchUrl.searchParams.set("sort", apiSort);
 
     const searchResponse = await fetch(searchUrl, {
       headers: {
@@ -94,7 +102,8 @@ module.exports = async function handler(req, res) {
       price: item.price && item.price.value ? item.price.value : "",
       currency: item.price && item.price.currency ? item.price.currency : "",
       condition: item.condition || "",
-      seller: item.seller && item.seller.username ? item.seller.username : ""
+      seller: item.seller && item.seller.username ? item.seller.username : "",
+      uploadedAt: item.itemCreationDate || item.itemOriginDate || ""
     })).filter(item => item.url);
 
     return send(res, 200, {
