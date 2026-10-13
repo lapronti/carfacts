@@ -64,6 +64,7 @@
 <section class="section">
 <div class="section-head"><div><h2 id="resultsHeading">Start je zoekopdracht</h2><p id="resultsSub">Selecteer landen en bronnen en voer een onderdeel in.</p></div><div class="results-toolbar"><label for="sortResults">Sorteren</label><select id="sortResults" aria-label="Sorteer eBay-resultaten"><option value="relevance">Meest relevant</option><option value="price-asc">Prijs: laag naar hoog</option><option value="price-desc">Prijs: hoog naar laag</option><option value="newest">Nieuwste eerst</option><option value="oldest">Oudste eerst</option></select></div><div class="status" id="status" role="status" aria-live="polite"></div></div>
 <div class="results" id="results"><div class="empty">Je zoeklinks verschijnen hier. Je wordt doorgestuurd naar de gekozen bronzoekopdrachten; aankopen en advertenties blijven bij de oorspronkelijke websites.</div></div>
+<div style="text-align:center;margin-top:16px"><button type="button" id="loadMore" class="hidden" style="min-height:46px">Laad meer eBay-resultaten</button></div>
 <div class="notice"><strong>Wat deze MVP wel en niet doet</strong>Deze versie maakt zoeklinks per bron en land. Het is nog geen geïntegreerde live-resultatenfeed en toont daarom geen verzonnen advertenties, prijzen of beschikbaarheid. Rechtstreekse automatische resultaten volgen pas na officiële API- of partner-toegang en controle van de gebruiksvoorwaarden.</div>
 </section>
 </main>
@@ -93,6 +94,35 @@ document.getElementById("clearCountries").addEventListener("click",()=>setChecks
 document.getElementById("allSources").addEventListener("click",()=>setChecks("sources",true));
 document.getElementById("clearSources").addEventListener("click",()=>setChecks("sources",false));
 let liveEbayItems=[];
+let ebayCountries=[], ebayPages={}, ebayHasMore={}, ebaySearchId=0, ebayTerm="";
+const ebaySupported=["NL","DE","PL","BE","GB","FR","IT","ES"];
+const loadMoreButton=document.getElementById("loadMore");
+function updateMore(){loadMoreButton.classList.toggle("hidden",!ebayCountries.some(c=>ebayHasMore[c]));}
+async function loadEbayPages(reset=false){
+ const id=ebaySearchId;
+ const status=document.getElementById("status");
+ const countries=ebayCountries.filter(c=>ebayHasMore[c]);
+ if(!countries.length){updateMore();return;}
+ loadMoreButton.disabled=true;loadMoreButton.textContent="Resultaten ophalen…";
+ const results=await Promise.allSettled(countries.map(async c=>{
+  const params=new URLSearchParams({q:ebayTerm,country:c,sort:document.getElementById("sortResults").value,page:String(ebayPages[c]||0)});
+  const response=await fetch("/api/ebay-search?"+params);
+  const data=await response.json();if(!response.ok)throw new Error(data.error||"eBay niet beschikbaar");
+  return {country:c,data};
+ }));
+ if(id!==ebaySearchId)return;
+ let errors=0;
+ results.forEach((r,i)=>{if(r.status==="fulfilled"){
+  const {country,data}=r.value;ebayPages[country]=(ebayPages[country]||0)+1;ebayHasMore[country]=!!data.hasMore;
+  liveEbayItems.push(...(data.items||[]).map(item=>({...item,country})));
+ }else{errors++;ebayHasMore[countries[i]]=false;}});
+ const seen=new Set();liveEbayItems=liveEbayItems.filter(item=>{const key=item.url;if(seen.has(key))return false;seen.add(key);return true;});
+ document.getElementById("results").querySelectorAll(".ebay-loading").forEach(x=>x.remove());
+ renderEbayResults();status.textContent=liveEbayItems.length+" live eBay-aanbiedingen geladen"+(errors?" · "+errors+" landen niet bereikbaar":"")+". "+(ebayCountries.some(c=>ebayHasMore[c])?"Laad meer voor volgende resultaten.":"");
+ if(!liveEbayItems.length){const el=document.createElement("div");el.className="empty ebay-loading";el.textContent="Geen eBay-aanbiedingen gevonden.";document.getElementById("results").prepend(el);}
+ loadMoreButton.disabled=false;loadMoreButton.textContent="Laad meer eBay-resultaten";updateMore();
+}
+loadMoreButton.addEventListener("click",()=>loadEbayPages());
 function sortEbayItems(items){
  const mode=document.getElementById("sortResults").value;
  const price=item=>{const n=Number(item.price);return Number.isFinite(n)&&item.price!==""?n:null};
@@ -113,7 +143,7 @@ function renderEbayResults(){
   const top=document.createElement("div");top.className="result-title";
   if(item.image){const img=document.createElement("img");img.src=item.image;img.alt="";img.loading="lazy";img.style.cssText="width:76px;height:76px;object-fit:contain;border-radius:10px;background:#f1f5f9;flex-shrink:0";top.append(img)}
   const info=document.createElement("div");const title=document.createElement("h3");title.textContent=item.title;
-  const desc=document.createElement("p");const details=[item.condition,item.seller].filter(Boolean);if(item.uploadedAt){const date=new Date(item.uploadedAt);if(!Number.isNaN(date.getTime()))details.push("Geplaatst "+new Intl.DateTimeFormat("nl-NL",{day:"2-digit",month:"short",year:"numeric"}).format(date))}desc.textContent=details.join(" · ")||"eBay-aanbieding";info.append(title,desc);top.append(info);
+  const desc=document.createElement("p");const details=[countryNames[item.country]||item.country,item.condition,item.seller].filter(Boolean);if(item.uploadedAt){const date=new Date(item.uploadedAt);if(!Number.isNaN(date.getTime()))details.push("Geplaatst "+new Intl.DateTimeFormat("nl-NL",{day:"2-digit",month:"short",year:"numeric"}).format(date))}desc.textContent=details.join(" · ")||"eBay-aanbieding";info.append(title,desc);top.append(info);
   const foot=document.createElement("div");foot.className="result-footer";const priceEl=document.createElement("strong");priceEl.textContent=item.price?item.price+" "+(item.currency||""):"Prijs niet beschikbaar";
   const link=document.createElement("a");link.className="link-btn";link.href=item.url;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Bekijk op eBay ↗";foot.append(priceEl,link);card.append(top,foot);root.prepend(card);
  });
@@ -121,7 +151,27 @@ function renderEbayResults(){
 document.getElementById("sortResults").addEventListener("change",()=>{if(queryInput.value.trim())document.getElementById("searchForm").requestSubmit()});
 function makeUrl(domain,term,country,sourceKey){const countryText=country&&country!=="INT"?" "+countryNames[country]:"";const sourcePrefix=domain?"site:"+domain+" ":"Eurostock gebruikte auto-onderdelen ";const q=sourcePrefix+term+countryText+" auto onderdeel";return "https://www.google.com/search?q="+encodeURIComponent(q)}
 function createCard(sourceKey,country,term){const s=sourceInfo[sourceKey];const countryLabel=country==="INT"?"Internationaal":countryNames[country];const url=makeUrl(s.domain,term,country,sourceKey);const card=document.createElement("article");card.className="result";const top=document.createElement("div");top.className="result-title";const icon=document.createElement("div");icon.className="source-icon";icon.textContent=s.name.split(/[. ]/)[0].slice(0,2).toUpperCase();const text=document.createElement("div");const title=document.createElement("h3");title.textContent=s.name;const desc=document.createElement("p");desc.textContent=s.note+" · zoekgebied: "+countryLabel; text.append(title,desc);top.append(icon,text);const foot=document.createElement("div");foot.className="result-footer";const pill=document.createElement("span");pill.className="pill";pill.textContent="Externe zoeklink";const a=document.createElement("a");a.className="link-btn";a.href=url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Open zoekresultaten ↗";foot.append(pill,a);card.append(top,foot);return card}
-document.getElementById("searchForm").addEventListener("submit",e=>{e.preventDefault();const term=queryInput.value.trim();if(!term)return;const src=selectedSources();let countries=selectedCountries();if(scope.value==="NL"||scope.value==="DE"||scope.value==="PL"||scope.value==="LT"||scope.value==="BE")countries=[scope.value];if(scope.value==="EU"||scope.value==="INT")countries=["INT"];if(scope.value==="CUSTOM"&&!countries.length){document.getElementById("status").textContent="Selecteer minimaal één land.";return}if(!src.length){document.getElementById("status").textContent="Selecteer minimaal één bron.";return}const root=document.getElementById("results");root.replaceChildren();let count=0;const ebaySelected=src.includes("ebay");src.filter(k=>k!=="ebay").forEach(k=>{const s=sourceInfo[k];const relevant=countries.filter(c=>c==="INT"||s.country.includes(c));if(relevant.length){relevant.forEach(c=>{root.append(createCard(k,c,term));count++})}else if(countries.includes("INT")){root.append(createCard(k,"INT",term));count++}});document.getElementById("resultsHeading").textContent="Zoekopdracht: "+term;document.getElementById("resultsSub").textContent="eBay-resultaten worden rechtstreeks geladen; overige bronnen openen zoeklinks.";document.getElementById("status").textContent=count+" zoeklinks aangemaakt.";if(ebaySelected){const loading=document.createElement("div");loading.className="empty";loading.textContent="Live eBay-resultaten ophalen…";root.prepend(loading);const selectedCountry=countries.find(c=>["NL","DE","PL","BE","GB","FR","IT","ES"].includes(c))||"NL";fetch("/api/ebay-search?q="+encodeURIComponent(term)+"&country="+encodeURIComponent(selectedCountry)+"&sort="+encodeURIComponent(document.getElementById("sortResults").value)).then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.error||"eBay-zoekopdracht mislukt");return data}).then(data=>{loading.remove();if(!data.items||!data.items.length){liveEbayItems=[];const empty=document.createElement("div");empty.className="empty";empty.textContent=data.message||"Geen eBay-aanbiedingen gevonden.";root.prepend(empty);return}liveEbayItems=data.items;renderEbayResults();document.getElementById("status").textContent=data.items.length+" live eBay-aanbiedingen gevonden."}).catch(error=>{loading.textContent=error.message;loading.style.borderColor="#f3d49b";loading.style.background="#fff9e9";document.getElementById("status").textContent="eBay niet beschikbaar"})}if(!count&&!ebaySelected)root.innerHTML='<div class="empty">Geen bron/land-combinaties gevonden. Kies andere landen of bronnen.</div>';document.getElementById("resultsHeading").scrollIntoView({behavior:"smooth",block:"start"})});
+document.getElementById("searchForm").addEventListener("submit",e=>{
+ e.preventDefault();const term=queryInput.value.trim();if(!term)return;
+ const src=selectedSources();let countries=selectedCountries();
+ if(["NL","DE","PL","LT","BE"].includes(scope.value))countries=[scope.value];
+ if(scope.value==="EU"||scope.value==="INT")countries=[...ebaySupported];
+ if(scope.value==="CUSTOM"&&!countries.length){document.getElementById("status").textContent="Selecteer minimaal één land.";return}
+ if(!src.length){document.getElementById("status").textContent="Selecteer minimaal één bron.";return}
+ const root=document.getElementById("results");root.replaceChildren();let count=0;
+ const ebaySelected=src.includes("ebay");
+ src.filter(k=>k!=="ebay").forEach(k=>{const source=sourceInfo[k];const relevant=countries.filter(c=>source.country.includes(c));relevant.forEach(c=>{root.append(createCard(k,c,term));count++})});
+ document.getElementById("resultsHeading").textContent="Zoekopdracht: "+term;
+ document.getElementById("resultsSub").textContent="eBay-resultaten worden rechtstreeks geladen; overige bronnen openen zoeklinks.";
+ ebaySearchId++;liveEbayItems=[];ebayTerm=term;ebayCountries=ebaySelected?countries.filter(c=>ebaySupported.includes(c)):[];
+ ebayPages={};ebayHasMore={};ebayCountries.forEach(c=>{ebayPages[c]=0;ebayHasMore[c]=true;});
+ updateMore();
+ document.getElementById("status").textContent=count+" externe zoeklinks aangemaakt.";
+ if(ebayCountries.length){const loading=document.createElement("div");loading.className="empty ebay-loading";loading.textContent="Live eBay-resultaten ophalen uit "+ebayCountries.length+" landen…";root.prepend(loading);loadEbayPages();}
+ else if(ebaySelected){const empty=document.createElement("div");empty.className="empty";empty.textContent="Voor de geselecteerde landen is nog geen eBay-API beschikbaar.";root.prepend(empty);}
+ else if(!count){root.innerHTML='<div class="empty">Geen bron/land-combinaties gevonden. Kies andere landen of bronnen.</div>';}
+ document.getElementById("resultsHeading").scrollIntoView({behavior:"smooth",block:"start"});
+});
 </script>
 </body>
 </html>
