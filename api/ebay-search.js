@@ -25,6 +25,8 @@ module.exports = async function handler(req, res) {
   const q = String(req.query.q || "").trim().slice(0, 180);
   const country = String(req.query.country || "NL").toUpperCase();
   const marketplace = MARKETPLACES[country];
+  const limit = 50;
+  const page = Math.min(20, Math.max(0, Number.parseInt(req.query.page, 10) || 0));
 
   if (!q) return send(res, 400, { error: "Vul een onderdeel of OEM-nummer in." });
   if (!marketplace) return send(res, 400, { error: "Dit eBay-land wordt nog niet ondersteund." });
@@ -67,7 +69,8 @@ module.exports = async function handler(req, res) {
     const token = await tokenResponse.json();
     const searchUrl = new URL(apiHost + "/buy/browse/v1/item_summary/search");
     searchUrl.searchParams.set("q", q);
-    searchUrl.searchParams.set("limit", "12");
+    searchUrl.searchParams.set("limit", String(limit));
+    searchUrl.searchParams.set("offset", String(page * limit));
     // Keep the selected eBay marketplace separate from the actual item location.
     // This ensures choosing NL returns items located in the Netherlands, not merely listings visible on eBay NL.
     searchUrl.searchParams.set("filter", "buyingOptions:{FIXED_PRICE},itemLocationCountry:" + country);
@@ -110,7 +113,9 @@ module.exports = async function handler(req, res) {
 
     return send(res, 200, {
       items,
-      total: Number(data.total || items.length),
+      total: Number(data.total ?? items.length),
+      page,
+      hasMore: (page + 1) * limit < Number(data.total ?? 0),
       message: items.length ? "" : "Geen aanbiedingen gevonden. Probeer een andere zoekterm."
     });
   } catch (error) {
