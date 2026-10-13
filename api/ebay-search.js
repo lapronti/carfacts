@@ -25,7 +25,8 @@ module.exports = async function handler(req, res) {
   const q = String(req.query.q || "").trim().slice(0, 180);
   const country = String(req.query.country || "NL").toUpperCase();
   const marketplace = MARKETPLACES[country];
-  const limit = 50;
+  const requestedLimit = Number.parseInt(req.query.limit, 10);
+  const limit = [10, 20, 50].includes(requestedLimit) ? requestedLimit : 20;
   const page = Math.min(20, Math.max(0, Number.parseInt(req.query.page, 10) || 0));
 
   if (!q) return send(res, 400, { error: "Vul een onderdeel of OEM-nummer in." });
