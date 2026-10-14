@@ -48,6 +48,53 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 .vehicle-lookup-note{color:#66746b!important;font-size:11px!important;margin:10px 0 0!important;max-width:100%!important}
 @media(max-width:560px){.plate-lookup-controls{flex-direction:column}.plate-lookup-controls button{min-height:46px}}
 
+
+/* Onderdelen-catalogus: compact zijfilter en beeldgerichte productkaarten. */
+.wrap{max-width:1520px;padding:20px 28px 60px}
+header{margin-bottom:16px;padding-bottom:15px;border-bottom:1px solid var(--line)}
+.hero{padding:24px 28px;margin-bottom:18px}
+.hero h1{font-size:clamp(25px,3vw,35px);letter-spacing:-1px;margin:7px 0}
+.hero p{font-size:13px;max-width:900px;margin:0}
+.parts-workspace{display:grid;grid-template-columns:275px minmax(0,1fr);gap:22px;align-items:start}
+.parts-sidebar{display:flex;flex-direction:column;gap:12px}
+.parts-sidebar .plate-lookup{padding:17px;margin:0;max-width:none;background:var(--card)}
+.parts-sidebar .plate-lookup-title{display:block}
+.parts-sidebar .plate-lookup-title span{display:block;margin-top:5px}
+.parts-sidebar .plate-lookup-controls{flex-direction:column;gap:8px}
+.parts-sidebar .plate-lookup-controls input{width:100%;background:#f8ca27;border-color:#d3aa19;text-align:center;font-weight:800;letter-spacing:2px}
+.parts-sidebar .plate-lookup-controls button{min-height:43px}
+.parts-sidebar .search-form{display:grid;grid-template-columns:1fr;gap:9px;max-width:none;background:var(--card);border:1px solid var(--line);padding:16px;border-radius:10px}
+.parts-sidebar .search-form input,.parts-sidebar .search-form select{border:1px solid var(--line);padding:12px 11px;width:100%;font-size:13px}
+.parts-sidebar .search-form button{padding:12px 10px}
+.parts-sidebar .search-hint{font-size:11px;line-height:1.5;color:var(--muted);margin:0 2px}
+.parts-sidebar .filters{display:flex;flex-direction:column;gap:12px;margin-top:0}
+.parts-sidebar .panel{padding:16px}
+.parts-sidebar .country-options,.parts-sidebar .source-options{grid-template-columns:1fr 1fr;gap:6px}
+.parts-sidebar .choice{padding:8px 6px;font-size:11px}
+.parts-sidebar .panel h3{font-size:13px}
+.results-section{margin-top:0;min-width:0}
+.results-section .section-head{align-items:flex-start;gap:12px;margin-bottom:16px}
+.results-section .results-toolbar{flex-wrap:wrap}
+.results{grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.result{padding:0;overflow:hidden;gap:0;border-radius:9px}
+.result-title{display:flex;flex-direction:column;gap:0;min-width:0}
+.result-title .product-image{display:block;width:100%;height:205px;object-fit:contain;background:#f0f2f0;border-bottom:1px solid var(--line)}
+.result-title .product-info{padding:14px 14px 6px;min-width:0}
+.result h3{font-size:14px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.result p{font-size:11px;line-height:1.55}
+.result-footer{padding:12px 14px 15px;align-items:flex-start;flex-wrap:wrap;gap:10px}
+.result-footer strong{font-size:19px}
+.result-footer .link-btn{width:100%;text-align:center}
+.result:not(.ebay-result){padding:14px}
+.result:not(.ebay-result) .result-title{flex-direction:row;gap:10px}
+.result:not(.ebay-result) .result-footer{padding:10px 0 0}
+.result:not(.ebay-result) .result-footer .link-btn{width:auto}
+.result.ebay-result:not(:has(.product-image)) .product-info{padding-top:28px;min-height:140px}
+.notice{margin-top:20px}
+@media(max-width:1100px){.parts-workspace{grid-template-columns:245px minmax(0,1fr);gap:14px}.results{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap{padding:18px 16px 50px}}
+@media(max-width:720px){.parts-workspace{grid-template-columns:1fr}.parts-sidebar .filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.results{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{padding:20px}.results-section .section-head{flex-direction:column}}
+@media(max-width:520px){.parts-sidebar .filters{grid-template-columns:1fr}.results{grid-template-columns:1fr 1fr;gap:9px}.result-title .product-image{height:145px}.result h3{font-size:12px}.result-title .product-info{padding:10px}.result-footer{padding:9px}.result-footer strong{font-size:15px}.result-footer .link-btn{font-size:11px;padding:9px 7px}.wrap{padding:12px 10px 35px}.hero h1{font-size:25px}}
+
 </style>
 </head>
 <body>
@@ -58,7 +105,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 <div class="eyebrow">Eén zoekopdracht · meerdere markten</div>
 <h1>Vind het juiste onderdeel.<br>Vergelijk over grenzen heen.</h1>
 <p>Zoek gebruikte auto-onderdelen in Nederland en Europa vanuit Carfacts. Vergelijk meerdere bronnen vanuit één overzicht en open de originele advertenties bij de aanbieder.</p>
-<div class="plate-lookup">
+</section>
+<div class="parts-workspace"><aside class="parts-sidebar" aria-label="Zoekfilters"><div class="plate-lookup">
   <div class="plate-lookup-title"><strong>Zoek op kenteken</strong><span>Of zoek hieronder handmatig op onderdeelnummer</span></div>
   <div class="plate-lookup-controls">
     <input id="vehiclePlate" type="text" inputmode="text" autocomplete="off" maxlength="12" placeholder="XX-XXX-X" aria-label="Nederlands kenteken">
@@ -73,7 +121,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 <select id="scope" aria-label="Zoekgebied"><option value="NL">Nederland</option><option value="DE">Duitsland</option><option value="PL">Polen</option><option value="LT">Litouwen</option><option value="BE">België</option><option value="EU">Europa</option><option value="INT" selected>Internationaal</option><option value="CUSTOM">Zelf landen kiezen</option></select>
 <button type="submit">Zoek onderdelen ↗</button>
 </form>
-<div class="search-hint">Zoekassistent van Carfacts. Deze versie opent bronzoekopdrachten; live advertenties en prijzen worden nog niet rechtstreeks opgehaald.</div>
+<div class="search-hint">Live eBay-aanbiedingen · andere platforms via externe zoeklinks · controleer passendheid met OEM-nummer of VIN.</div>
 </section>
 
 <section class="section filters">
@@ -107,15 +155,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 <div class="row-actions"><button type="button" class="text-btn" id="allSources">Selecteer alle bronnen</button><button type="button" class="text-btn" id="clearSources">Wis selectie</button></div>
 </div>
 </section>
-
-<section class="section">
+</aside>
+<section class="section results-section">
 <div class="section-head"><div><h2 id="resultsHeading">Start je zoekopdracht</h2><p id="resultsSub">Selecteer landen en bronnen en voer een onderdeel in.</p></div><div class="results-toolbar"><label for="pageSize">Resultaten per pagina</label><select id="pageSize" aria-label="Aantal zichtbare resultaten per pagina"><option value="10">10</option><option value="20" selected>20</option><option value="50">50</option></select><label for="sortResults">Sorteren</label><select id="sortResults" aria-label="Sorteer eBay-resultaten"><option value="relevance">Meest relevant</option><option value="price-asc">Prijs: laag naar hoog</option><option value="price-desc">Prijs: hoog naar laag</option><option value="newest">Nieuwste eerst</option><option value="oldest">Oudste eerst</option></select></div><div class="status" id="status" role="status" aria-live="polite"></div></div>
 <div class="results-toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 16px"><label for="filterCountry">Land <select id="filterCountry"><option value="">Alle landen</option></select></label><label for="filterCondition">Staat <select id="filterCondition"><option value="">Alle staten</option><option value="used">Gebruikt</option><option value="new">Nieuw</option></select></label><label for="filterMin">Min. prijs (€) <input id="filterMin" type="number" min="0" step="1" placeholder="0" style="width:100px;font-size:14px;letter-spacing:0;padding:10px"></label><label for="filterMax">Max. prijs (€) <input id="filterMax" type="number" min="0" step="1" placeholder="Geen" style="width:100px;font-size:14px;letter-spacing:0;padding:10px"></label></div><div class="status" id="filterNote" style="margin-bottom:10px"></div>
-<div class="results" id="results"><div class="empty">Je zoeklinks verschijnen hier. Je wordt doorgestuurd naar de gekozen bronzoekopdrachten; aankopen en advertenties blijven bij de oorspronkelijke websites.</div></div>
+<div class="results" id="results"><div class="empty">Zoek op kenteken of onderdeelnummer om aanbiedingen en bronlinks te bekijken.</div></div>
 <div id="pagination" class="hidden" style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:16px"><button type="button" id="previousPage" style="min-height:42px">← Vorige</button><span id="pageIndicator" style="font-size:13px"></span><button type="button" id="nextPage" style="min-height:42px">Volgende →</button></div>
 <div style="text-align:center;margin-top:16px"><button type="button" id="loadMore" class="hidden" style="min-height:46px">Laad meer eBay-resultaten</button></div>
-<div class="notice"><strong>Wat deze MVP wel en niet doet</strong>Deze versie maakt zoeklinks per bron en land. Het is nog geen geïntegreerde live-resultatenfeed en toont daarom geen verzonnen advertenties, prijzen of beschikbaarheid. Rechtstreekse automatische resultaten volgen pas na officiële API- of partner-toegang en controle van de gebruiksvoorwaarden.</div>
+<div class="notice"><strong>Over de resultaten</strong>eBay-aanbiedingen worden rechtstreeks via de bestaande koppeling geladen. Andere bronnen openen externe zoekopdrachten. Voor die bronnen tonen we geen onbevestigde prijzen of voorraden.</div>
 </section>
+</div>
 </main>
 <div class="footer">Carfacts onderdelenzoeker. Onafhankelijke zoekhulp; geen officiële samenwerking met de genoemde platforms. Merknamen blijven eigendom van hun respectieve eigenaren.</div>
 </div>
@@ -299,8 +348,8 @@ function renderEbayResults(){
  items.slice(start,start+size).reverse().forEach(item=>{
   const card=document.createElement("article");card.className="result ebay-result";
   const top=document.createElement("div");top.className="result-title";
-  if(item.image){const img=document.createElement("img");img.src=item.image;img.alt="";img.loading="lazy";img.style.cssText="width:76px;height:76px;object-fit:contain;border-radius:10px;background:#f1f5f9;flex-shrink:0";top.append(img)}
-  const info=document.createElement("div");const title=document.createElement("h3");title.textContent=item.title;
+  if(item.image){const img=document.createElement("img");img.src=item.image;img.alt="";img.loading="lazy";img.className="product-image";top.append(img)}
+  const info=document.createElement("div");info.className="product-info";const title=document.createElement("h3");title.textContent=item.title;
   const desc=document.createElement("p");const details=[countryNames[item.country]||item.country,item.condition,item.seller].filter(Boolean);if(item.uploadedAt){const date=new Date(item.uploadedAt);if(!Number.isNaN(date.getTime()))details.push("Geplaatst "+new Intl.DateTimeFormat("nl-NL",{day:"2-digit",month:"short",year:"numeric"}).format(date))}desc.textContent=details.join(" · ")||"eBay-aanbieding";info.append(title,desc);top.append(info);
   const foot=document.createElement("div");foot.className="result-footer";const priceEl=document.createElement("strong");const converted=euroPrice(item);
   priceEl.textContent=converted!==null?euroFormat.format(converted):item.price?item.price+" "+(item.currency||""):"Prijs niet beschikbaar";
