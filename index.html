@@ -630,6 +630,7 @@ async function go(type='plate'){
   if(type==='vin' && !/^[A-HJ-NPR-Z0-9]{17}$/.test(k)){
     q('s').innerHTML='<span class="err">Een VIN moet precies 17 tekens bevatten.</span>';return;
   }
+  q('s').classList.remove('err');
   q('s').textContent='Voertuiggegevens ophalen…';
   q('r').classList.add('hidden');
   if(q('advancedTools')) q('advancedTools').classList.add('hidden');
