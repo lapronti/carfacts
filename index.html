@@ -256,6 +256,16 @@ button:hover{background:var(--blue-dark);transform:none;box-shadow:none}
 .source-chip,.service-event-type{background:#e8eeea;color:var(--blue-dark);border-color:#d3dfd7;border-radius:5px}
 input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 
+
+/* Show the entire model photo rather than cropping roof, bumpers or wheels. */
+@media screen{
+  .model-photo{grid-template-columns:minmax(0,1.65fr) minmax(260px,.55fr);background:#e9ece9;min-height:330px}
+  .model-photo>img{width:100%;height:clamp(310px,34vw,450px);object-fit:contain;object-position:center;background:#e9ece9}
+}
+@media screen and (max-width:560px){
+  .model-photo{grid-template-columns:1fr}
+  .model-photo>img{height:auto;max-height:420px;min-height:0;object-fit:contain}
+}
 </style>
 </head>
 <body>
