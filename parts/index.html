@@ -44,6 +44,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 .vehicle-lookup-status{font-size:12px;margin-top:9px;color:#56645d}
 .vehicle-summary{border:1px solid #d6e3dc;background:#eaf1eb;border-radius:7px;padding:12px;margin-top:10px;font-size:13px}
 .vehicle-summary strong{display:block;font-size:15px;margin-bottom:4px}
+.vehicle-codes{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:9px;color:#394d44;font-size:12px}
 .vehicle-lookup-note{color:#66746b!important;font-size:11px!important;margin:10px 0 0!important;max-width:100%!important}
 @media(max-width:560px){.plate-lookup-controls{flex-direction:column}.plate-lookup-controls button{min-height:46px}}
 
@@ -60,7 +61,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 <div class="plate-lookup">
   <div class="plate-lookup-title"><strong>Zoek op kenteken</strong><span>Of zoek hieronder handmatig op onderdeelnummer</span></div>
   <div class="plate-lookup-controls">
-    <input id="vehiclePlate" type="text" inputmode="text" autocomplete="off" maxlength="12" placeholder="Bijv. X-467-RJ" aria-label="Nederlands kenteken">
+    <input id="vehiclePlate" type="text" inputmode="text" autocomplete="off" maxlength="12" placeholder="XX-XXX-X" aria-label="Nederlands kenteken">
     <button id="lookupVehicle" type="button">Voertuig ophalen</button>
   </div>
   <div id="vehicleLookupStatus" class="vehicle-lookup-status" role="status" aria-live="polite"></div>
@@ -138,7 +139,7 @@ const plateStatus=document.getElementById("vehicleLookupStatus");
 const vehicleSummary=document.getElementById("vehicleSummary");
 function normalizePlate(value){return String(value||"").toUpperCase().replace(/[^A-Z0-9]/g,"")}
 function vehicleSearchPrefix(vehicle){
- return [vehicle.merk,vehicle.handelsbenaming].filter(Boolean).join(" ").replace(/\\s+/g," ").trim();
+ return [vehicle.merk,vehicle.handelsbenaming].filter(Boolean).join(" ").replace(/\s+/g," ").trim();
 }
 async function lookupVehicle(){
  const plate=normalizePlate(plateInput.value),sequence=++plateLookupSequence;
@@ -154,10 +155,23 @@ async function lookupVehicle(){
   if(sequence!==plateLookupSequence)return;
   const data=rows[0];
   if(!data.merk||!data.handelsbenaming)throw new Error("Onvoldoende voertuiggegevens om gericht te zoeken");
-  selectedVehicle={plate,merk:data.merk,handelsbenaming:data.handelsbenaming,bouwjaar:String(data.datum_eerste_toelating||"").slice(0,4),brandstof:data.brandstof||""};
+  // Codes are only displayed when explicitly provided by the data source.
+  // RDW open data does not reliably expose VAG engine/gearbox identifiers.
+  const knownCode=(...values)=>values.map(value=>String(value||"").trim()).find(value=>/^[A-Z0-9]{2,12}$/i.test(value))||"";
+  selectedVehicle={
+   plate,merk:data.merk,handelsbenaming:data.handelsbenaming,
+   bouwjaar:String(data.datum_eerste_toelating||"").slice(0,4),
+   brandstof:data.brandstof||"",
+   motorcode:knownCode(data.motorcode,data.motor_code,data.engine_code),
+   versnellingsbakcode:knownCode(data.versnellingsbakcode,data.versnellingsbak_code,data.gearbox_code,data.transmission_code)
+  };
   const heading=document.createElement("strong");heading.textContent=vehicleSearchPrefix(selectedVehicle);
   const detail=document.createElement("span");detail.textContent=[selectedVehicle.plate,selectedVehicle.bouwjaar,selectedVehicle.brandstof].filter(Boolean).join(" · ");
-  vehicleSummary.append(heading,detail);vehicleSummary.classList.remove("hidden");
+  const codes=document.createElement("div");codes.className="vehicle-codes";
+  const engine=document.createElement("span");engine.textContent="Motorcode: "+(selectedVehicle.motorcode||"Niet beschikbaar via RDW");
+  const gearbox=document.createElement("span");gearbox.textContent="Versnellingsbakcode: "+(selectedVehicle.versnellingsbakcode||"Niet beschikbaar via RDW");
+  codes.append(engine,gearbox);
+  vehicleSummary.append(heading,detail,codes);vehicleSummary.classList.remove("hidden");
   plateStatus.textContent="Voertuig gevonden. Vul hieronder het gewenste onderdeel in.";
   queryInput.placeholder="Bijv. koplamp links, turbo of OEM-nummer";
   queryInput.focus();
