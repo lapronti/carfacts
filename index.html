@@ -436,7 +436,7 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 </div>
 
 <script>
-const A='https://carfacts-rdw.nlaghmiri.workers.dev/api/rdw';
+const A='/api/rdw';
 const q=x=>document.getElementById(x);
 const v=x=>x==null||x===''?'—':x;
 
@@ -630,6 +630,7 @@ async function go(type='plate'){
   if(type==='vin' && !/^[A-HJ-NPR-Z0-9]{17}$/.test(k)){
     q('s').innerHTML='<span class="err">Een VIN moet precies 17 tekens bevatten.</span>';return;
   }
+  q('s').classList.remove('err');
   q('s').textContent='Voertuiggegevens ophalen…';
   q('r').classList.add('hidden');
   if(q('advancedTools')) q('advancedTools').classList.add('hidden');
@@ -680,8 +681,8 @@ async function go(type='plate'){
       loadExtraVehicleData({voertuig_identificatienummer:k,kenteken:d.plateNumber?.plateNumber||'',vinApiData:d});
       loadModelPhoto(normalizedMake,s.model||s.Model,s.registrationDate||modelYear);
       return;    }
-    const z=await fetch(A+'?kenteken='+encodeURIComponent(k));
-    if(!z.ok) throw Error('RDW is tijdelijk niet bereikbaar');
+    const z=await fetch(A+'?kenteken='+encodeURIComponent(k),{headers:{Accept:'application/json'}});
+    if(!z.ok) throw Error('RDW is tijdelijk niet bereikbaar. Probeer het opnieuw.');
     const a=await z.json();
     if(!a.length) throw Error('Kenteken niet gevonden');
     const x=a[0];
@@ -764,7 +765,7 @@ async function go(type='plate'){
     loadExtraVehicleData(x);
     checkBPM(x);
   }catch(e){
-    q('s').innerHTML='<span class="err">Zoeken mislukt: '+e.message+'</span>';
+    q('s').textContent='Zoeken mislukt: '+(e instanceof TypeError?'De verbinding met Carfacts is niet beschikbaar. Probeer de pagina opnieuw te laden.':e.message);q('s').classList.add('err');
   }
 }
 
