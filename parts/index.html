@@ -97,6 +97,7 @@ document.getElementById("allSources").addEventListener("click",()=>setChecks("so
 document.getElementById("clearSources").addEventListener("click",()=>setChecks("sources",false));
 let liveEbayItems=[];
 let loadingEbay=false;
+let loadingSearchId=-1;
 function filteredEbayItems(){
  const country=document.getElementById("filterCountry").value;
  const condition=document.getElementById("filterCondition").value;
@@ -126,8 +127,8 @@ const ebaySupported=["NL","DE","PL","BE","GB","FR","IT","ES"];
 const loadMoreButton=document.getElementById("loadMore");
 function updateMore(){loadMoreButton.classList.toggle("hidden",!ebayCountries.some(c=>ebayHasMore[c]));}
 async function loadEbayPages(){
- if(loadingEbay)return;
- loadingEbay=true;
+ if(loadingEbay&&loadingSearchId===ebaySearchId)return;
+ loadingEbay=true;loadingSearchId=ebaySearchId;
  const id=ebaySearchId;
  const status=document.getElementById("status");
  const countries=ebayCountries.filter(c=>ebayHasMore[c]);
@@ -139,7 +140,7 @@ async function loadEbayPages(){
   const data=await response.json();if(!response.ok)throw new Error(data.error||"eBay niet beschikbaar");
   return {country:c,data};
  }));
- if(id!==ebaySearchId){loadingEbay=false;return;}
+ if(id!==ebaySearchId)return;
  let errors=0;
  results.forEach((r,i)=>{if(r.status==="fulfilled"){
   const {country,data}=r.value;ebayPages[country]=(ebayPages[country]||0)+1;ebayHasMore[country]=!!data.hasMore;
@@ -191,7 +192,7 @@ function updatePager(){
  bar.classList.toggle("hidden",!total);
  document.getElementById("pageIndicator").textContent="Pagina "+(visiblePage+1)+" van "+pages+" · "+total+" geladen advertenties";
  document.getElementById("previousPage").disabled=visiblePage===0;
- document.getElementById("nextPage").disabled=visiblePage>=pages-1&&!ebayCountries.some(c=>ebayHasMore[c]);
+ document.getElementById("nextPage").disabled=visiblePage>=pages-1&&(!ebayCountries.some(c=>ebayHasMore[c])||!!document.getElementById("filterCountry").value);
  }
  document.getElementById("previousPage").addEventListener("click",()=>{if(visiblePage>0){visiblePage--;renderEbayResults();document.getElementById("resultsHeading").scrollIntoView({block:"start"});}});
  document.getElementById("nextPage").addEventListener("click",async()=>{
@@ -211,6 +212,7 @@ document.getElementById("searchForm").addEventListener("submit",e=>{
  if(scope.value==="CUSTOM"&&!countries.length){document.getElementById("status").textContent="Selecteer minimaal één land.";return}
  if(!src.length){document.getElementById("status").textContent="Selecteer minimaal één bron.";return}
  const root=document.getElementById("results");root.replaceChildren();let count=0;
+ document.getElementById("filterCountry").replaceChildren(new Option("Alle landen",""));
  const ebaySelected=src.includes("ebay");
  src.filter(k=>k!=="ebay").forEach(k=>{const source=sourceInfo[k];const relevant=countries.filter(c=>source.country.includes(c));relevant.forEach(c=>{root.append(createCard(k,c,term));count++})});
  document.getElementById("resultsHeading").textContent="Zoekopdracht: "+term;
