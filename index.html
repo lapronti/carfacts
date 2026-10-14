@@ -232,7 +232,31 @@ footer{opacity:.8}
   .section h2{break-after:avoid}
   .section > div{break-inside:avoid}
   footer{display:block!important;margin-top:8px!important;padding-top:5px;border-top:1px solid #d9e1ea;font-size:8px;color:#667085}
-} .header-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.parts-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#eaf2ff;color:#1746a2;border:1px solid #cbdcff;border-radius:999px;padding:9px 13px;font-size:12px;font-weight:850;transition:.18s ease}.parts-link:hover{background:#dce9ff;transform:translateY(-1px)}@media(max-width:560px){header{align-items:flex-start;flex-wrap:wrap}.header-actions{width:100%;justify-content:space-between}} </style>
+} .header-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.parts-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#eaf2ff;color:#1746a2;border:1px solid #cbdcff;border-radius:999px;padding:9px 13px;font-size:12px;font-weight:850;transition:.18s ease}.parts-link:hover{background:#dce9ff;transform:translateY(-1px)}@media(max-width:560px){header{align-items:flex-start;flex-wrap:wrap}.header-actions{width:100%;justify-content:space-between}} 
+/* Carfacts restrained editorial palette: consistent with parts search. */
+:root{--ink:#232a2d;--muted:#647071;--blue:#285c60;--blue-dark:#1c4649;--cyan:#285c60;--bg:#f5f4f0;--card:#fffefa;--line:#deded7;--soft:#eeefea;--green:#326b54;--orange:#9c6a2b;--shadow:0 3px 16px rgba(25,35,34,.055)}
+body{background:var(--bg)}
+.logo{color:var(--ink);text-shadow:none}
+.badge{background:#e8eeea;color:#285c60;border:1px solid #d3dfd7;box-shadow:none;border-radius:5px}
+.search-card{background:#263638;border:1px solid #263638;box-shadow:none;border-radius:14px}
+.search-card:after{display:none}
+.search-box{background:#324346;border-color:#526361;backdrop-filter:none;border-radius:8px}
+.search-box label{color:#d0dfd9}
+button{background:var(--blue);box-shadow:none;border-radius:7px;transition:background .15s ease}
+button:hover{background:var(--blue-dark);transform:none;box-shadow:none}
+.search-card input{border-radius:7px}
+.hero,.item,.mrb-card,.bpm-card,.external-data,.import,.notice,.service-event{box-shadow:none;border-color:var(--line)}
+.hero{border-radius:12px}
+.hero-top{background:var(--card);border-bottom:1px solid var(--line)}
+.eyebrow{color:var(--blue)}
+.model-photo{background:#263638}
+.model-photo-info{background:#263638}
+.model-photo-info small{color:#c1d9d1}
+.anwb-card{background:var(--card)}
+.source-chip,.service-event-type{background:#e8eeea;color:var(--blue-dark);border-color:#d3dfd7;border-radius:5px}
+input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+</style>
 </head>
 <body>
 <div class="container">
