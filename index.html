@@ -266,6 +266,33 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
   .model-photo{grid-template-columns:1fr}
   .model-photo>img{height:auto;max-height:420px;min-height:0;object-fit:contain}
 }
+
+/* Finnik-inspired readable report, with Carfacts' own design and data provenance. */
+.container{max-width:1120px}
+.hero{border-radius:11px;margin-top:18px}
+.hero-top{padding:20px 24px 13px}
+.title{font-size:30px}
+.vehicle-intro{font-size:13px;line-height:1.65;color:var(--muted);padding:0 24px 14px;margin:0}
+.model-photo{min-height:0;grid-template-columns:minmax(0,1fr) 235px;background:#edf0ed}
+.model-photo img{height:clamp(220px,30vw,330px);object-fit:contain}
+.model-photo-info{padding:18px}
+.value-box{padding:13px 24px}
+.value{font-size:22px}
+.section{margin-top:22px}
+.section h2{font-size:18px;margin-bottom:10px}
+.section h2:before{height:15px;width:3px;background:#285c60}
+.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.item{min-height:66px;border-radius:8px;padding:12px 14px}
+.item small{font-size:10px;line-height:1.4}
+.item b{font-size:14px}
+.report-chooser{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:0;overflow:hidden}
+.report-chooser>summary{cursor:pointer;font-weight:750;padding:15px 18px;font-size:13px}
+.report-chooser-body{padding:0 18px 16px}
+.report-chooser .chooser-intro{font-size:12px}
+.report-chooser h2{display:none}
+@media(max-width:700px){.model-photo{grid-template-columns:1fr}.model-photo img{height:auto;max-height:310px}.model-photo-info{padding:14px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.vehicle-intro{padding:0 16px 12px}.hero-top{padding:16px}.value-box{padding:12px 16px}}
+@media print{.report-chooser{display:none!important}.vehicle-intro{font-size:10px!important}.model-photo img{max-height:160px!important}}
+
 </style>
 </head>
 <body>
@@ -301,27 +328,17 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 <div><div class="eyebrow">Voertuig</div><div id="t" class="title"></div></div>
 <div id="plate" class="plate"></div>
 </div>
-<div id="modelPhoto"></div>
+<p id="vehicleIntro" class="vehicle-intro"></p><div id="modelPhoto"></div>
 <div class="value-box">
 <div><div class="value-label">RDW-catalogusprijs (geen actuele marktwaarde)</div><div class="value" id="price">—</div></div>
-<div style="font-size:24px">€</div>
+
 </div>
 </section>
 
-<section id="reportChooser" class="section report-chooser hidden">
-<h2>Wat wil je bekijken?</h2>
-<p class="chooser-intro">Kies welke onderdelen na de kentekencheck zichtbaar moeten zijn.</p>
-<div class="chooser-actions"><button type="button" onclick="setReportSelection(true)">Alles tonen</button><button type="button" onclick="setReportSelection(false)">Alles uit</button></div>
-<div class="chooser-grid">
-<label><input type="checkbox" data-report="summary" checked onchange="applyReportSelection()"> <span>Kerngegevens</span></label>
-<label><input type="checkbox" data-report="apk" checked onchange="applyReportSelection()"> <span>APK & tellerstand</span></label>
-<label><input type="checkbox" data-report="history" checked onchange="applyReportSelection()"> <span>Onderhoudshistorie</span></label>
-<label><input type="checkbox" data-report="rdw" onchange="applyReportSelection()"> <span>Alle beschikbare RDW-gegevens</span></label>
-</div>
-</section>
+
 
 <section class="section report-section" data-report-section="summary">
-<h2>In één oogopslag</h2>
+<h2>Snelle check</h2>
 <div id="summary" class="grid"></div>
 </section>
 
@@ -438,7 +455,34 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
     <div class="pro-card"><h3>🏁 Proefrit-assistent</h3><div id="proTestDrive"></div></div>
   </div>
 </div></section>
-<section class="section report-section" data-report-section="compare"><h2>Carfacts Auto Vergelijken</h2><div class="market-panel"><p style="color:#667085;font-size:13px;margin-top:0">Voer een tweede auto in om de huidige auto met een andere RDW-auto te vergelijken.</p><div class="sim-controls"><div><label>Tweede kenteken</label><input id="comparePlate" maxlength="8" placeholder="Bijv. AB-12-CD"></div><div style="display:flex;align-items:end"><button onclick="compareCarfacts()">Vergelijk</button></div></div><div id="compareResult"></div></div></section><div class="pdf-actions"><button class="pdf-btn" onclick="generateCarfactsPdf()">📄 PDF-rapport maken</button></div><footer>Bron: RDW Open Data · Carfacts</footer>
+<section class="section report-section" data-report-section="compare"><h2>Carfacts Auto Vergelijken</h2><div class="market-panel"><p style="color:#667085;font-size:13px;margin-top:0">Voer een tweede auto in om de huidige auto met een andere RDW-auto te vergelijken.</p><div class="sim-controls"><div><label>Tweede kenteken</label><input id="comparePlate" maxlength="8" placeholder="Bijv. AB-12-CD"></div><div style="display:flex;align-items:end"><button onclick="compareCarfacts()">Vergelijk</button></div></div><div id="compareResult"></div></div></section><div class="pdf-actions"><button class="pdf-btn" onclick="generateCarfactsPdf()">📄 PDF-rapport maken</button></div><details id="reportChooser" class="section report-chooser hidden"><summary>Rapportonderdelen aanpassen</summary><div class="report-chooser-body">
+<h2>Wat wil je bekijken?</h2>
+<p class="chooser-intro">Kies welke onderdelen na de kentekencheck zichtbaar moeten zijn.</p>
+<div class="chooser-actions"><button type="button" onclick="setReportSelection(true)">Alles tonen</button><button type="button" onclick="setReportSelection(false)">Alles uit</button></div>
+<div class="chooser-grid">
+<label><input type="checkbox" data-report="summary" checked onchange="applyReportSelection()"> <span>Kerngegevens</span></label>
+<label><input type="checkbox" data-report="apk" checked onchange="applyReportSelection()"> <span>APK & tellerstand</span></label>
+<label><input type="checkbox" data-report="history" checked onchange="applyReportSelection()"> <span>Onderhoudshistorie</span></label>
+<label><input type="checkbox" data-report="rdw" onchange="applyReportSelection()"> <span>Alle beschikbare RDW-gegevens</span></label>
+<label><input type="checkbox" data-report="vehicle" onchange="applyReportSelection()"> <span>Basisgegevens</span></label>
+<label><input type="checkbox" data-report="engine" onchange="applyReportSelection()"> <span>Technische informatie</span></label>
+<label><input type="checkbox" data-report="dimensions" onchange="applyReportSelection()"> <span>Afmetingen en gewichten</span></label>
+<label><input type="checkbox" data-report="bpm" onchange="applyReportSelection()"> <span>BPM en import</span></label>
+<label><input type="checkbox" data-report="mrb" onchange="applyReportSelection()"> <span>Wegenbelasting</span></label>
+<label><input type="checkbox" data-report="extra" onchange="applyReportSelection()"> <span>Extra voertuigdata</span></label>
+<label><input type="checkbox" data-report="intelligence" onchange="applyReportSelection()"> <span>Carfacts Intelligence</span></label>
+<label><input type="checkbox" data-report="market" onchange="applyReportSelection()"> <span>Marktanalyse</span></label>
+<label><input type="checkbox" data-report="distribution" onchange="applyReportSelection()"> <span>Distributie</span></label>
+<label><input type="checkbox" data-report="lifecycle" onchange="applyReportSelection()"> <span>Levensduur</span></label>
+<label><input type="checkbox" data-report="repair" onchange="applyReportSelection()"> <span>Reparatierisico</span></label>
+<label><input type="checkbox" data-report="fraud" onchange="applyReportSelection()"> <span>Fraude-indicatie</span></label>
+<label><input type="checkbox" data-report="sell" onchange="applyReportSelection()"> <span>Verkoopadvies</span></label>
+<label><input type="checkbox" data-report="garage" onchange="applyReportSelection()"> <span>AI Garage</span></label>
+<label><input type="checkbox" data-report="pro" onchange="applyReportSelection()"> <span>Pro</span></label>
+<label><input type="checkbox" data-report="anwb" onchange="applyReportSelection()"> <span>ANWB koerslijst</span></label>
+</div>
+</div></details>
+<footer>Bron: RDW Open Data · Carfacts</footer>
 </div>
 </div>
 
@@ -705,11 +749,16 @@ async function go(type='plate'){
     loadModelPhoto(x.merk,x.handelsbenaming,x.datum_eerste_toelating);
 
     q('summary').innerHTML=[
-      it('Eerste toelating',formatDate(x.datum_eerste_toelating)),
+      it('Bouwjaar',String(x.datum_eerste_toelating||'').slice(0,4)),
+      it('APK geldig tot',formatDate(x.vervaldatum_apk)),
+      it('Tellerstandoordeel',x.tellerstandoordeel),
       it('Brandstof',x.brandstof),
-      it('Vermogen',x.vermogen?x.vermogen+' kW':null),
-      it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null)
+      it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null),
+      it('Eerste toelating',formatDate(x.datum_eerste_toelating)),
+      it('Geïmporteerd?',x.datum_eerste_toelating&&x.datum_eerste_tenaamstelling_in_nederland?(String(x.datum_eerste_toelating)===String(x.datum_eerste_tenaamstelling_in_nederland)?'Geen datumverschil':'Datumverschil — controleren'):'Niet vast te stellen'),
+      it('WAM verzekerd',x.wam_verzekerd)
     ].join('');
+    q('vehicleIntro').textContent=[x.merk,x.handelsbenaming].filter(Boolean).join(' ')+' · '+[String(x.datum_eerste_toelating||'').slice(0,4),x.voertuigsoort,x.brandstof,x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null].filter(Boolean).join(' · ')+'. Gegevens volgens beschikbare RDW-registratie.';
 
     q('g').innerHTML=[
       it('Kenteken',formatPlate(x.kenteken)),
@@ -1096,7 +1145,7 @@ function setReportSelection(all){
   applyReportSelection();
 }
 function resetReportSelection(){
-  const defaults=new Set(['summary','apk','history']);
+  const defaults=new Set(['summary','vehicle','engine','dimensions','bpm','mrb','apk','history','extra']);
   document.querySelectorAll('[data-report]').forEach(box=>box.checked=defaults.has(box.dataset.report));
   applyReportSelection();
 }
