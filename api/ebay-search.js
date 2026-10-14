@@ -10,6 +10,10 @@ const MARKETPLACES = {
   US: "EBAY_US"
 };
 
+let cachedToken = null;
+let cachedTokenExpiry = 0;
+let tokenPromise = null;
+
 function send(res, status, payload) {
   res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
@@ -26,7 +30,7 @@ module.exports = async function handler(req, res) {
   const country = String(req.query.country || "NL").toUpperCase();
   const marketplace = MARKETPLACES[country];
   const limit = 50;
-  const page = Math.min(20, Math.max(0, Number.parseInt(req.query.page, 10) || 0));
+  const page = Math.min(19, Math.max(0, Number.parseInt(req.query.page, 10) || 0));
 
   if (!q) return send(res, 400, { error: "Vul een onderdeel of OEM-nummer in." });
   if (!marketplace) return send(res, 400, { error: "Dit eBay-land wordt nog niet ondersteund." });
@@ -45,28 +49,33 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const credentials = Buffer.from(clientId + ":" + clientSecret).toString("base64");
-    const tokenResponse = await fetch(apiHost + "/identity/v1/oauth2/token", {
-      method: "POST",
-      headers: {
-        Authorization: "Basic " + credentials,
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({
-        grant_type: "client_credentials",
-        scope: "https://api.ebay.com/oauth/api_scope"
-      })
-    });
-
-    if (!tokenResponse.ok) {
-      const details = await tokenResponse.text();
-      console.error("eBay OAuth failed:", tokenResponse.status, details.slice(0, 500));
-      return send(res, 502, {
-        error: "eBay kon geen toegangstoken geven. Controleer of de Production- of Sandbox-sleutels bij de gekozen API-omgeving horen."
-      });
+    // Reuse a short-lived OAuth token across requests in the same serverless instance.
+    if (!cachedToken || Date.now() >= cachedTokenExpiry) {
+      if (!tokenPromise) {
+        tokenPromise = (async () => {
+          const credentials = Buffer.from(clientId + ":" + clientSecret).toString("base64");
+          const response = await fetch(apiHost + "/identity/v1/oauth2/token", {
+            method: "POST",
+            headers: {
+              Authorization: "Basic " + credentials,
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({
+              grant_type: "client_credentials",
+              scope: "https://api.ebay.com/oauth/api_scope"
+            })
+          });
+          if (!response.ok) throw new Error("eBay OAuth failed: " + response.status);
+          const token = await response.json();
+          cachedToken = token.access_token;
+          cachedTokenExpiry = Date.now() + Math.max(0, Number(token.expires_in || 7200) - 120) * 1000;
+        })().finally(() => { tokenPromise = null; });
+      }
+      try { await tokenPromise; } catch (error) {
+        console.error("eBay OAuth failed:", error.message);
+        return send(res, 502, { error: "eBay kon geen toegangstoken geven. Controleer de API-instellingen." });
+      }
     }
-
-    const token = await tokenResponse.json();
     const searchUrl = new URL(apiHost + "/buy/browse/v1/item_summary/search");
     searchUrl.searchParams.set("q", q);
     searchUrl.searchParams.set("limit", String(limit));
@@ -85,7 +94,7 @@ module.exports = async function handler(req, res) {
 
     const searchResponse = await fetch(searchUrl, {
       headers: {
-        Authorization: "Bearer " + token.access_token,
+        Authorization: "Bearer " + cachedToken,
         "X-EBAY-C-MARKETPLACE-ID": marketplace,
         "Accept": "application/json"
       }
@@ -115,7 +124,7 @@ module.exports = async function handler(req, res) {
       items,
       total: Number(data.total ?? items.length),
       page,
-      hasMore: (page + 1) * limit < Number(data.total ?? 0),
+      hasMore: items.length > 0 && page < 19 && (page + 1) * limit < Number(data.total ?? 0),
       message: items.length ? "" : "Geen aanbiedingen gevonden. Probeer een andere zoekterm."
     });
   } catch (error) {
