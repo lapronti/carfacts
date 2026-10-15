@@ -319,6 +319,14 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
   #pdfReport .pdf-report-table td{font-weight:700;color:#202d2d}
   #pdfReport .pdf-report-note{border-top:1px solid #dce5df;padding-top:7px;margin-top:10px;font-size:8.5px;color:#687775}
 }
+
+.apk-defects{margin-top:12px;background:var(--card);border:1px solid var(--line);padding:15px;border-radius:9px}
+.apk-defects h3{font-size:15px;margin:0 0 6px}
+.apk-defects-note{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 8px}
+.apk-defects-table{border-collapse:collapse;width:100%;font-size:12px}
+.apk-defects-table th,.apk-defects-table td{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+@media(max-width:560px){.apk-defects{overflow-x:auto}.apk-defects-table{min-width:490px}}
+@media print{.apk-defects{display:none!important}}
 </style>
 </head>
 <body>
@@ -463,6 +471,7 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 <section class="section report-section" data-report-section="apk">
 <h2>Kilometerstand & APK</h2>
 <div id="f" class="grid"></div>
+<div id="apkDefects" class="apk-defects" aria-live="polite"></div>
 </section>
 
 <div id="advancedTools" class="hidden">
@@ -815,6 +824,8 @@ async function go(type='plate'){
       it('WAM verzekerd',x.wam_verzekerd),
       it('Tenaamstellen mogelijk',x.tenaamstellen_mogelijk)
     ].join('');
+
+    renderApkDefects(x);
 
     q('m').innerHTML=[
       it('Brandstof',x.brandstof),
@@ -1173,6 +1184,37 @@ function applyReportSelection(){
 function setReportSelection(all){
   document.querySelectorAll('[data-report]').forEach(box=>box.checked=all);
   applyReportSelection();
+}
+function renderApkDefects(x){
+  const box=q('apkDefects');
+  if(!box)return;
+  box.replaceChildren();
+  const title=document.createElement('h3');title.textContent='Geregistreerde APK-gebreken';box.appendChild(title);
+  const note=document.createElement('p');note.className='apk-defects-note';box.appendChild(note);
+  if(x.apk_gebreken_beschikbaar!==true){
+    note.textContent='De openbare RDW-gebrekenregistratie is momenteel niet beschikbaar. Dit zegt niets over de keuringshistorie.';
+    return;
+  }
+  const records=Array.isArray(x.apk_gebreken)?x.apk_gebreken:[];
+  if(!records.length){
+    note.textContent='Geen geregistreerde gebreken gevonden in deze openbare RDW-dataset. Dit is geen volledig APK-overzicht en bewijst niet dat er nooit gebreken zijn geweest.';
+    return;
+  }
+  note.textContent='Onderstaande meldingen komen uit RDW Open Data. Het zijn geconstateerde gebreken, niet alle APK-keuringen. De code is de officiële RDW-gebrekcode.';
+  const table=document.createElement('table');table.className='apk-defects-table';
+  const thead=document.createElement('thead');const tr=document.createElement('tr');
+  ['Datum melding','Gebrekcode','Aantal','Erkenning'].forEach(label=>{const th=document.createElement('th');th.textContent=label;tr.appendChild(th);});
+  thead.appendChild(tr);table.appendChild(thead);
+  const tbody=document.createElement('tbody');
+  records.forEach(d=>{
+    const row=document.createElement('tr');
+    const date=String(d.datum||'');
+    const values=[/^\\d{8}$/.test(date)?date.slice(6,8)+'-'+date.slice(4,6)+'-'+date.slice(0,4):'Onbekend',d.code||'Onbekend',String(d.aantal||'—'),d.soort||'—'];
+    values.forEach(value=>{const td=document.createElement('td');td.textContent=value;row.appendChild(td);});
+    tbody.appendChild(row);
+  });
+  table.appendChild(tbody);box.appendChild(table);
+  if(x.apk_gebreken_afgekapt){const cap=document.createElement('p');cap.className='apk-defects-note';cap.textContent='Maximaal 100 meldingen getoond; er kunnen meer registraties zijn.';box.appendChild(cap);}
 }
 function resetReportSelection(){
   const defaults=new Set(['summary','vehicle','engine','dimensions','bpm','mrb','apk','history','extra']);
