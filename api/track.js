@@ -12,7 +12,11 @@ module.exports=async(req,res)=>{
  if(b.type==='page_view'){if(!pages.has(b.page))return reply(res,400,{error:'Invalid page'});field+=':'+b.page}
  if(b.type==='plate_search'){const plate=String(b.plate||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!/^[A-Z0-9]{5,8}$/.test(plate))return reply(res,400,{error:'Invalid plate'});field+=':'+plate}
  if(b.type==='outbound_click'){if(!sources.has(b.source))return reply(res,400,{error:'Invalid source'});field+=':'+b.source}
- if(b.type==='parts_search'){field+=':total'}
+ if(b.type==='parts_search'){
+  const term=String(b.term||'').trim().replace(/\s+/g,' ').slice(0,100);
+  if(!term||/[\x00-\x1f\x7f]/.test(term))return reply(res,400,{error:'Invalid search'});
+  field+=':'+term.toLocaleLowerCase('nl-NL');
+ }
  if(b.type==='pro_interest'){field+=':total'}
  try{await cmd('HINCRBY',key,field,1);await cmd('EXPIRE',key,86400*100);return reply(res,200,{ok:true})}catch{return reply(res,503,{error:'Storage unavailable'})}
 };
