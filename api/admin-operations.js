@@ -1,6 +1,7 @@
 const {cmd,configured,reply}=require('./_analytics');
 const {session}=require('./_admin-security');
 const crypto=require('node:crypto');
+const monitor=require('./_monitor');
 const auditKey='cf:admin:audit';
 const iso=()=>new Date().toISOString();
 async function audit(action,detail=''){try{await cmd('LPUSH',auditKey,JSON.stringify({date:iso(),action,detail}));await cmd('LTRIM',auditKey,0,199);await cmd('EXPIRE',auditKey,86400*90)}catch{}}
@@ -11,11 +12,15 @@ module.exports=async(req,res)=>{
  try{if(!await session(req))return reply(res,401,{error:'Login met 2FA vereist'})}catch{return reply(res,503,{error:'Authenticatie niet beschikbaar'})}
  if(req.method==='POST'){
   const origin=req.headers.origin;try{if(!origin||new URL(origin).host!==req.headers.host)return reply(res,403,{error:'Ongeldige herkomst'})}catch{return reply(res,403,{error:'Ongeldige herkomst'})}
-  if(req.body?.action!=='delete_bug'||!/^[-a-f0-9]{36}$/.test(String(req.body.id||'')))return reply(res,400,{error:'Ongeldige actie'});
-  try{const all=await cmd('LRANGE','cf:bugs',0,499)||[];const found=all.find(v=>{try{return JSON.parse(v).id===req.body.id}catch{return false}});if(!found)return reply(res,404,{error:'Melding niet gevonden'});await cmd('LREM','cf:bugs',1,found);await audit('bug_deleted',req.body.id);return reply(res,200,{ok:true})}catch{return reply(res,503,{error:'Verwijderen mislukt'})}
+  const action=req.body?.action;
+  if(action==='set_budget'){const budget=Number(req.body.eur);if(!Number.isFinite(budget)||budget<0||budget>100000)return reply(res,400,{error:'Ongeldig budget'});try{await cmd('SET','cf:admin:vwe_budget',String(budget));await audit('budget_updated');return reply(res,200,{ok:true,budgetEur:budget,active:false})}catch{return reply(res,503,{error:'Opslaan mislukt'})}}
+  if(action==='set_bug_status'){const id=String(req.body.id||''),status=String(req.body.status||'');if(!/^[-a-f0-9]{36}$/.test(id)||!['nieuw','in_behandeling','opgelost'].includes(status))return reply(res,400,{error:'Ongeldige invoer'});try{const all=await cmd('LRANGE','cf:bugs',0,499)||[];if(!all.some(v=>{try{return JSON.parse(v).id===id}catch{return false}}))return reply(res,404,{error:'Melding niet gevonden'});await cmd('SET','cf:bug:status:'+id,status,'EX',86400*90);await audit('bug_status_updated');return reply(res,200,{ok:true})}catch{return reply(res,503,{error:'Opslaan mislukt'})}}
+  if(action!=='delete_bug'||!/^[-a-f0-9]{36}$/.test(String(req.body.id||'')))return reply(res,400,{error:'Ongeldige actie'});
+  try{const all=await cmd('LRANGE','cf:bugs',0,499)||[];const found=all.find(v=>{try{return JSON.parse(v).id===req.body.id}catch{return false}});if(!found)return reply(res,404,{error:'Melding niet gevonden'});await cmd('LREM','cf:bugs',1,found);await cmd('DEL','cf:bug:status:'+req.body.id);await audit('bug_deleted',req.body.id);return reply(res,200,{ok:true})}catch{return reply(res,503,{error:'Verwijderen mislukt'})}
  }
  if(req.method!=='GET')return reply(res,405,{error:'Method not allowed'});
  const action=String(req.query.action||'overview');
+ if(action==='monitor'){try{const [history,week,budget,abuse]=await Promise.all([cmd('LRANGE','cf:monitor:history',0,29),cmd('GET','cf:monitor:last_week'),cmd('GET','cf:admin:vwe_budget'),cmd('GET','cf:security:blocked:'+new Date().toISOString().slice(0,10))]);return reply(res,200,{history:(history||[]).map(v=>JSON.parse(v)),week:week?JSON.parse(week):null,budgetEur:budget===null?null:Number(budget),budgetEnforced:false,blockedRequests:Number(abuse||0),searchConsole:{connected:false,url:'https://search.google.com/search-console'}})}catch{return reply(res,503,{error:'Monitoringgegevens niet beschikbaar'})}}
  if(action==='health'){
   const [rdw,storage]=await Promise.all([check('https://opendata.rdw.nl/resource/m9d7-ebf2.json?%24limit=1'),cmd('PING').then(x=>({state:x==='PONG'?'ok':'error'})).catch(()=>({state:'error'}))]);
   return reply(res,200,{checkedAt:iso(),rdw,storage,valuation:{state:'not_connected',label:'Geen VWE-waarderingskoppeling bevestigd'},payments:{state:'not_connected',label:'Geen betaalprovider bevestigd'}});
