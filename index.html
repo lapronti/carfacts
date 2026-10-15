@@ -365,6 +365,7 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 .analytics-consent-actions button{padding:10px 15px;border:1px solid #cbd5e1;border-radius:8px;cursor:pointer;font-weight:700;background:#fff;color:#101828}
 .analytics-consent-actions button:last-child{background:#2563eb;color:#fff;border-color:#2563eb}
 @media print{#analyticsConsentBanner{display:none!important}}
+.site-header{gap:22px}.site-header .logo{white-space:nowrap;text-decoration:none;display:inline-block}.site-header .header-actions{display:flex;gap:8px;align-items:stretch;justify-content:flex-end;flex-wrap:wrap}.site-nav-link{display:flex;flex-direction:column;justify-content:center;gap:3px;padding:11px 15px;border-radius:12px;border:1px solid #dce4ed;background:#fff;color:#25324a;text-decoration:none;font-size:13px;font-weight:800;line-height:1.2;transition:background .15s,border-color .15s}.site-nav-link:hover{background:#eff6ff;border-color:#b5cdfb}.site-nav-active{background:#eaf2ff;border-color:#b9d1ff;color:#1746a2}.site-nav-pro{background:#f4f7fb}.site-nav-sub{font-size:10px;font-weight:550;color:#667085}.site-nav-active .site-nav-sub{color:#426caa}@media(max-width:700px){.site-header{align-items:flex-start;flex-direction:column;gap:12px}.site-header .header-actions{width:100%;justify-content:flex-start}.site-nav-link{flex:1 1 145px;padding:11px 12px}}@media(max-width:420px){.site-header .header-actions{gap:6px}.site-nav-link{flex:1 1 100%;flex-direction:row;align-items:center;justify-content:space-between}.site-nav-sub{font-size:10px}}
 </style>
 </head>
 <body>
@@ -376,7 +377,14 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
   </div>
 </div>
 <div class="container">
-<header><div class="logo">Car<span>facts</span></div><nav class="header-actions" aria-label="Carfacts diensten"><a class="parts-link" href="/parts/">Onderdelen zoeken ↗</a><div class="badge">RDW KENTEKENCHECK</div></nav></header>
+<header class="site-header">
+  <a class="logo" href="/" aria-label="Carfacts startpagina">Car<span>facts</span></a>
+  <nav class="header-actions" aria-label="Hoofdnavigatie">
+    <a class="site-nav-link site-nav-active" href="/" aria-current="page">Kentekencheck <span class="site-nav-sub">Gratis voertuiggegevens</span></a>
+    <a class="site-nav-link" href="/parts/">Onderdelen zoeken <span class="site-nav-sub">Zoek auto-onderdelen</span></a>
+    <a class="site-nav-link site-nav-pro" href="/pro/">Carfacts PRO <span class="site-nav-sub">Onderhoudshistorie</span></a>
+  </nav>
+</header>
 
 <section class="search-card">
 <h1>Controleer een voertuig</h1>
