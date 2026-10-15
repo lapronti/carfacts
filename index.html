@@ -506,26 +506,7 @@ body{background:#f5f8f7}.search-card{background:linear-gradient(120deg,#17383b,#
 </div>
 </section>
 
-<section class="section report-section" data-report-section="mrb">
-<h2>MRB / wegenbelasting 2026</h2>
-<div class="mrb-card">
-  <div class="mrb-controls">
-    <div><label for="mrbProvince">Provincie</label><select id="mrbProvince" aria-label="Provincie voor MRB"></select></div>
-    <div><label for="mrbOwner">Gebruik bestelauto</label><select id="mrbOwner"><option value="private">Particulier / normaal tarief</option><option value="business">Ondernemer (voorwaarden vereist)</option></select></div>
-  </div>
-  <div class="mrb-result">
-    <div class="mrb-total"><small>Voertuig & brandstof</small><strong id="mrbVehicle">—</strong></div>
-    <div class="mrb-total"><small>Massa rijklaar / gewichtsklasse</small><strong id="mrbWeight">—</strong></div>
-    <div class="mrb-total"><small>Opcenten provincie (personenauto)</small><strong id="mrbProvincial">—</strong></div>
-  </div>
-  <p id="mrbTariffNote" class="mrb-note"></p>
-  <div style="overflow-x:auto;margin-top:14px">
-    <table class="apk-defects-table"><thead><tr><th>Provincie</th><th>Opcenten 2026</th><th>Toepassing</th></tr></thead><tbody id="mrbProvinceRows"></tbody></table>
-  </div>
-  <p class="mrb-note">Bron opcenten: CBS StatLine 80889NED (2026, voorlopige cijfers). Dit zijn percentages van de wettelijke opcentengrondslag, niet rechtstreeks van het actuele MRB-totaal. Voor een exact bedrag per kwartaal is een gecontroleerde officiële tarieventabel per voertuigcategorie, gewichtsklasse en brandstof nodig. Tot die beschikbaar is, toont Carfacts bewust geen verzonnen bedrag.</p>
-  <a class="anwb-btn" style="margin-top:14px;text-decoration:none" href="https://www.belastingdienst.nl/wps/wcm/connect/nl/auto-en-vervoer/content/hulpmiddel-motorrijtuigenbelasting-berekenen" target="_blank" rel="noopener">Bereken exact bij Belastingdienst →</a>
-</div>
-</section></section>
+</section>
 
 <section class="section report-section" data-report-section="apk">
 <h2>Kilometerstand & APK</h2>
@@ -563,7 +544,7 @@ body{background:#f5f8f7}.search-card{background:linear-gradient(120deg,#17383b,#
 <label><input type="checkbox" data-report="engine" onchange="applyReportSelection()"> <span>Technische informatie</span></label>
 <label><input type="checkbox" data-report="dimensions" onchange="applyReportSelection()"> <span>Afmetingen en gewichten</span></label>
 <label><input type="checkbox" data-report="bpm" onchange="applyReportSelection()"> <span>BPM en import</span></label>
-<label><input type="checkbox" data-report="mrb" onchange="applyReportSelection()"> <span>Wegenbelasting</span></label>
+
 <label><input type="checkbox" data-report="extra" onchange="applyReportSelection()"> <span>Extra voertuigdata</span></label>
 <label><input type="checkbox" data-report="intelligence" onchange="applyReportSelection()"> <span>Carfacts Intelligence</span></label>
 <label><input type="checkbox" data-report="market" onchange="applyReportSelection()"> <span>Marktanalyse</span></label>
@@ -924,7 +905,6 @@ async function go(type='plate'){
     renderAllRdwData(x);
     loadExtraVehicleData(x);
     checkBPM(x);
-    renderMRB(x);
     // Keep this panel hidden for original Dutch vehicles and missing dates.
     q('importBpmSection').classList.toggle('report-hidden',isImportVehicle(x)!==true);
   }catch(e){
