@@ -462,7 +462,7 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 <section class="section report-section" data-report-section="history">
 <h2>Digitale onderhoudshistorie</h2>
 <div class="external-data">
-<div class="service-history-head"><div><div class="service-history-title">Onderhoudsgegevens op VIN</div><div class="service-history-text">Deze betaalde gegevensbron kan alleen onderhoud tonen dat in de aangesloten systemen beschikbaar is. Een lege uitkomst bewijst niet dat de auto geen onderhoud heeft gehad.</div></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><a class="anwb-btn" href="https://carfacts-api.nlaghmiri.workers.dev/" target="_blank" rel="noopener">Inloggen</a><button class="service-btn" onclick="loadServiceHistory()">Onderhoudshistorie ophalen</button></div></div>
+<div class="service-history-head"><div><div class="service-history-title">Digitale onderhoudshistorie via Carfacts PRO</div><div class="service-history-text">Een uitgebreider onderhoudsrapport is een toekomstige betaalde dienst. De databron en betaalfunctie zijn nog in ontwikkeling. Er worden nu geen betalingen aangenomen en er wordt geen onderhoudshistorie opgevraagd.</div></div><a class="anwb-btn" href="/pro/">Bekijk Carfacts PRO →</a></div>
 <div id="serviceHistoryStatus" class="status"></div><div id="serviceHistory"></div>
 </div>
 </section>
@@ -926,40 +926,6 @@ async function go(type='plate'){
 }
 
 
-async function loadServiceHistory(){
-  const vin=String((window.carData&&window.carData.voertuig_identificatienummer)||q('vin').value||'').trim().toUpperCase();
-  if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){
-    q('serviceHistoryStatus').innerHTML='<span class="err">Er is geen geldig VIN beschikbaar. De onderhoudsbron kan alleen zoeken met het volledige chassisnummer (VIN).</span>'; return;
-  }
-  const confirmed=window.confirm('Weet je het zeker?\n\nHet ophalen van de digitale onderhoudshistorie via One Auto API is een betaalde aanvraag. Er worden kosten in rekening gebracht zodra de aanvraag wordt uitgevoerd.\n\nWil je de onderhoudshistorie nu ophalen?');
-  if(!confirmed) return;
-  const status=q('serviceHistoryStatus'), box=q('serviceHistory');
-  status.textContent='Onderhoudshistorie ophalen…'; box.innerHTML='';
-  try{
-    const res=await fetch('https://carfacts-api.nlaghmiri.workers.dev/api/service-history?vin='+encodeURIComponent(vin),{credentials:'include'});
-    if(res.status===401||res.status===403){
-      status.innerHTML='<span class="err">Log eerst in voor de beveiligde Carfacts API en probeer daarna opnieuw.</span> <a href="https://carfacts-api.nlaghmiri.workers.dev/" target="_blank" rel="noopener">Inloggen →</a>'; return;
-    }
-    const data=await res.json();
-    if(data.status==='pending'&&data.request_id){
-      status.textContent='Aanvraag ontvangen. Onderhoudshistorie wordt opgehaald…';
-      for(let i=0;i<30;i++){
-        await new Promise(r=>setTimeout(r,2000));
-        const poll=await fetch('https://carfacts-api.nlaghmiri.workers.dev/api/service-history/status?request_id='+encodeURIComponent(data.request_id),{credentials:'include'});
-        if(!poll.ok)continue;
-        const p=await poll.json();
-        if(p.status==='complete'){renderServiceHistory(p.data);return;}
-        if(p.status==='error'){status.innerHTML='<span class="err">One Auto API kon de onderhoudshistorie niet ophalen.</span>';return;}
-      }
-      status.innerHTML='<span class="err">De aanvraag duurt langer dan verwacht. Probeer later opnieuw.</span>'; return;
-    }
-    if(data.status==='complete'){renderServiceHistory(data.data);return;}
-    const message=data.data&&data.data.error?data.data.error:'Geen onderhoudshistorie beschikbaar.';
-    status.textContent=message; 
-  }catch(e){
-    status.innerHTML='<span class="err">De beveiligde Carfacts API kon niet worden bereikt. Log eerst in via de knop hierboven en probeer daarna opnieuw.</span>';
-  }
-}
 function renderServiceHistory(payload){
   const status=q('serviceHistoryStatus'), box=q('serviceHistory');
   let data=payload;
