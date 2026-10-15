@@ -397,6 +397,8 @@ body{background:#f5f8f7}.search-card{background:linear-gradient(120deg,#17383b,#
 <div id="summary" class="grid"></div>
 </section>
 
+<section class="section" id="purchaseAssistantCard"><div style="background:#fff;border:1px solid #d9e5e8;border-radius:12px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><h2 style="margin:0 0 6px">Persoonlijke aankoopchecklist</h2><p style="margin:0;color:#52676b;font-size:13px">Controleer onderhoud, documenten, techniek en proefrit. Houd je eigen aandachtspunten bij.</p></div><a id="purchaseAssistantLink" href="/aankoopassistent/" style="display:inline-block;background:#176e73;color:white;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700">Start aankoopcheck →</a></div></section>
+
 <section class="section report-section" id="carfactsIntelligence" data-report-section="intelligence">
 <h2>Carfacts Intelligence</h2>
 <div class="intel-card">
@@ -860,6 +862,7 @@ async function go(type='plate'){
     ].join('');
 
     window.carData=x;
+    const purchaseLink=q('purchaseAssistantLink');if(purchaseLink){const p=new URLSearchParams({kenteken:String(x.kenteken||k).replace(/[^A-Z0-9]/gi,''),voertuig:[x.merk,x.handelsbenaming].filter(Boolean).join(' ')});purchaseLink.href='/aankoopassistent/?'+p.toString();}
     try{sessionStorage.setItem('cf_last_plate',k)}catch{}
     q('printHeaderText').textContent=''+formatPlate(x.kenteken||'')+' · '+(x.merk||'')+' '+(x.handelsbenaming||'')+' · gegenereerd '+new Date().toLocaleDateString('nl-NL');
     calculateCarfactsIntelligence(x);
