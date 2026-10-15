@@ -30,3 +30,14 @@ Open `https://car-facts.nl/admin/` en log in. De sessiecookie is HttpOnly, Secur
 5. Controleer de weergave op mobiel.
 
 Deze integratie is **niet live end-to-end getest** zolang de database en secrets ontbreken.
+
+## 2FA en langere sessies (nieuwe implementatie)
+- Het oude `cf_admin`-cookie wordt niet meer geaccepteerd door de statistieken-API. Opnieuw aanmelden is verplicht.
+- Eerste login: voer `CARFACTS_ADMIN_PASSWORD` in, voeg de getoonde TOTP-sleutel handmatig toe in een authenticator-app en bevestig met de 6-cijferige code. Sla de eenmalig getoonde 8 herstelcodes offline op.
+- Vervolgaanmeldingen vereisen wachtwoord plus authenticator-code of een ongebruikte herstelcode.
+- Redis-backed sessiecookie `cf_admin_v2`: HttpOnly, Secure, SameSite Strict; 30 dagen geldig, bij activiteit maximaal elke 10 minuten verlengd, met harde vervaldatum na 90 dagen. Dashboard toont knoppen voor uitloggen en alle sessies intrekken.
+- De TOTP-sleutel is AES-256-GCM versleuteld met een sleutel afgeleid van `CARFACTS_ADMIN_SECRET`. Wijzig deze Vercel-secret **niet** zonder herstelplan: bestaande TOTP-secrets en sessies zijn dan niet meer leesbaar.
+- Herstelcodes worden uitsluitend als HMAC opgeslagen, worden éénmalig getoond en bij gebruik ingetrokken. Bij verlies van zowel authenticator als herstelcodes is handmatig beheerderherstel in Redis noodzakelijk; voer dat niet uit zonder de identiteit van de eigenaar te verifiëren.
+- De eerste registratie heeft een eenmalige 5-minuten wachtwoordchallenge. Scherm het wachtwoord af en activeer 2FA meteen na uitrol.
+- Extra test: wachtwoord zonder code geeft geen dashboard; verkeerde code geeft 401; eenmalige herstelcode kan slechts eenmaal; alle sessies uitloggen blokkeert eerdere cookies; oude `cf_admin`-cookies werken niet meer.
+- Er is nog geen live end-to-end-test uitgevoerd. Test deze beveiliging zorgvuldig vóór vertrouwen op productie.
