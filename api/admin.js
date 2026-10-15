@@ -3,9 +3,13 @@ const {cmd,configured,authed,cookie,reply,password}=require('./_analytics');
 module.exports=async(req,res)=>{
  if(!configured())return reply(res,503,{error:'Admin is not configured'});
  if(req.method==='POST'){
-  const supplied=String(req.body?.password||'');
+  const ip=String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0].trim();
+  const lock='cf:admin:attempts:'+crypto.createHash('sha256').update(ip+process.env.CARFACTS_ADMIN_SECRET).digest('hex');
+  try{if(Number(await cmd('GET',lock))>=8)return reply(res,429,{error:'Te veel pogingen. Probeer over 15 minuten opnieuw.'})}catch{return reply(res,503,{error:'Inloggen tijdelijk niet beschikbaar'})}
+  const supplied=String(req.body?.password||'').slice(0,1024);
   const a=crypto.createHash('sha256').update(supplied).digest(),b=crypto.createHash('sha256').update(password).digest();
-  if(!crypto.timingSafeEqual(a,b))return reply(res,401,{error:'Onjuist wachtwoord'});
+  if(!crypto.timingSafeEqual(a,b)){try{await cmd('INCR',lock);await cmd('EXPIRE',lock,900)}catch{}return reply(res,401,{error:'Onjuist wachtwoord'})}
+  try{await cmd('DEL',lock)}catch{}
   res.setHeader('Set-Cookie',cookie());return reply(res,200,{ok:true});
  }
  if(req.method!=='GET')return reply(res,405,{error:'Method not allowed'});
