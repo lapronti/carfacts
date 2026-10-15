@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Carfacts — Kentekencheck</title>
+<title>Gratis kentekencheck en voertuiggegevens | Carfacts</title>
+<meta name="description" content="Doe een gratis Nederlandse kentekencheck. Bekijk RDW-voertuiggegevens, APK, tellerstandoordeel, brandstof, technische gegevens en maak een compact PDF-rapport.">
+<link rel="canonical" href="https://car-facts.nl/">
+<meta name="theme-color" content="#263638">
 <style>
 :root{--ink:#101828;--muted:#667085;--blue:#2563eb;--blue-dark:#1746a2;--bg:#eef2f7;--card:#fff;--line:#e4e7ec;--soft:#f7f9fc;--green:#067647;--orange:#b54708;--shadow:0 10px 30px rgba(16,24,40,.07)}
 *{box-sizing:border-box}
@@ -778,6 +781,7 @@ async function go(type='plate'){
       it('Tellerstandoordeel',x.tellerstandoordeel),
       it('Brandstof',x.brandstof),
       it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null),
+      it('Vermogen',x.vermogen?Number(x.vermogen).toLocaleString('nl-NL')+' kW':null),
       it('Eerste toelating',formatDate(x.datum_eerste_toelating)),
       it('Geïmporteerd?',x.datum_eerste_toelating&&x.datum_eerste_tenaamstelling_in_nederland?(String(x.datum_eerste_toelating)===String(x.datum_eerste_tenaamstelling_in_nederland)?'Geen datumverschil':'Datumverschil — controleren'):'Niet vast te stellen'),
       it('WAM verzekerd',x.wam_verzekerd)
@@ -815,6 +819,8 @@ async function go(type='plate'){
     q('m').innerHTML=[
       it('Brandstof',x.brandstof),
       it('Aantal cilinders',x.aantal_cilinders),
+      it('Vermogen',x.vermogen?x.vermogen+' kW':null),
+      it('Verbruik gecombineerd',x.brandstofverbruik_gecombineerd?x.brandstofverbruik_gecombineerd+' l/100 km':null),
       it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null),
       it('CO₂-uitstoot',x.co2_emissie?x.co2_emissie+' g/km':null),
       it('Emissieklasse',x.emissieklasse),
@@ -1249,6 +1255,7 @@ function buildCompactPdfReport(x){
   ]);
   section('Technische gegevens',[
     ['Cilinderinhoud',x.cilinderinhoud?number(x.cilinderinhoud)+' cc':null],
+    ['Verbruik gecombineerd',x.brandstofverbruik_gecombineerd?x.brandstofverbruik_gecombineerd+' l/100 km':null],
     ['Aantal cilinders',x.aantal_cilinders],
     ['Vermogen',x.vermogen?x.vermogen+' kW':null],
     ['Inrichting',x.inrichting],['Aantal zitplaatsen',x.aantal_zitplaatsen],
