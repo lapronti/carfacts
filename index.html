@@ -458,13 +458,21 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 <section class="section report-section" data-report-section="mrb">
 <h2>MRB / wegenbelasting 2026</h2>
 <div class="mrb-card">
-  <div class="mrb-result">
-    <div class="mrb-total"><small>Provincie</small><strong>Zuid-Holland</strong></div>
-    <div class="mrb-total"><small>Bron</small><strong>Belastingdienst</strong></div>
-    <div class="mrb-total"><small>Berekening</small><strong>Officieel</strong></div>
+  <div class="mrb-controls">
+    <div><label for="mrbProvince">Provincie</label><select id="mrbProvince" aria-label="Provincie voor MRB"></select></div>
+    <div><label for="mrbOwner">Gebruik bestelauto</label><select id="mrbOwner"><option value="private">Particulier / normaal tarief</option><option value="business">Ondernemer (voorwaarden vereist)</option></select></div>
   </div>
-  <div class="mrb-note">Carfacts rekent de wegenbelasting hier niet zelf uit. Gebruik de officiële rekenhulp van de Belastingdienst; die gebruikt de actuele 2026-tarieven en houdt rekening met onder andere massa rijklaar, brandstof en eventuele fijnstoftoeslag.</div>
-  <a class="anwb-btn" style="margin-top:14px;text-decoration:none" href="https://www.belastingdienst.nl/wps/wcm/connect/nl/auto-en-vervoer/content/hulpmiddel-motorrijtuigenbelasting-berekenen" target="_blank" rel="noopener">Open officiële MRB-berekening →</a>
+  <div class="mrb-result">
+    <div class="mrb-total"><small>Voertuig & brandstof</small><strong id="mrbVehicle">—</strong></div>
+    <div class="mrb-total"><small>Massa rijklaar / gewichtsklasse</small><strong id="mrbWeight">—</strong></div>
+    <div class="mrb-total"><small>Opcenten provincie (personenauto)</small><strong id="mrbProvincial">—</strong></div>
+  </div>
+  <p id="mrbTariffNote" class="mrb-note"></p>
+  <div style="overflow-x:auto;margin-top:14px">
+    <table class="apk-defects-table"><thead><tr><th>Provincie</th><th>Opcenten 2026</th><th>Toepassing</th></tr></thead><tbody id="mrbProvinceRows"></tbody></table>
+  </div>
+  <p class="mrb-note">Bron opcenten: CBS StatLine 80889NED (2026, voorlopige cijfers). Dit zijn percentages van de wettelijke opcentengrondslag, niet rechtstreeks van het actuele MRB-totaal. Voor een exact bedrag per kwartaal is een gecontroleerde officiële tarieventabel per voertuigcategorie, gewichtsklasse en brandstof nodig. Tot die beschikbaar is, toont Carfacts bewust geen verzonnen bedrag.</p>
+  <a class="anwb-btn" style="margin-top:14px;text-decoration:none" href="https://www.belastingdienst.nl/wps/wcm/connect/nl/auto-en-vervoer/content/hulpmiddel-motorrijtuigenbelasting-berekenen" target="_blank" rel="noopener">Bereken exact bij Belastingdienst →</a>
 </div>
 </section></section>
 
@@ -864,6 +872,7 @@ async function go(type='plate'){
     renderAllRdwData(x);
     loadExtraVehicleData(x);
     checkBPM(x);
+    renderMRB(x);
     // Keep this panel hidden for original Dutch vehicles and missing dates.
     q('importBpmSection').classList.toggle('report-hidden',isImportVehicle(x)!==true);
   }catch(e){
@@ -1054,6 +1063,48 @@ function isImportVehicle(x){
   if(first.length!==8||firstNl.length!==8)return null;
   return first!==firstNl;
 }
+const MRB_OPCENTEN_2026=[
+  ['Groningen',95.7],['Friesland',92.1],['Drenthe',92.0],['Overijssel',82.2],
+  ['Flevoland',84.7],['Gelderland',98.3],['Utrecht',86.4],['Noord-Holland',82.1],
+  ['Zuid-Holland',104.4],['Zeeland',84.4],['Noord-Brabant',87.0],['Limburg',88.5]
+];
+function renderMRB(x){
+  const province=q('mrbProvince'),owner=q('mrbOwner'),tbody=q('mrbProvinceRows');
+  if(!province.options.length){
+    MRB_OPCENTEN_2026.forEach(([name])=>province.add(new Option(name,name)));
+    province.value='Zuid-Holland';
+  }
+  const category=String(x.voertuigsoort||'Onbekend');
+  const van=/bedrijfsauto|bestelauto/i.test(category);
+  const passenger=/personenauto/i.test(category);
+  const mass=Number(x.massa_rijklaar);
+  const validMass=Number.isFinite(mass)&&mass>0;
+  // RDW mass is the ready-to-drive mass; the new 2026 lookup uses this
+  // directly rather than subtracting 100 kg.
+  const band=validMass?Math.max(0,Math.ceil((mass-50)/100)*100+50):null;
+  const low=band===null?null:Math.max(0,band-99);
+  q('mrbVehicle').textContent=category+' · '+(x.brandstof||'Brandstof onbekend');
+  q('mrbWeight').textContent=validMass?mass.toLocaleString('nl-NL')+' kg · '+low.toLocaleString('nl-NL')+'–'+band.toLocaleString('nl-NL')+' kg':'Onbekend';
+  const value=MRB_OPCENTEN_2026.find(([name])=>name===province.value);
+  q('mrbProvincial').textContent=passenger&&value?value[1].toLocaleString('nl-NL',{minimumFractionDigits:1})+'%':van?'Niet van toepassing':'Controle vereist';
+  tbody.replaceChildren();
+  MRB_OPCENTEN_2026.forEach(([name,pct])=>{
+    const tr=document.createElement('tr');
+    [name,pct.toLocaleString('nl-NL',{minimumFractionDigits:1})+'%',passenger?'Personenauto':van?'Niet voor bestelauto':'Personenauto / motor'].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td);});
+    if(name===province.value)tr.style.fontWeight='700';
+    tbody.appendChild(tr);
+  });
+  const note=q('mrbTariffNote');
+  if(van&&owner.value==='business'){
+    note.textContent='Bestelauto ondernemer: alleen bij voldoen aan de fiscale voorwaarden. Vanaf het eerste belastingtijdvak op of na 1 juli 2026 tot de tijdelijke regeling afloopt geldt 50% van het normale ondernemerstarief. De exacte ingangsdatum hangt af van uw tijdvak; provinciale opcenten voor personenauto’s gelden hier niet.';
+  }else if(van){
+    note.textContent='Bestelauto particulier: het normale bestelautotarief is van toepassing. Provinciale opcenten voor personenauto’s zijn hier niet van toepassing.';
+  }else if(passenger){
+    note.textContent='Personenauto: het tarief hangt af van gewichtsklasse, brandstof, eventuele toeslagen en provinciale opcenten. De percentages in de tabel zijn geen complete kwartaalbedragen.';
+  }else{
+    note.textContent='Controleer de voertuigcategorie in de RDW-registratie. Voor dit voertuig kan Carfacts de toepasselijke MRB-regeling nog niet bepalen.';
+  }
+}
 function checkBPM(x){
   const imported=isImportVehicle(x);
   const section=q('importBpmSection');
@@ -1070,6 +1121,8 @@ function checkBPM(x){
   q('bpmStatus').textContent='Dit voertuig heeft een latere eerste Nederlandse tenaamstelling dan de eerste toelating. RDW bruto BPM is niet automatisch de oorspronkelijke BPM of het bedrag dat bij import is afgedragen. Voor een betrouwbare vergelijking zijn de oorspronkelijke BPM-grondslag en de BPM-aangifte/beschikking bij import nodig.';
 }
 
+q('mrbProvince').addEventListener('change',()=>{if(window.carData)renderMRB(window.carData)});
+q('mrbOwner').addEventListener('change',()=>{if(window.carData)renderMRB(window.carData)});
 q('p').addEventListener('keydown',e=>{if(e.key==='Enter')go('plate')});
 q('vin').addEventListener('keydown',e=>{if(e.key==='Enter')go('vin')});
 q('askingPrice').addEventListener('input',()=>{if(window.carData)carfactsLifecycle(window.carData)});
