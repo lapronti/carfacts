@@ -434,13 +434,7 @@ body{background:#f5f8f7}.search-card{background:linear-gradient(120deg,#17383b,#
 
 <section class="section">
 
-<section class="section report-section" data-report-section="history">
-<h2>Digitale onderhoudshistorie</h2>
-<div class="external-data">
-<div class="service-history-head"><div><div class="service-history-title">Digitale onderhoudshistorie via Carfacts PRO</div><div class="service-history-text">Een uitgebreider onderhoudsrapport is een toekomstige betaalde dienst. De databron en betaalfunctie zijn nog in ontwikkeling. Er worden nu geen betalingen aangenomen en er wordt geen onderhoudshistorie opgevraagd.</div></div><a class="anwb-btn" href="/pro/">Bekijk Carfacts PRO →</a></div>
-<div id="serviceHistoryStatus" class="status"></div><div id="serviceHistory"></div>
-</div>
-</section>
+
 <h2>Importcontrole</h2>
 <div id="i" class="import"></div>
 </section>
@@ -500,7 +494,14 @@ body{background:#f5f8f7}.search-card{background:linear-gradient(120deg,#17383b,#
     <div class="pro-card"><h3>🏁 Proefrit-assistent</h3><div id="proTestDrive"></div></div>
   </div>
 </div></section>
-<section class="section report-section" data-report-section="compare"><h2>Carfacts Auto Vergelijken</h2><div class="market-panel"><p style="color:#667085;font-size:13px;margin-top:0">Voer een tweede auto in om de huidige auto met een andere RDW-auto te vergelijken.</p><div class="sim-controls"><div><label>Tweede kenteken</label><input id="comparePlate" maxlength="8" placeholder="Bijv. AB-12-CD"></div><div style="display:flex;align-items:end"><button onclick="compareCarfacts()">Vergelijk</button></div></div><div id="compareResult"></div></div></section><div class="pdf-actions"><button class="pdf-btn" onclick="generateCarfactsPdf()">📄 PDF-rapport maken</button></div><details id="reportChooser" class="section report-chooser hidden"><summary>☷ Kies rapportonderdelen</summary><div class="report-chooser-body">
+<section class="section report-section" data-report-section="compare"><h2>Carfacts Auto Vergelijken</h2><div class="market-panel"><p style="color:#667085;font-size:13px;margin-top:0">Voer een tweede auto in om de huidige auto met een andere RDW-auto te vergelijken.</p><div class="sim-controls"><div><label>Tweede kenteken</label><input id="comparePlate" maxlength="8" placeholder="Bijv. AB-12-CD"></div><div style="display:flex;align-items:end"><button onclick="compareCarfacts()">Vergelijk</button></div></div><div id="compareResult"></div></div></section><section class="section report-section" data-report-section="history">
+<h2>Digitale onderhoudshistorie</h2>
+<div class="external-data">
+<div class="service-history-head"><div><div class="service-history-title">Digitale onderhoudshistorie via Carfacts PRO</div><div class="service-history-text">Een uitgebreider onderhoudsrapport is een toekomstige betaalde dienst. De databron en betaalfunctie zijn nog in ontwikkeling. Er worden nu geen betalingen aangenomen en er wordt geen onderhoudshistorie opgevraagd.</div></div><a class="anwb-btn" href="/pro/">Bekijk Carfacts PRO →</a></div>
+<div id="serviceHistoryStatus" class="status"></div><div id="serviceHistory"></div>
+</div>
+</section>
+<div class="pdf-actions"><button class="pdf-btn" onclick="generateCarfactsPdf()">📄 PDF-rapport maken</button></div><details id="reportChooser" class="section report-chooser hidden"><summary>☷ Kies rapportonderdelen</summary><div class="report-chooser-body">
 <h2>Wat wil je bekijken?</h2>
 <p class="chooser-intro">Vink aan wat je wilt bekijken.</p>
 <div class="chooser-actions"><button type="button" onclick="setReportSelection(true)">Alles tonen</button><button type="button" onclick="setReportSelection(false)">Alles uit</button></div>
