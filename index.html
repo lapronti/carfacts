@@ -440,8 +440,8 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 <div class="bpm-card">
 <div class="bpm-main">
 <div class="bpm-number"><small>RDW bruto BPM</small><strong id="bpmRdw">—</strong></div>
-<div class="bpm-number"><small>Indicatieve berekening</small><strong id="bpmCalc">—</strong></div>
-<div class="bpm-number"><small>Verschil</small><strong id="bpmDiff">—</strong></div>
+<div class="bpm-number"><small>Vergelijkbare historische berekening</small><strong id="bpmCalc">—</strong></div>
+<div class="bpm-number"><small>Verschil met RDW</small><strong id="bpmDiff">—</strong></div>
 </div>
 <div id="bpmStatus" class="bpm-status info">Berekening wordt uitgevoerd…</div>
 </div>
@@ -1047,44 +1047,28 @@ function calculateCarfactsIntelligence(x){
   q('intelAdvice').innerHTML=notes.join('<br>');
 }
 function checkBPM(x){
-  const rdw=Number(x.bruto_bpm),co2=Number(x.co2_emissie);
+  const raw=String(x.bruto_bpm??'').trim();
+  const rdw=raw!==''?Number(raw):NaN;
   const first=String(x.datum_eerste_toelating||'').replace(/[^0-9]/g,'');
   const year=Number(first.slice(0,4));
-  q('bpmRdw').textContent=Number.isFinite(rdw)?euro(rdw):'—';
-  if(!rdw||!co2){
-    q('bpmCalc').textContent='—';q('bpmDiff').textContent='—';
-    q('bpmStatus').className='bpm-status info';
-    q('bpmStatus').textContent='Niet genoeg RDW-gegevens voor een BPM-berekening.';
-    return;
+  const co2=Number(x.co2_emissie);
+  q('bpmRdw').textContent=Number.isFinite(rdw)?euro(rdw):'Niet geregistreerd';
+  q('bpmCalc').textContent='Niet beschikbaar';
+  q('bpmDiff').textContent='Niet berekend';
+  q('bpmStatus').className='bpm-status info';
+  if(!Number.isFinite(rdw)){
+    q('bpmStatus').textContent='Er is geen bruto BPM-bedrag beschikbaar in de opgehaalde RDW-registratie.';
+  }else if(year<2024||year>2026){
+    q('bpmStatus').textContent='De RDW vermeldt het geregistreerde bruto BPM-bedrag. Voor de eerste toelating in '+(year||'een onbekend jaar')+' heeft Carfacts geen voldoende gevalideerde historische tariefberekening. Een vergelijking met het tarief van 2026 zou misleidend zijn en wordt daarom niet getoond.';
+  }else if(!co2||!x.brandstof){
+    q('bpmStatus').textContent='Er zijn onvoldoende voertuiggegevens voor een betrouwbare BPM-berekening. De RDW-waarde blijft leidend.';
+  }else{
+    // The historical calculator is not a certified BPM assessment. Do not
+    // present a tax discrepancy without validated rates and CO2 methodology.
+    q('bpmStatus').textContent='De RDW-waarde is geregistreerd. Een betrouwbare herberekening vereist de juiste historische tarieven, CO₂-meetmethode en voertuigcategorie. Carfacts toont daarom geen onbevestigd verschil.';
   }
-
-  const current=calcHistoricalBPM(2026,co2,x.brandstof);
-  const historical=calcHistoricalBPM(year,co2,x.brandstof);
-  let calc=historical||current;
-  let tariff=historical?year:2026;
-
-  if(year<2024 || year>2026){
-    q('bpmCalc').textContent=current!==null?euro(current):'—';
-    q('bpmDiff').textContent=current!==null?euro(rdw-current):'—';
-    q('bpmStatus').className='bpm-status info';
-    q('bpmStatus').textContent='Voor dit bouwjaar is het historische tarief niet volledig in de automatische controle opgenomen. De 2026-berekening is alleen ter vergelijking.';
-    return;
-  }
-
-  const candidates=[{year:2026,value:current},{year:year,value:historical}].filter(a=>a.value!==null);
-  candidates.sort((a,b)=>a.value-b.value);
-  const best=candidates[0];
-  calc=best.value;tariff=best.year;
-  const diff=rdw-calc,pct=Math.abs(diff)/Math.max(calc,1)*100;
-  q('bpmCalc').textContent=euro(calc);
-  q('bpmDiff').textContent=(diff>=0?'+':'')+euro(diff);
-  q('bpmStatus').className='bpm-status '+(pct<=2?'ok':pct<=10?'warn':'warn');
-  q('bpmStatus').textContent=
-    'Vergelijking met '+tariff+'-tarief: '+(pct<=2
-      ?'de RDW-waarde sluit zeer nauw aan.'
-      :'er is een afwijking van '+pct.toFixed(1).replace('.',',')+'%. Dit is een signaal om de CO₂-meetmethode, dieseltoeslag en historische voertuiggegevens te controleren.')
-    +' Dit is een plausibiliteitscontrole, geen bewijs dat de RDW-waarde fout is.';
 }
+
 q('p').addEventListener('keydown',e=>{if(e.key==='Enter')go('plate')});
 q('vin').addEventListener('keydown',e=>{if(e.key==='Enter')go('vin')});
 q('askingPrice').addEventListener('input',()=>{if(window.carData)carfactsLifecycle(window.carData)});
