@@ -423,14 +423,7 @@ body{background:#f5f8f7}.search-card{background:linear-gradient(120deg,#17383b,#
 <div id="allRdw" class="grid"></div>
 </section>
 
-<section class="section report-section" data-report-section="extra">
-<h2>Extra voertuigdata</h2>
-<div class="external-data">
-<div id="extraData" class="external-grid"></div>
-<div id="vinData" class="external-grid" style="margin-top:10px"></div>
 
-</div>
-</section>
 
 <section class="section">
 
@@ -515,7 +508,7 @@ body{background:#f5f8f7}.search-card{background:linear-gradient(120deg,#17383b,#
 <label><input type="checkbox" data-report="dimensions" onchange="applyReportSelection()"> <span>Afmetingen en gewichten</span></label>
 <label><input type="checkbox" data-report="bpm" onchange="applyReportSelection()"> <span>BPM en import</span></label>
 
-<label><input type="checkbox" data-report="extra" onchange="applyReportSelection()"> <span>Extra voertuigdata</span></label>
+
 <label><input type="checkbox" data-report="intelligence" onchange="applyReportSelection()"> <span>Carfacts Intelligence</span></label>
 <label><input type="checkbox" data-report="market" onchange="applyReportSelection()"> <span>Marktanalyse</span></label>
 <label><input type="checkbox" data-report="distribution" onchange="applyReportSelection()"> <span>Distributie</span></label>
@@ -879,7 +872,7 @@ async function go(type='plate'){
   q('reportChooser').classList.remove('hidden');
   resetReportSelection();
     renderAllRdwData(x);
-    loadExtraVehicleData(x);
+
     checkBPM(x);
     // Keep this panel hidden for original Dutch vehicles and missing dates.
     q('importBpmSection').classList.toggle('report-hidden',isImportVehicle(x)!==true);
@@ -1234,7 +1227,7 @@ function renderApkDefects(x){
   if(x.apk_gebreken_afgekapt){const cap=document.createElement('p');cap.className='apk-defects-note';cap.textContent='Maximaal 100 meldingen getoond; er kunnen meer registraties zijn.';box.appendChild(cap);}
 }
 function resetReportSelection(){
-  const defaults=new Set(['summary','vehicle','engine','dimensions','bpm','mrb','apk','history','extra']);
+  const defaults=new Set(['summary','vehicle','engine','dimensions','bpm','mrb','apk','history']);
   document.querySelectorAll('[data-report]').forEach(box=>box.checked=defaults.has(box.dataset.report));
   applyReportSelection();
   if(window.carData)q('importBpmSection').classList.toggle('report-hidden',isImportVehicle(window.carData)!==true);
