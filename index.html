@@ -7,6 +7,36 @@
 <meta name="description" content="Doe een gratis Nederlandse kentekencheck. Bekijk RDW-voertuiggegevens, APK, tellerstandoordeel, brandstof, technische gegevens en maak een compact PDF-rapport.">
 <link rel="canonical" href="https://car-facts.nl/">
 <meta name="theme-color" content="#263638">
+<script>
+/* GA4 loads only after explicit analytics consent. */
+(function(){
+  const key='carfacts_analytics_consent_v1';
+  window.carfactsAnalyticsConsent=function(allow){
+    try{localStorage.setItem(key,allow?'granted':'denied');}catch(e){}
+    const banner=document.getElementById('analyticsConsentBanner');
+    if(banner)banner.hidden=true;
+    if(allow)window.carfactsLoadAnalytics();
+  };
+  window.carfactsLoadAnalytics=function(){
+    if(window.carfactsAnalyticsLoaded)return;
+    window.carfactsAnalyticsLoaded=true;
+    window.dataLayer=window.dataLayer||[];
+    window.gtag=function(){window.dataLayer.push(arguments);};
+    window.gtag('js',new Date());
+    window.gtag('config','G-YCS6X0Y3Y7',{anonymize_ip:true});
+    const script=document.createElement('script');
+    script.async=true;
+    script.src='https://www.googletagmanager.com/gtag/js?id=G-YCS6X0Y3Y7';
+    document.head.appendChild(script);
+  };
+  try{if(localStorage.getItem(key)==='granted')window.carfactsLoadAnalytics();}catch(e){}
+  document.addEventListener('DOMContentLoaded',function(){
+    let choice=null;
+    try{choice=localStorage.getItem(key);}catch(e){}
+    if(choice===null){const banner=document.getElementById('analyticsConsentBanner');if(banner)banner.hidden=false;}
+  });
+})();
+</script>
 <style>
 :root{--ink:#101828;--muted:#667085;--blue:#2563eb;--blue-dark:#1746a2;--bg:#eef2f7;--card:#fff;--line:#e4e7ec;--soft:#f7f9fc;--green:#067647;--orange:#b54708;--shadow:0 10px 30px rgba(16,24,40,.07)}
 *{box-sizing:border-box}
@@ -327,9 +357,24 @@ input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid 
 .apk-defects-table th,.apk-defects-table td{padding:8px;border-bottom:1px solid var(--line);text-align:left}
 @media(max-width:560px){.apk-defects{overflow-x:auto}.apk-defects-table{min-width:490px}}
 @media print{.apk-defects{display:none!important}}
+
+#analyticsConsentBanner{position:fixed;bottom:16px;left:16px;right:16px;max-width:600px;margin:auto;background:#fff;color:#101828;border:1px solid #cbd5e1;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);padding:17px;z-index:9999;font-size:13px}
+#analyticsConsentBanner[hidden]{display:none!important}
+#analyticsConsentBanner p{margin:0 0 12px;line-height:1.5}
+.analytics-consent-actions{display:flex;gap:8px;flex-wrap:wrap}
+.analytics-consent-actions button{padding:10px 15px;border:1px solid #cbd5e1;border-radius:8px;cursor:pointer;font-weight:700;background:#fff;color:#101828}
+.analytics-consent-actions button:last-child{background:#2563eb;color:#fff;border-color:#2563eb}
+@media print{#analyticsConsentBanner{display:none!important}}
 </style>
 </head>
 <body>
+<div id="analyticsConsentBanner" role="dialog" aria-label="Toestemming voor bezoekersstatistieken" hidden>
+  <p><strong>Bezoekersstatistieken</strong><br>Carfacts gebruikt Google Analytics alleen met jouw toestemming om te begrijpen hoe de website wordt gebruikt. Je kunt de statistiekcookies weigeren.</p>
+  <div class="analytics-consent-actions">
+    <button type="button" onclick="carfactsAnalyticsConsent(false)">Weigeren</button>
+    <button type="button" onclick="carfactsAnalyticsConsent(true)">Toestaan</button>
+  </div>
+</div>
 <div class="container">
 <header><div class="logo">Car<span>facts</span></div><nav class="header-actions" aria-label="Carfacts diensten"><a class="parts-link" href="/parts/">Onderdelen zoeken ↗</a><div class="badge">RDW KENTEKENCHECK</div></nav></header>
 
