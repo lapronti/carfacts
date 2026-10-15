@@ -391,7 +391,7 @@ document.getElementById("searchForm").addEventListener("submit",e=>{
  if(scope.value==="CUSTOM"&&!countries.length){document.getElementById("status").textContent="Selecteer minimaal één land.";return}
  const src=selectedSources(countries);
  if(!src.length){document.getElementById("status").textContent="Voor deze landen zijn nog geen bronnen beschikbaar.";return}
- if(window.cfTrack)window.cfTrack('parts_search',{term:term});
+ if(window.cfTrack)window.cfTrack('parts_search',{term:activeSearchMethod==='vin'?(part||'VIN-zoekopdracht'):term});
  const root=document.getElementById("results");root.replaceChildren();let count=0;
  document.getElementById("filterCountry").replaceChildren(new Option("Alle landen",""));
  const ebaySelected=src.includes("ebay");
