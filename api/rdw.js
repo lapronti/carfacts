@@ -1,5 +1,6 @@
 // Same-origin RDW lookup: avoid browser-to-Worker CORS and provide a direct RDW fallback.
 const RDW_SOURCE = "https://opendata.rdw.nl/resource/m9d7-ebf2.json";
+const DEFECTS_SOURCE = "https://opendata.rdw.nl/resource/a34c-vvps.json";
 const FUEL_SOURCE = "https://opendata.rdw.nl/resource/8ys7-d773.json";
 const LEGACY_WORKER = "https://carfacts-rdw.nlaghmiri.workers.dev/api/rdw";
 async function getJson(url, timeout = 8500) {
@@ -54,6 +55,22 @@ module.exports = async function handler(req, res) {
     }
   } catch (error) {
     console.warn("RDW fuel data unavailable:", error.message);
+  }
+  // Publicly registered inspection defects are not a complete APK history.
+  // A vehicle with no returned rows may still have passed inspections.
+  try {
+    const defects = await getJson(DEFECTS_SOURCE + "?kenteken=" + encoded + "&%24limit=100&%24order=meld_datum_door_keuringsinstantie%20DESC", 5500);
+    data[0].apk_gebreken = defects.map(d => ({
+      datum: String(d.meld_datum_door_keuringsinstantie || "").replace(/[^0-9]/g, "").slice(0,8),
+      code: String(d.gebrek_identificatie || "").slice(0,32),
+      aantal: Number(d.aantal_gebreken_geconstateerd || 0),
+      soort: String(d.soort_erkenning_omschrijving || "").slice(0,100)
+    }));
+    data[0].apk_gebreken_beschikbaar = true;
+    data[0].apk_gebreken_afgekapt = defects.length === 100;
+  } catch (error) {
+    console.warn("RDW inspection defects unavailable:", error.message);
+    data[0].apk_gebreken_beschikbaar = false;
   }
   return res.status(200).json(data);
 };
