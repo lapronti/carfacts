@@ -1209,7 +1209,7 @@ function renderApkDefects(x){
   records.forEach(d=>{
     const row=document.createElement('tr');
     const date=String(d.datum||'');
-    const values=[/^\\d{8}$/.test(date)?date.slice(6,8)+'-'+date.slice(4,6)+'-'+date.slice(0,4):'Onbekend',d.code||'Onbekend',String(d.aantal||'—'),d.soort||'—'];
+    const values=[/^[0-9]{8}$/.test(date)?date.slice(6,8)+'-'+date.slice(4,6)+'-'+date.slice(0,4):'Onbekend',d.code||'Onbekend',String(d.aantal||'—'),d.soort||'—'];
     values.forEach(value=>{const td=document.createElement('td');td.textContent=value;row.appendChild(td);});
     tbody.appendChild(row);
   });
