@@ -369,13 +369,14 @@ document.getElementById("searchForm").addEventListener("submit",e=>{
  e.preventDefault();const part=queryInput.value.trim();if(!part)return;
  const prefix=selectedVehicle?vehicleSearchPrefix(selectedVehicle):"";
  const term=prefix?prefix+" "+part:part;
- if(window.cfTrack)window.cfTrack('parts_search');
+
  let countries=selectedCountries();
  if(["NL","DE","PL","LT","BE"].includes(scope.value))countries=[scope.value];
  if(scope.value==="EU"||scope.value==="INT")countries=Object.keys(countryNames);
  if(scope.value==="CUSTOM"&&!countries.length){document.getElementById("status").textContent="Selecteer minimaal één land.";return}
  const src=selectedSources(countries);
  if(!src.length){document.getElementById("status").textContent="Voor deze landen zijn nog geen bronnen beschikbaar.";return}
+ if(window.cfTrack)window.cfTrack('parts_search',{term:part});
  const root=document.getElementById("results");root.replaceChildren();let count=0;
  document.getElementById("filterCountry").replaceChildren(new Option("Alle landen",""));
  const ebaySelected=src.includes("ebay");
