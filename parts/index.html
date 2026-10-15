@@ -95,6 +95,8 @@ header{margin-bottom:16px;padding-bottom:15px;border-bottom:1px solid var(--line
 @media(max-width:720px){.parts-workspace{grid-template-columns:1fr}.parts-sidebar .filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.results{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{padding:20px}.results-section .section-head{flex-direction:column}}
 @media(max-width:520px){.parts-sidebar .filters{grid-template-columns:1fr}.results{grid-template-columns:1fr 1fr;gap:9px}.result-title .product-image{height:145px}.result h3{font-size:12px}.result-title .product-info{padding:10px}.result-footer{padding:9px}.result-footer strong{font-size:15px}.result-footer .link-btn{font-size:11px;padding:9px 7px}.wrap{padding:12px 10px 35px}.hero h1{font-size:25px}}
 
+
+.search-methods{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}.search-methods h2{font-size:14px;margin:0 0 10px}.method-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-bottom:12px}.method-tab{border:1px solid var(--line);background:#f7f8f5;border-radius:6px;padding:9px 5px;font:inherit;font-size:11px;font-weight:700;cursor:pointer}.method-tab[aria-selected="true"]{background:#285c60;color:#fff;border-color:#285c60}.method-panel[hidden]{display:none}.method-panel label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}.method-panel>input{width:100%;min-width:0;padding:12px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:13px}.method-panel>p{font-size:11px;color:var(--muted);line-height:1.5}.method-panel .plate-lookup{border:0;padding:0;margin:0}.method-panel .plate-lookup-title{display:none}.method-panel .plate-lookup-controls{flex-direction:column}
 </style>
 <link rel="stylesheet" href="/assets/site-shell.css">
 </head>
@@ -107,7 +109,7 @@ header{margin-bottom:16px;padding-bottom:15px;border-bottom:1px solid var(--line
 <h1>Vind het juiste onderdeel.<br>Vergelijk over grenzen heen.</h1>
 <p>Zoek gebruikte auto-onderdelen in Nederland en Europa vanuit Carfacts. Vergelijk meerdere bronnen vanuit één overzicht en open de originele advertenties bij de aanbieder.</p>
 </section>
-<div class="parts-workspace"><aside class="parts-sidebar" aria-label="Zoekfilters"><div class="plate-lookup">
+<div class="parts-workspace"><aside class="parts-sidebar" aria-label="Zoekfilters"><div class="search-methods"><h2>Zoekmethode</h2><div class="method-tabs" role="tablist" aria-label="Zoekmethode"><button type="button" class="method-tab" role="tab" data-method="plate" aria-selected="true" aria-controls="method-plate">Kenteken</button><button type="button" class="method-tab" role="tab" data-method="brand" aria-selected="false" aria-controls="method-brand">Merk & model</button><button type="button" class="method-tab" role="tab" data-method="oem" aria-selected="false" aria-controls="method-oem">Artikelnummer</button><button type="button" class="method-tab" role="tab" data-method="engine" aria-selected="false" aria-controls="method-engine">Motorcode</button><button type="button" class="method-tab" role="tab" data-method="gearbox" aria-selected="false" aria-controls="method-gearbox">Bakcode</button><button type="button" class="method-tab" role="tab" data-method="vin" aria-selected="false" aria-controls="method-vin">Chassisnummer (VIN)</button><button type="button" class="method-tab" role="tab" data-method="kba" aria-selected="false" aria-controls="method-kba">KBA-nummer</button><button type="button" class="method-tab" role="tab" data-method="free" aria-selected="false" aria-controls="method-free">Vrij zoeken</button></div><div class="method-panel" id="method-plate" role="tabpanel"><div class="plate-lookup">
   <div class="plate-lookup-title"><strong>Zoek op kenteken</strong><span>Of zoek hieronder handmatig op onderdeelnummer</span></div>
   <div class="plate-lookup-controls">
     <input id="vehiclePlate" type="text" inputmode="text" autocomplete="off" maxlength="12" placeholder="XX-XXX-X" aria-label="Nederlands kenteken">
@@ -117,6 +119,7 @@ header{margin-bottom:16px;padding-bottom:15px;border-bottom:1px solid var(--line
   <div id="vehicleSummary" class="vehicle-summary hidden"></div>
   <p class="vehicle-lookup-note">RDW-gegevens helpen bij het zoeken, maar bevestigen niet of een onderdeel technisch past. Controleer altijd het OEM-nummer, de motorcode of het VIN.</p>
 </div>
+</div><div class="method-panel" id="method-brand" role="tabpanel" hidden><label for="input-brand">Merk & model</label><input id="input-brand" placeholder="Voer zoekgegevens in" ><p>Combineer met een onderdeelnaam hieronder voor gerichter zoeken.</p></div><div class="method-panel" id="method-oem" role="tabpanel" hidden><label for="input-oem">Artikelnummer</label><input id="input-oem" placeholder="Bijv. 04E906023AG" ><p>Combineer met een onderdeelnaam hieronder voor gerichter zoeken.</p></div><div class="method-panel" id="method-engine" role="tabpanel" hidden><label for="input-engine">Motorcode</label><input id="input-engine" placeholder="Bijv. DFSD" ><p>Combineer met een onderdeelnaam hieronder voor gerichter zoeken.</p></div><div class="method-panel" id="method-gearbox" role="tabpanel" hidden><label for="input-gearbox">Bakcode</label><input id="input-gearbox" placeholder="Bijv. SWS" ><p>Combineer met een onderdeelnaam hieronder voor gerichter zoeken.</p></div><div class="method-panel" id="method-vin" role="tabpanel" hidden><label for="input-vin">Chassisnummer (VIN)</label><input id="input-vin" placeholder="17 tekens" maxlength="17"><p>Zoekt op VIN als tekst; nog geen gekoppelde VIN-onderdelencatalogus.</p></div><div class="method-panel" id="method-kba" role="tabpanel" hidden><label for="input-kba">KBA-nummer</label><input id="input-kba" placeholder="Voer zoekgegevens in" ><p>Combineer met een onderdeelnaam hieronder voor gerichter zoeken.</p></div><div class="method-panel" id="method-free" role="tabpanel" hidden><label for="input-free">Vrij zoeken</label><input id="input-free" placeholder="Voer zoekgegevens in" ><p>Combineer met een onderdeelnaam hieronder voor gerichter zoeken.</p></div></div>
 <form id="searchForm" class="search-form">
 <input id="query" type="search" placeholder="Bijv. VW Golf 7 koplamp links of OEM-nummer" required aria-label="Onderdeel of OEM-nummer">
 <select id="scope" aria-label="Zoekgebied"><option value="NL">Nederland</option><option value="DE">Duitsland</option><option value="PL">Polen</option><option value="LT">Litouwen</option><option value="BE">België</option><option value="EU">Europa</option><option value="INT" selected>Internationaal</option><option value="CUSTOM">Zelf landen kiezen</option></select>
@@ -167,6 +170,14 @@ const sourceInfo={
 };
 const countryNames={NL:"Nederland",DE:"Duitsland",PL:"Polen",LT:"Litouwen",BE:"België",GB:"Verenigd Koninkrijk",FR:"Frankrijk",IT:"Italië",ES:"Spanje"};
 const scope=document.getElementById("scope"),countryPanel=document.getElementById("countryPanel"),queryInput=document.getElementById("query");
+let activeSearchMethod='plate';
+document.querySelectorAll('[data-method]').forEach(button=>button.addEventListener('click',()=>{
+ activeSearchMethod=button.dataset.method;selectedVehicle=null;
+ document.getElementById('vehicleSummary').classList.add('hidden');
+ document.querySelectorAll('[data-method]').forEach(tab=>{const selected=tab===button;tab.setAttribute('aria-selected',String(selected));document.getElementById('method-'+tab.dataset.method).hidden=!selected});
+ queryInput.required=activeSearchMethod==='plate'||activeSearchMethod==='free';
+ queryInput.placeholder=activeSearchMethod==='plate'||activeSearchMethod==='free'?'Bijv. turbo of koplamp links':'Optioneel: onderdeelnaam';
+}));
 let selectedVehicle=null;
 let plateLookupSequence=0;
 const plateInput=document.getElementById("vehiclePlate");
@@ -366,9 +377,13 @@ document.getElementById("pageSize").addEventListener("change",()=>{visiblePage=0
 function makeUrl(domain,term,country,sourceKey){const countryText=country&&country!=="INT"?" "+countryNames[country]:"";const sourcePrefix=domain?"site:"+domain+" ":"Eurostock gebruikte auto-onderdelen ";const q=sourcePrefix+term+countryText+" auto onderdeel";return "https://www.google.com/search?q="+encodeURIComponent(q)}
 function createCard(sourceKey,country,term){const s=sourceInfo[sourceKey];const countryLabel=country==="INT"?"Internationaal":countryNames[country];const url=makeUrl(s.domain,term,country,sourceKey);const card=document.createElement("article");card.className="result";const top=document.createElement("div");top.className="result-title";const icon=document.createElement("div");icon.className="source-icon";icon.textContent=s.name.split(/[. ]/)[0].slice(0,2).toUpperCase();const text=document.createElement("div");const title=document.createElement("h3");title.textContent=s.name;const desc=document.createElement("p");desc.textContent=s.note+" · zoekgebied: "+countryLabel; text.append(title,desc);top.append(icon,text);const foot=document.createElement("div");foot.className="result-footer";const pill=document.createElement("span");pill.className="pill";pill.textContent="Externe zoeklink";const a=document.createElement("a");a.className="link-btn";a.href=url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Open zoekresultaten ↗";foot.append(pill,a);card.append(top,foot);return card}
 document.getElementById("searchForm").addEventListener("submit",e=>{
- e.preventDefault();const part=queryInput.value.trim();if(!part)return;
- const prefix=selectedVehicle?vehicleSearchPrefix(selectedVehicle):"";
- const term=prefix?prefix+" "+part:part;
+ e.preventDefault();const part=queryInput.value.trim();
+ const extra=activeSearchMethod==='plate'?'':(document.getElementById('input-'+activeSearchMethod)?.value||'').trim();
+ if((activeSearchMethod==='plate'||activeSearchMethod==='free')&&!part)return;
+ if(activeSearchMethod!=='plate'&&activeSearchMethod!=='free'&&!extra){document.getElementById('status').textContent='Vul eerst de zoekgegevens in.';return}
+ if(activeSearchMethod==='vin'&&!/^[A-HJ-NPR-Z0-9]{17}$/i.test(extra)){document.getElementById('status').textContent='Vul een geldig VIN van 17 tekens in.';return}
+ const prefix=activeSearchMethod==='plate'&&selectedVehicle?vehicleSearchPrefix(selectedVehicle):'';
+ const term=[prefix,extra,part].filter(Boolean).join(' ');
 
  let countries=selectedCountries();
  if(["NL","DE","PL","LT","BE"].includes(scope.value))countries=[scope.value];
@@ -376,13 +391,13 @@ document.getElementById("searchForm").addEventListener("submit",e=>{
  if(scope.value==="CUSTOM"&&!countries.length){document.getElementById("status").textContent="Selecteer minimaal één land.";return}
  const src=selectedSources(countries);
  if(!src.length){document.getElementById("status").textContent="Voor deze landen zijn nog geen bronnen beschikbaar.";return}
- if(window.cfTrack)window.cfTrack('parts_search',{term:part});
+ if(window.cfTrack)window.cfTrack('parts_search',{term:term});
  const root=document.getElementById("results");root.replaceChildren();let count=0;
  document.getElementById("filterCountry").replaceChildren(new Option("Alle landen",""));
  const ebaySelected=src.includes("ebay");
  src.filter(k=>k!=="ebay").forEach(k=>{const source=sourceInfo[k];const relevant=countries.filter(c=>source.country.includes(c));relevant.forEach(c=>{root.append(createCard(k,c,term));count++})});
- document.getElementById("resultsHeading").textContent=selectedVehicle?"Onderdelen voor "+vehicleSearchPrefix(selectedVehicle)+" · "+part:"Zoekopdracht: "+term;
- document.getElementById("resultsSub").textContent=(selectedVehicle?"Kenteken "+selectedVehicle.plate+" · Controleer de passendheid met OEM-nummer of VIN. ":"")+"eBay-resultaten worden rechtstreeks geladen; overige bronnen openen zoeklinks.";
+ document.getElementById("resultsHeading").textContent=activeSearchMethod==='plate'&&selectedVehicle?"Onderdelen voor "+vehicleSearchPrefix(selectedVehicle)+" · "+part:"Zoekopdracht: "+term;
+ document.getElementById("resultsSub").textContent=(activeSearchMethod==='plate'&&selectedVehicle?"Kenteken "+selectedVehicle.plate+" · Controleer de passendheid met OEM-nummer of VIN. ":"")+"eBay-resultaten worden rechtstreeks geladen; overige bronnen openen zoeklinks.";
  ebaySearchId++;liveEbayItems=[];visiblePage=0;document.getElementById("filterCountry").value="";document.getElementById("pagination").classList.add("hidden");ebayTerm=term;ebayCountries=ebaySelected?countries.filter(c=>ebaySupported.includes(c)):[];
  ebayPages={};ebayHasMore={};ebayCountries.forEach(c=>{ebayPages[c]=0;ebayHasMore[c]=true;});
  updateMore();
