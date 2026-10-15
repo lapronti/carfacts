@@ -1,3 +1,4 @@
+const crypto=require('node:crypto');
 const {cmd,configured,reply}=require('./_analytics');
 const types=new Set(['page_view','plate_search','parts_search','outbound_click','pro_interest']);
 const pages=new Set(['/','/parts/','/pro/']);
@@ -18,5 +19,5 @@ module.exports=async(req,res)=>{
   field+=':'+term.toLocaleLowerCase('nl-NL');
  }
  if(b.type==='pro_interest'){field+=':total'}
- try{await cmd('HINCRBY',key,field,1);await cmd('EXPIRE',key,86400*100);return reply(res,200,{ok:true})}catch{return reply(res,503,{error:'Storage unavailable'})}
+ try{const ip=String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0].trim();const digest=crypto.createHmac('sha256',process.env.CARFACTS_ADMIN_SECRET||'').update(ip).digest('hex');const rate='cf:analytics:rate:'+digest;const count=Number(await cmd('INCR',rate));if(count===1)await cmd('EXPIRE',rate,3600);if(count>120){await cmd('INCR','cf:security:blocked:'+date);await cmd('EXPIRE','cf:security:blocked:'+date,86400*100);return reply(res,429,{error:'Te veel analytics-verzoeken'})}await cmd('HINCRBY',key,field,1);await cmd('EXPIRE',key,86400*100);return reply(res,200,{ok:true})}catch{return reply(res,503,{error:'Storage unavailable'})}
 };
