@@ -10,7 +10,7 @@ module.exports=async(req,res)=>{
  if(req.method==='GET'){
   try{if(!await session(req))return reply(res,401,{error:'Inloggen vereist'});
    const items=await cmd('LRANGE',key,0,99);
-   return reply(res,200,{items:(items||[]).map(v=>JSON.parse(v))});
+   const parsed=(items||[]).map(v=>JSON.parse(v));const statuses=parsed.length?await cmd('MGET',...parsed.map(v=>'cf:bug:status:'+v.id)):[];return reply(res,200,{items:parsed.map((v,i)=>({...v,status:statuses?.[i]||'nieuw'}))});
   }catch{return reply(res,503,{error:'Meldingen niet beschikbaar'})}
  }
  if(req.method!=='POST')return reply(res,405,{error:'Method not allowed'});
