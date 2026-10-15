@@ -538,6 +538,10 @@ body{background:#f5f8f7}.search-card{background:linear-gradient(120deg,#17383b,#
 const A='/api/rdw';
 const q=x=>document.getElementById(x);
 const v=x=>x==null||x===''?'—':x;
+// Herstel na verversen alleen het laatst succesvol opgezochte kenteken in dit tabblad.
+window.addEventListener('DOMContentLoaded',()=>{
+ try{const saved=sessionStorage.getItem('cf_last_plate');if(saved&&/^[A-Z0-9]{6}$/.test(saved)){q('p').value=saved;go('plate')}}catch{}
+});
 
 function formatDate(x){
   if(x==null||x==='') return '—';
@@ -862,6 +866,7 @@ async function go(type='plate'){
     ].join('');
 
     window.carData=x;
+    try{sessionStorage.setItem('cf_last_plate',k)}catch{}
     q('printHeaderText').textContent=''+formatPlate(x.kenteken||'')+' · '+(x.merk||'')+' '+(x.handelsbenaming||'')+' · gegenereerd '+new Date().toLocaleDateString('nl-NL');
     calculateCarfactsIntelligence(x);
     carfactsDistribution(x);
