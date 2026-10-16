@@ -1,0 +1,21 @@
+/* Carfacts theme manager: appearance only, no changes to functional status colors */
+body[data-cf-theme]{--theme-bg:#f5f8fc;--theme-ink:#172d4a;--theme-accent:#1764e8;--theme-soft:#eaf2ff;--theme-line:#e2eaf5;background:var(--theme-bg)!important;color:var(--theme-ink)!important}
+body[data-cf-theme="midnight"]{--theme-bg:#111b2b;--theme-ink:#e9f1ff;--theme-accent:#6da9ff;--theme-soft:#202f46;--theme-line:#34465e}
+body[data-cf-theme="minimal"]{--theme-bg:#fafafa;--theme-ink:#242b35;--theme-accent:#374151;--theme-soft:#f2f3f5;--theme-line:#dfe2e6}
+body[data-cf-theme="slate"]{--theme-bg:#edf1f5;--theme-ink:#24354d;--theme-accent:#4779ad;--theme-soft:#e0eaf5;--theme-line:#cbd6e4}
+body[data-cf-theme="classic"]{--theme-bg:#fffdf8;--theme-ink:#283850;--theme-accent:#254b84;--theme-soft:#f6f0e5;--theme-line:#e8dfd2}
+body[data-cf-theme="contrast"]{--theme-bg:#f7f8fc;--theme-ink:#111827;--theme-accent:#1948bd;--theme-soft:#e7ecff;--theme-line:#c9d3e7}
+body[data-cf-theme="halloween"]{--theme-bg:#201829;--theme-ink:#f5eafa;--theme-accent:#e98c36;--theme-soft:#33233e;--theme-line:#57415e}
+body[data-cf-theme="blackfriday"]{--theme-bg:#13151a;--theme-ink:#f8f5eb;--theme-accent:#e6bd65;--theme-soft:#282725;--theme-line:#4b4538}
+body[data-cf-theme="sinterklaas"]{--theme-bg:#fff7f3;--theme-ink:#502c31;--theme-accent:#a92d3c;--theme-soft:#fff0e9;--theme-line:#ecd7d1}
+body[data-cf-theme="christmas"]{--theme-bg:#102e29;--theme-ink:#f7f5e9;--theme-accent:#e0c47e;--theme-soft:#1c4038;--theme-line:#47675b}
+body[data-cf-theme] .cf-header,body[data-cf-theme] .panel,body[data-cf-theme] .card,body[data-cf-theme] .parts-sidebar,body[data-cf-theme] .pro-feature,body[data-cf-theme] .result-card{border-color:var(--theme-line)!important}
+body[data-cf-theme] .cf-brand span,body[data-cf-theme] .logo span,body[data-cf-theme] .cf-subbrand-tag,body[data-cf-theme] .parts-brand-tag{color:var(--theme-accent)!important}
+body[data-cf-theme] .cf-nav a[aria-current="page"],body[data-cf-theme] .method-tab[aria-selected="true"]{border-color:var(--theme-accent)!important;color:var(--theme-accent)!important}
+body[data-cf-theme] button[type="submit"],body[data-cf-theme] .pro-cta,body[data-cf-theme] .btn{background:var(--theme-accent)!important}
+body[data-cf-theme="halloween"] .hero,body[data-cf-theme="blackfriday"] .hero,body[data-cf-theme="christmas"] .hero{background:linear-gradient(120deg,var(--theme-bg),var(--theme-soft))!important}
+body[data-cf-theme="halloween"] .hero h1,body[data-cf-theme="blackfriday"] .hero h1,body[data-cf-theme="christmas"] .hero h1{color:var(--theme-ink)!important}
+body[data-cf-theme="midnight"] .hero,body[data-cf-theme="halloween"] .hero,body[data-cf-theme="blackfriday"] .hero,body[data-cf-theme="christmas"] .hero{background:linear-gradient(120deg,var(--theme-bg),var(--theme-soft))!important}
+body[data-cf-theme="midnight"] .hero h1{color:var(--theme-ink)!important}
+body[data-cf-theme="midnight"] .hero p,body[data-cf-theme="halloween"] .hero p,body[data-cf-theme="blackfriday"] .hero p,body[data-cf-theme="christmas"] .hero p{color:var(--theme-ink)!important}
+body[data-cf-theme] .cf-legal-footer{background:transparent!important}
