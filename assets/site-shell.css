@@ -1,15 +1,15 @@
 /* Shared Carfacts navigation and layout, used by all pages */
-:root{--cf-ink:#193538;--cf-teal:#176e73;--cf-border:#dce7e5}
-body{background:#f5f8f7;color:var(--cf-ink)}
+:root{--cf-ink:#172d4a;--cf-teal:#1764e8;--cf-border:#e2eaf5}
+body{background:#f5f8fc;color:var(--cf-ink)}
 .cf-shell{max-width:1180px;margin-left:auto;margin-right:auto}
 .cf-header{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:20px!important;margin:0 0 24px!important;padding:8px 0 18px!important;background:transparent!important;border:0!important;box-shadow:none!important}
-.cf-brand{font-size:30px!important;line-height:1.2!important;font-weight:850!important;letter-spacing:-1.2px!important;text-decoration:none!important;color:#193538!important;white-space:nowrap}
-.cf-brand span{color:#16898e!important}
+.cf-brand{font-size:30px!important;line-height:1.2!important;font-weight:850!important;letter-spacing:-1.2px!important;text-decoration:none!important;color:#172d4a!important;white-space:nowrap}
+.cf-brand span{color:#1764e8!important}
 .cf-nav{display:flex!important;align-items:stretch!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:10px!important}
 .cf-nav a{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:3px!important;min-height:58px!important;padding:10px 15px!important;background:#fff!important;border:1px solid var(--cf-border)!important;border-radius:12px!important;text-decoration:none!important;color:#244649!important;font-size:13px!important;font-weight:800!important;line-height:1.25!important;box-shadow:none!important;white-space:normal!important}
 .cf-nav a small{display:block!important;color:#728585!important;font-size:10px!important;font-weight:500!important}
 .cf-nav a[aria-current="page"]{background:#e7f3f1!important;border-color:#8cc8c4!important;color:#125c61!important}
-.cf-nav a:hover{border-color:#75bcb8!important;background:#f0f8f7!important}
+.cf-nav a:hover{border-color:#a9c8fb!important;background:#edf4ff!important}
 @media(max-width:760px){.cf-header{flex-direction:column!important;align-items:stretch!important}.cf-nav{justify-content:stretch!important}.cf-nav a{flex:1 1 130px!important}}
 @media(max-width:460px){.cf-nav{gap:6px!important}.cf-nav a{padding:10px!important;font-size:12px!important}.cf-nav a small{font-size:9px!important}}
 @media print{.cf-header{display:none!important}}
