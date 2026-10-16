@@ -50,3 +50,11 @@ body:has(#adminNav) .admin-nav button{background:#fff!important;color:#395879!im
 body:has(#adminNav) .admin-nav button[aria-current="page"]{background:#1764e8!important;color:#fff!important;border-color:#1764e8!important}
 @media(min-width:1000px){body:has(#adminNav) #dashboard{display:grid;grid-template-columns:215px minmax(0,1fr);column-gap:24px;align-items:start}body:has(#adminNav) #dashboard>.panel:first-child,body:has(#adminNav) #dashboard>label[for="days"],body:has(#adminNav) #dashboard>#days{grid-column:2}body:has(#adminNav) .admin-nav{grid-column:1;grid-row:1/span 15;position:sticky;top:20px;display:flex;flex-direction:column;margin:0;padding:12px;background:#fff;border:1px solid #e2eaf5;border-radius:16px}body:has(#adminNav) #dashboard>:not(.admin-nav){grid-column:2;min-width:0}}
 @media(max-width:700px){body:has(#adminNav) .admin-nav{grid-template-columns:repeat(2,minmax(0,1fr))}body:has(.parts-workspace) .hero,body:has(.pro-features) .hero{padding:25px!important}}
+
+/* Neutralize legacy teal decorative accents, preserving semantic success/warning states */
+body:has(.parts-workspace) .eyebrow,body:has(.pro-features) .pro-eyebrow{color:#1764e8!important}
+body:has(.parts-workspace) .method-tabs button[aria-selected="true"]{color:#1559cf!important;background:#edf4ff!important;border-color:#b5cdf7!important}
+body:has(.parts-workspace) .search-methods,body:has(.parts-workspace) .parts-sidebar{border-color:#e2eaf5!important}
+body:has(.pro-features) .pro-cta,body:has(.pro-features) .pro-state{border-color:#dbe8fb!important}
+body:has(#adminNav) .panel h2,body:has(#adminNav) .panel h3{color:#172d4a!important}
+body:has(#adminNav) a:not(.cf-brand){color:#1559cf}
