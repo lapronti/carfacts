@@ -411,7 +411,7 @@ body{background:#f5f8fc;color:#14243b}
 
 </style>
 <link rel="stylesheet" href="/assets/site-shell.css">
-<link rel="stylesheet" href="/assets/bug-report.css"></head>
+<link rel="stylesheet" href="/assets/bug-report.css"><link rel="stylesheet" href="/assets/theme-manager.css"></head>
 <body>
 <div class="container">
 <header class="cf-header"><a class="cf-brand" href="/" aria-label="Carfacts startpagina">Car<span>facts</span></a><nav class="cf-nav" aria-label="Hoofdnavigatie"><a href="/" aria-current="page">Kentekencheck<small>Gratis voertuiggegevens</small></a><a href="/parts/">Onderdelen zoeken<small>Zoek auto-onderdelen</small></a><a href="/pro/">Carfacts PRO<small>Onderhoudshistorie</small></a></nav></header>
@@ -1406,5 +1406,5 @@ function carfactsGarage(){const s=String(q('garageQuestion').value||'').toLowerC
 </script>
 <script defer src="/assets/analytics.js"></script><script defer src="/assets/bug-report.js"></script><script defer src="/assets/cookie-consent.js"></script><footer class="cf-legal-footer" style="padding:28px 18px;text-align:center;font:13px system-ui;color:#586e70"><a href="/privacy/">Privacyverklaring</a> · <a href="/cookies/">Cookies en instellingen</a> · <a href="/voorwaarden/">Gebruiksvoorwaarden</a> · Carfacts, handelsnaam van MAE Safety · KvK 97363642</footer>
 <script>function prepareValuation(){const a=document.getElementById('valuationAsking'),m=document.getElementById('valuationMileage'),o=document.getElementById('valuationMessage');if(!a||!m||!o)return;const price=Number(a.value),km=Number(m.value);if(!a.value||!m.value||!Number.isFinite(price)||!Number.isFinite(km)||price<=0||km<0){o.textContent='Vul een geldige vraagprijs en kilometerstand in.';return}o.textContent='Vraagprijs '+new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(price)+' · '+new Intl.NumberFormat('nl-NL').format(km)+' km. Een marktwaarde kan pas worden berekend nadat een geautoriseerde waarderingsbron is gekoppeld.';}}</script>
-</body>
+<script defer src="/assets/theme-manager.js"></script></body>
 </html>
