@@ -1,0 +1,52 @@
+/* Carfacts Professional V5 – consistent design across Parts, PRO and Admin */
+:root{--cf-ink:#172d4a;--cf-teal:#1764e8;--cf-border:#e2eaf5;--bg:#f5f8fc;--blue:#1764e8;--blue2:#1456ca;--line:#e2eaf5;--shadow:0 10px 28px rgba(20,45,83,.055)}
+body{background:#f5f8fc!important;color:#172d4a!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important}
+.cf-shell,.wrap{max-width:1240px}
+.cf-header{background:#fff!important;border:1px solid #e5ecf5!important;border-radius:15px!important;padding:14px 22px!important;box-shadow:0 4px 20px rgba(20,45,83,.035)!important;margin-bottom:22px!important}
+.cf-brand{color:#172d4a!important}.cf-brand span{color:#1764e8!important}
+.cf-nav a{color:#425a78!important;border-color:#e3eaf4!important;background:#f8faff!important}
+.cf-nav a[aria-current="page"],.cf-nav a:hover{color:#1259d5!important;border-color:#aac6f5!important;background:#edf4ff!important}
+button,.btn,.pro-cta{transition:background .16s ease,box-shadow .16s ease}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #93b9ff;outline-offset:2px}
+button:not(.method-tab):not([data-target]),.btn,.pro-cta{background:#1764e8;color:#fff;border-radius:10px}
+button:not(.method-tab):not([data-target]):hover,.btn:hover,.pro-cta:hover{background:#104fbe}
+h1,h2,h3{letter-spacing:-.55px;color:#172d4a}
+.panel,.card,.pro-feature,.pro-info,.parts-sidebar,.parts-results,.search-methods,.hero{border-color:#e2eaf5!important;border-radius:17px!important;box-shadow:0 8px 26px rgba(20,45,83,.04)!important}
+input,select,textarea{border-color:#d7e2f0!important}
+table th{color:#4d6685;background:#f6f9fe}
+table td{border-color:#e5edf6}
+.muted{color:#647890}
+.cf-legal-footer{color:#647890!important}
+@media(max-width:760px){.cf-header{padding:14px!important}.cf-nav{gap:6px!important}}
+/* Parts: spacious search workspace */
+.parts-workspace{gap:20px!important}
+.parts-sidebar{background:#fff!important}
+.parts-sidebar h2,.parts-results h2{color:#172d4a}
+.method-tab{border-color:#dce7f5!important;color:#395777!important}
+.method-tab[aria-selected="true"]{background:#eaf2ff!important;color:#1359d7!important;border-color:#b7cff8!important}
+.parts-results .result-card,.parts-results article{border-radius:13px}
+body:has(.parts-workspace) .hero{background:linear-gradient(110deg,#f4f9ff,#eaf3ff 60%,#dbeaff)!important;color:#172d4a!important;padding:40px!important;min-height:225px}
+body:has(.parts-workspace) .hero h1{color:#142b4b!important;font-size:clamp(29px,3.6vw,44px);line-height:1.16}
+body:has(.parts-workspace) .hero p{color:#506782!important;max-width:740px}
+body:has(.parts-workspace) .hero .eyebrow{color:#1764e8!important}
+/* PRO: premium product presentation without implying live payments */
+body:has(.pro-features) .hero{background:linear-gradient(115deg,#f2f8ff,#e4efff)!important;padding:43px!important}
+body:has(.pro-features) .hero h1{color:#142b4b;font-size:clamp(32px,4vw,48px)}
+body:has(.pro-features) .hero p{color:#526985}
+.pro-eyebrow{color:#1764e8!important}
+.pro-feature{background:#fff!important;padding:27px!important}
+.pro-feature h2{color:#172d4a!important}
+.pro-feature .pro-state{background:#eaf2ff!important;color:#1559cf!important}
+.pro-info{background:#f0f6ff!important;border-color:#dbe8fa!important}
+body:has(.pro-features) .wrap{max-width:1180px}
+/* Admin: left navigation on desktop, consistent content cards */
+body:has(#adminNav) .wrap{max-width:1320px}
+body:has(#adminNav) h1{font-size:clamp(27px,3vw,37px);margin:15px 0 20px}
+body:has(#adminNav) .panel{background:#fff!important}
+body:has(#adminNav) .stat{background:#f0f6ff!important;border:1px solid #dce9fb;border-radius:13px!important}
+body:has(#adminNav) .stat strong{color:#1559cf}
+body:has(#adminNav) .admin-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:18px 0}
+body:has(#adminNav) .admin-nav button{background:#fff!important;color:#395879!important;border:1px solid #dce7f5!important;border-radius:10px!important;padding:12px!important;text-align:left}
+body:has(#adminNav) .admin-nav button[aria-current="page"]{background:#1764e8!important;color:#fff!important;border-color:#1764e8!important}
+@media(min-width:1000px){body:has(#adminNav) #dashboard{display:grid;grid-template-columns:215px minmax(0,1fr);column-gap:24px;align-items:start}body:has(#adminNav) #dashboard>.panel:first-child,body:has(#adminNav) #dashboard>label[for="days"],body:has(#adminNav) #dashboard>#days{grid-column:2}body:has(#adminNav) .admin-nav{grid-column:1;grid-row:1/span 15;position:sticky;top:20px;display:flex;flex-direction:column;margin:0;padding:12px;background:#fff;border:1px solid #e2eaf5;border-radius:16px}body:has(#adminNav) #dashboard>:not(.admin-nav){grid-column:2;min-width:0}}
+@media(max-width:700px){body:has(#adminNav) .admin-nav{grid-template-columns:repeat(2,minmax(0,1fr))}body:has(.parts-workspace) .hero,body:has(.pro-features) .hero{padding:25px!important}}
