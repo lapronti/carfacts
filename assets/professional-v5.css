@@ -58,3 +58,7 @@ body:has(.parts-workspace) .search-methods,body:has(.parts-workspace) .parts-sid
 body:has(.pro-features) .pro-cta,body:has(.pro-features) .pro-state{border-color:#dbe8fb!important}
 body:has(#adminNav) .panel h2,body:has(#adminNav) .panel h3{color:#172d4a!important}
 body:has(#adminNav) a:not(.cf-brand){color:#1559cf}
+
+/* Consistent Carfacts sub-brand lockups */
+.cf-subbrand{display:inline-flex!important;align-items:center!important;gap:0!important}
+.cf-subbrand .cf-subbrand-tag{margin-left:9px!important;background:#eaf2ff!important;color:#1559cf!important;border:1px solid #cbdcf7!important;border-radius:7px!important;font-size:13px!important;font-weight:850!important;letter-spacing:0!important;padding:5px 9px!important;line-height:1.3!important}
