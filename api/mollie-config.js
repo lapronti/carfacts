@@ -1,0 +1,1 @@
+const {reply}=require('./_analytics');const m=require('./_mollie');module.exports=(req,res)=>{if(req.method!=='GET')return reply(res,405,{error:'Method not allowed'});return reply(res,200,{testEnabled:m.enabled(),price:(m.price()/100).toFixed(2),liveEnabled:false,reportAvailable:false})};
