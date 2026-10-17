@@ -599,6 +599,17 @@ function formatPowerKw(value,unit='kW'){
  return new Intl.NumberFormat('nl-NL',{maximumFractionDigits:1}).format(kw)+' kW ('+Math.round(kw*1.3596216173).toLocaleString('nl-NL')+' pk)';
 }
 
+function formatAcceleration0100(data){
+ if(!data||typeof data!=='object')return 'Niet beschikbaar';
+ const candidates=[data.acceleration0To100Kmh,data.acceleration_0_100_kmh,data.zeroTo100KmhSeconds,data.zero_to_100_kmh_seconds];
+ for(const value of candidates){
+  if(value===null||value===undefined||value==='')continue;
+  const n=Number(value);
+  if(Number.isFinite(n)&&n>=1.5&&n<=60)return new Intl.NumberFormat('nl-NL',{maximumFractionDigits:1}).format(n)+' seconden';
+ }
+ return 'Niet beschikbaar';
+}
+
 const A='/api/rdw';
 const q=x=>document.getElementById(x);
 const v=x=>x==null||x===''?'—':x;
@@ -691,6 +702,7 @@ async function loadExtraVehicleData(x){
       ['CarAPI brandstof',r.fuel||r.fuel_type||r.FuelType],
       ['CarAPI transmissie',r.transmission],
       ['CarAPI vermogen',formatPowerKw(r.enginePower,r.enginePowerUnit)],
+      ['CarAPI 0–100 km/u',formatAcceleration0100(r)],
       ['CarAPI carrosserie',r.bodyStyle||r.body_type],
       ['CarAPI aandrijving',r.drivetrain||r.drive_type],
       ['CarAPI kleur',r.color],
@@ -826,6 +838,7 @@ async function go(type='plate'){
         it('Brandstof',s.fuel||s.fuel_type||s.FuelType),
         it('Transmissie',s.transmission),
         it('Vermogen',formatPowerKw(s.enginePower,s.enginePowerUnit)),
+        it('0–100 km/u',formatAcceleration0100(s)),
         it('Carrosserie',s.bodyStyle||s.body_type),
         it('Aandrijving',s.drivetrain||s.drive_type)
       ].join('');
@@ -845,7 +858,7 @@ async function go(type='plate'){
       q('i').className='import ok';
       q('i').textContent='VIN-controle uitgevoerd via CarAPI.dev.';
       q('f').innerHTML=it('VIN',d.vin||k)+it('Fabrikant',m.name||normalizedMake);
-      q('m').innerHTML=it('Brandstof',s.fuel||s.fuel_type||s.FuelType)+it('Transmissie',s.transmission)+it('Vermogen',formatPowerKw(s.enginePower,s.enginePowerUnit))+it('Carrosserie',s.bodyStyle||s.body_type)+it('Aandrijving',s.drivetrain||s.drive_type);
+      q('m').innerHTML=it('Brandstof',s.fuel||s.fuel_type||s.FuelType)+it('Transmissie',s.transmission)+it('Vermogen',formatPowerKw(s.enginePower,s.enginePowerUnit))+it('0–100 km/u',formatAcceleration0100(s))+it('Carrosserie',s.bodyStyle||s.body_type)+it('Aandrijving',s.drivetrain||s.drive_type);
       loadExtraVehicleData({voertuig_identificatienummer:k,kenteken:d.plateNumber?.plateNumber||'',vinApiData:d});
       loadModelPhoto(normalizedMake,s.model||s.Model,s.registrationDate||modelYear);
       return;    }
@@ -869,6 +882,7 @@ async function go(type='plate'){
       it('Brandstof',x.brandstof),
       it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null),
       it('Vermogen',formatPowerKw(x.vermogen)),
+      it('0–100 km/u',formatAcceleration0100(x)),
       it('Eerste toelating',formatDate(x.datum_eerste_toelating)),
       it('Geïmporteerd?',x.datum_eerste_toelating&&x.datum_eerste_tenaamstelling_in_nederland?(String(x.datum_eerste_toelating)===String(x.datum_eerste_tenaamstelling_in_nederland)?'Geen datumverschil':'Datumverschil — controleren'):'Niet vast te stellen'),
       it('WAM verzekerd',x.wam_verzekerd)
@@ -909,6 +923,7 @@ async function go(type='plate'){
       it('Brandstof',x.brandstof),
       it('Aantal cilinders',x.aantal_cilinders),
       it('Vermogen',formatPowerKw(x.vermogen)),
+      it('0–100 km/u',formatAcceleration0100(x)),
       it('Verbruik gecombineerd',x.brandstofverbruik_gecombineerd?x.brandstofverbruik_gecombineerd+' l/100 km':null),
       it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null),
       it('CO₂-uitstoot',x.co2_emissie?x.co2_emissie+' g/km':null),
@@ -1382,6 +1397,7 @@ function buildCompactPdfReport(x){
     ['Verbruik gecombineerd',x.brandstofverbruik_gecombineerd?x.brandstofverbruik_gecombineerd+' l/100 km':null],
     ['Aantal cilinders',x.aantal_cilinders],
     ['Vermogen',formatPowerKw(x.vermogen)],
+    ['0–100 km/u',formatAcceleration0100(x)],
     ['Inrichting',x.inrichting],['Aantal zitplaatsen',x.aantal_zitplaatsen],
     ['Massa ledig',x.massa_ledig_voertuig?number(x.massa_ledig_voertuig)+' kg':null],
     ['Massa rijklaar',x.massa_rijklaar?number(x.massa_rijklaar)+' kg':null],
