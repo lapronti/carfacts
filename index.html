@@ -590,6 +590,15 @@ body{background:#f5f8fc;color:#14243b}
 </div>
 
 <script>
+function formatPowerKw(value,unit='kW'){
+ const n=Number(value);
+ if(!Number.isFinite(n)||n<=0)return null;
+ const u=String(unit||'kW').trim().toLowerCase();
+ const kw=u==='pk'||u==='ps'?n/1.3596216173:u==='hp'?n*0.745699872:n;
+ if(!Number.isFinite(kw)||kw<=0)return null;
+ return new Intl.NumberFormat('nl-NL',{maximumFractionDigits:1}).format(kw)+' kW ('+Math.round(kw*1.3596216173).toLocaleString('nl-NL')+' pk)';
+}
+
 const A='/api/rdw';
 const q=x=>document.getElementById(x);
 const v=x=>x==null||x===''?'—':x;
@@ -681,7 +690,7 @@ async function loadExtraVehicleData(x){
       ['CarAPI modeljaar',r.year||r.ModelYear],
       ['CarAPI brandstof',r.fuel||r.fuel_type||r.FuelType],
       ['CarAPI transmissie',r.transmission],
-      ['CarAPI vermogen',r.enginePower?(r.enginePower+' '+(r.enginePowerUnit||'kW')):null],
+      ['CarAPI vermogen',formatPowerKw(r.enginePower,r.enginePowerUnit)],
       ['CarAPI carrosserie',r.bodyStyle||r.body_type],
       ['CarAPI aandrijving',r.drivetrain||r.drive_type],
       ['CarAPI kleur',r.color],
@@ -748,7 +757,7 @@ function renderAllRdwData(x){
     massa_rijklaar:'Massa rijklaar (kg)',laadvermogen:'Laadvermogen (kg)',
     maximum_massa_trekken_geremd:'Max. trekken geremd (kg)',maximum_massa_trekken_ongeremd:'Max. trekken ongeremd (kg)',
     plaats_chassisnummer:'Plaats chassisnummer',aantal_cilinders:'Aantal cilinders',cilinderinhoud:'Cilinderinhoud (cc)',
-    vermogen:'Vermogen (kW)',vermogen_massarijklaar:'Vermogen/massa rijklaar',datum_eerste_toelating:'Eerste toelating',
+    vermogen:'Vermogen (kW / pk)',vermogen_massarijklaar:'Vermogen/massa rijklaar',datum_eerste_toelating:'Eerste toelating',
     datum_eerste_tenaamstelling_in_nederland:'Eerste tenaamstelling NL',datum_tenaamstelling:'Laatste tenaamstelling',
     vervaldatum_apk:'APK geldig tot',jaar_laatste_registratie_tellerstand:'Jaar laatste tellerstand',
     tellerstandoordeel:'Tellerstandoordeel',code_toelichting_tellerstandoordeel:'Toelichting tellerstandoordeel',
@@ -816,7 +825,7 @@ async function go(type='plate'){
         it('Modeljaar',modelYear),
         it('Brandstof',s.fuel||s.fuel_type||s.FuelType),
         it('Transmissie',s.transmission),
-        it('Vermogen',s.enginePower?(s.enginePower+' '+(s.enginePowerUnit||'kW')):null),
+        it('Vermogen',formatPowerKw(s.enginePower,s.enginePowerUnit)),
         it('Carrosserie',s.bodyStyle||s.body_type),
         it('Aandrijving',s.drivetrain||s.drive_type)
       ].join('');
@@ -836,7 +845,7 @@ async function go(type='plate'){
       q('i').className='import ok';
       q('i').textContent='VIN-controle uitgevoerd via CarAPI.dev.';
       q('f').innerHTML=it('VIN',d.vin||k)+it('Fabrikant',m.name||normalizedMake);
-      q('m').innerHTML=it('Brandstof',s.fuel||s.fuel_type||s.FuelType)+it('Transmissie',s.transmission)+it('Vermogen',s.enginePower?(s.enginePower+' '+(s.enginePowerUnit||'kW')):null)+it('Carrosserie',s.bodyStyle||s.body_type)+it('Aandrijving',s.drivetrain||s.drive_type);
+      q('m').innerHTML=it('Brandstof',s.fuel||s.fuel_type||s.FuelType)+it('Transmissie',s.transmission)+it('Vermogen',formatPowerKw(s.enginePower,s.enginePowerUnit))+it('Carrosserie',s.bodyStyle||s.body_type)+it('Aandrijving',s.drivetrain||s.drive_type);
       loadExtraVehicleData({voertuig_identificatienummer:k,kenteken:d.plateNumber?.plateNumber||'',vinApiData:d});
       loadModelPhoto(normalizedMake,s.model||s.Model,s.registrationDate||modelYear);
       return;    }
@@ -859,7 +868,7 @@ async function go(type='plate'){
       it('Tellerstandoordeel',x.tellerstandoordeel),
       it('Brandstof',x.brandstof),
       it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null),
-      it('Vermogen',x.vermogen?Number(x.vermogen).toLocaleString('nl-NL')+' kW':null),
+      it('Vermogen',formatPowerKw(x.vermogen)),
       it('Eerste toelating',formatDate(x.datum_eerste_toelating)),
       it('Geïmporteerd?',x.datum_eerste_toelating&&x.datum_eerste_tenaamstelling_in_nederland?(String(x.datum_eerste_toelating)===String(x.datum_eerste_tenaamstelling_in_nederland)?'Geen datumverschil':'Datumverschil — controleren'):'Niet vast te stellen'),
       it('WAM verzekerd',x.wam_verzekerd)
@@ -899,7 +908,7 @@ async function go(type='plate'){
     q('m').innerHTML=[
       it('Brandstof',x.brandstof),
       it('Aantal cilinders',x.aantal_cilinders),
-      it('Vermogen',x.vermogen?x.vermogen+' kW':null),
+      it('Vermogen',formatPowerKw(x.vermogen)),
       it('Verbruik gecombineerd',x.brandstofverbruik_gecombineerd?x.brandstofverbruik_gecombineerd+' l/100 km':null),
       it('Cilinderinhoud',x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null),
       it('CO₂-uitstoot',x.co2_emissie?x.co2_emissie+' g/km':null),
@@ -1372,7 +1381,7 @@ function buildCompactPdfReport(x){
     ['Cilinderinhoud',x.cilinderinhoud?number(x.cilinderinhoud)+' cc':null],
     ['Verbruik gecombineerd',x.brandstofverbruik_gecombineerd?x.brandstofverbruik_gecombineerd+' l/100 km':null],
     ['Aantal cilinders',x.aantal_cilinders],
-    ['Vermogen',x.vermogen?x.vermogen+' kW':null],
+    ['Vermogen',formatPowerKw(x.vermogen)],
     ['Inrichting',x.inrichting],['Aantal zitplaatsen',x.aantal_zitplaatsen],
     ['Massa ledig',x.massa_ledig_voertuig?number(x.massa_ledig_voertuig)+' kg':null],
     ['Massa rijklaar',x.massa_rijklaar?number(x.massa_rijklaar)+' kg':null],
