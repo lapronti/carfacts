@@ -507,6 +507,7 @@ body{background:#f5f8fc;color:#14243b}
 <h2>BPM bij import</h2>
 <div class="bpm-card">
 <div class="bpm-main">
+<div class="bpm-number"><small>Land van herkomst</small><strong id="importOriginCountry">Niet bekend</strong></div>
 <div class="bpm-number"><small>RDW bruto BPM (registratiewaarde)</small><strong id="bpmRdw">—</strong></div>
 <div class="bpm-number"><small>Oorspronkelijke bruto BPM</small><strong id="bpmCalc">Niet vastgesteld</strong></div>
 <div class="bpm-number"><small>BPM afgedragen bij import</small><strong id="bpmDiff">Niet bekend</strong></div>
@@ -1165,13 +1166,16 @@ function checkBPM(x){
   // is missing, do not claim the vehicle was imported.
   section.classList.toggle('hidden',imported!==true);
   if(imported!==true)return;
+  // The RDW open vehicle register does not establish the country of export.
+  // Never derive origin from brand, plate or first-registration dates.
+  q('importOriginCountry').textContent='Niet beschikbaar via RDW';
   const raw=String(x.bruto_bpm??'').trim();
   const rdw=raw!==''?Number(raw):NaN;
   q('bpmRdw').textContent=Number.isFinite(rdw)?euro(rdw):'Niet geregistreerd';
   q('bpmCalc').textContent='Niet vastgesteld';
   q('bpmDiff').textContent='Niet bekend';
   q('bpmStatus').className='bpm-status info';
-  q('bpmStatus').textContent='Dit voertuig heeft een latere eerste Nederlandse tenaamstelling dan de eerste toelating. RDW bruto BPM is niet automatisch de oorspronkelijke BPM of het bedrag dat bij import is afgedragen. Voor een betrouwbare vergelijking zijn de oorspronkelijke BPM-grondslag en de BPM-aangifte/beschikking bij import nodig.';
+  q('bpmStatus').textContent='Het land van herkomst is niet vast te stellen met de huidige RDW-gegevens. Dit voertuig heeft een latere eerste Nederlandse tenaamstelling dan de eerste toelating. RDW bruto BPM is niet automatisch de oorspronkelijke BPM of het bedrag dat bij import is afgedragen. Voor een betrouwbare vergelijking zijn de oorspronkelijke BPM-grondslag en de BPM-aangifte/beschikking bij import nodig.';
 }
 
 q('mrbProvince').addEventListener('change',()=>{if(window.carData)renderMRB(window.carData)});
