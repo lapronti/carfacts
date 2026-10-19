@@ -1,4 +1,6 @@
-const {session,configured,reply}=require('./_admin-security');
+const {session,configured,reply,cmd}=require('./_admin-security');
+const LOG_KEY='cf:admin:mail:diagnostics';
+async function recordMailEvent(status,details={}){const event={at:new Date().toISOString(),status,...details};console.info('carfacts-mail-diagnostic',JSON.stringify(event));try{await cmd('LPUSH',LOG_KEY,JSON.stringify(event));await cmd('LTRIM',LOG_KEY,0,99);await cmd('EXPIRE',LOG_KEY,86400*14)}catch{console.warn('carfacts-mail-diagnostic-store-unavailable')}}
 const {ImapFlow}=require('imapflow');
 const {simpleParser}=require('mailparser');
 const nodemailer=require('nodemailer');
@@ -14,6 +16,7 @@ module.exports=async(req,res)=>{
  if(req.method==='POST'&&!checkOrigin(req))return reply(res,403,{error:'Ongeldige herkomst'});
  if(['IMAP_HOST','MAIL_USER','MAIL_PASSWORD'].some(k=>!process.env[k]))return reply(res,503,{error:'Mailboxinstellingen ontbreken'});
  try{
+  if(req.method==='GET'&&req.query?.action==='diagnostics'){const raw=await cmd('LRANGE',LOG_KEY,0,29);return reply(res,200,{events:(raw||[]).map(s=>{try{return JSON.parse(s)}catch{return null}}).filter(Boolean)});}
   if(req.method==='GET'){
    const uid=Number(req.query?.uid);
    if(req.query?.uid!==undefined){
@@ -22,7 +25,7 @@ module.exports=async(req,res)=>{
     return data?reply(res,200,{message:data}):reply(res,404,{error:'Bericht niet gevonden'});
    }
    const messages=await withInbox(async client=>{const uids=await client.search({all:true},{uid:true});const selected=uids.slice(-30).reverse();const result=[];for(const uid of selected){const m=await client.fetchOne(uid,{envelope:true,flags:true},{uid:true});if(m)result.push({uid,subject:m.envelope?.subject||'(geen onderwerp)',from:m.envelope?.from?.[0]?.address||'',date:m.envelope?.date?.toISOString()||'',unread:!m.flags?.has('\\Seen')})}return result});
-   return reply(res,200,{messages});
+   await recordMailEvent('inbox_read_ok',{count:messages.length});return reply(res,200,{messages});
   }
   if(req.body?.action!=='reply')return reply(res,400,{error:'Onbekende actie'});
   const uid=Number(req.body.uid),body=String(req.body.text||'').trim();
@@ -34,6 +37,6 @@ module.exports=async(req,res)=>{
   if(!process.env.SMTP_HOST)return reply(res,503,{error:'SMTP niet geconfigureerd'});
   const transport=nodemailer.createTransport({host:process.env.SMTP_HOST,port:Number(process.env.SMTP_PORT||465),secure:Number(process.env.SMTP_PORT||465)===465,auth:{user:process.env.MAIL_USER,pass:process.env.MAIL_PASSWORD},connectionTimeout:12000});
   await transport.sendMail({from:process.env.MAIL_USER,to,subject:/^re:/i.test(original.subject||'')?original.subject:'Re: '+(original.subject||'(geen onderwerp)'),text:body,inReplyTo:original.messageId||undefined,references:original.messageId?[...(original.references||[]),original.messageId]:undefined});
-  return reply(res,200,{ok:true});
- }catch(e){const code=String(e?.code||'').toUpperCase();const msg=String(e?.message||'').toLowerCase();let reason='Mailserver reageert niet zoals verwacht';if(/auth|login|credential|password|authentication|invalid credentials|authenticate/.test(msg)||['EAUTH','AUTHENTICATIONFAILED'].includes(code))reason='Aanmelding geweigerd: controleer mailboxgebruikersnaam en wachtwoord';else if(['ETIMEDOUT','ESOCKET','ECONNREFUSED','ENOTFOUND','EAI_AGAIN','ECONNRESET'].includes(code)||/timeout|connect|socket|certificate|tls/.test(msg))reason='Verbindingsprobleem met de IMAP-mailserver';else if(/mailbox|folder|inbox|select/.test(msg))reason='De map INBOX kon niet worden geopend';console.error('admin-mail failure',{code:code||'UNKNOWN',type:e?.name||'Error',reason});return reply(res,502,{error:reason,code:code||'MAIL_ERROR'})}
+  await recordMailEvent('reply_sent_ok');return reply(res,200,{ok:true});
+ }catch(e){const code=String(e?.code||'').toUpperCase();const msg=String(e?.message||'').toLowerCase();let reason='Mailserver reageert niet zoals verwacht';if(/auth|login|credential|password|authentication|invalid credentials|authenticate/.test(msg)||['EAUTH','AUTHENTICATIONFAILED'].includes(code))reason='Aanmelding geweigerd: controleer mailboxgebruikersnaam en wachtwoord';else if(['ETIMEDOUT','ESOCKET','ECONNREFUSED','ENOTFOUND','EAI_AGAIN','ECONNRESET'].includes(code)||/timeout|connect|socket|certificate|tls/.test(msg))reason='Verbindingsprobleem met de IMAP-mailserver';else if(/mailbox|folder|inbox|select/.test(msg))reason='De map INBOX kon niet worden geopend';await recordMailEvent('mail_error',{code:code||'UNKNOWN',type:String(e?.name||'Error').slice(0,50),reason});return reply(res,502,{error:reason,code:code||'MAIL_ERROR'})}
 };
