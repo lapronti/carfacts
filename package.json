@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "dependencies": {
+    "imapflow": "^1.0.180",
+    "mailparser": "^3.7.2",
+    "nodemailer": "^6.10.1"
+  }
+}
