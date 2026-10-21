@@ -1198,7 +1198,7 @@ async function loadVweApkHistory(plate){
   if(!records.length)return;
   const table=document.createElement('table');table.className='apk-defects-table';
   const head=document.createElement('tr');for(const label of ['Keuringsdatum','Vermelde gebreken']){const th=document.createElement('th');th.textContent=label;head.append(th)}table.append(head);
-  for(const record of records){const tr=document.createElement('tr'),date=document.createElement('td'),defects=document.createElement('td');const rawDate=record.inspectionDate||record.date||'';date.textContent=/^\\d{4}-\\d{2}-\\d{2}/.test(rawDate)?rawDate.slice(8,10)+'-'+rawDate.slice(5,7)+'-'+rawDate.slice(0,4):'Niet opgegeven';const list=Array.isArray(record.defects)?record.defects:[];defects.textContent=list.length?list.map(d=>typeof d==='string'?d:(d.description||d.code||JSON.stringify(d))).join('; '):'Geen gebreken vermeld';tr.append(date,defects);table.append(tr)}box.append(table);
+  for(const record of records){const tr=document.createElement('tr'),date=document.createElement('td'),defects=document.createElement('td');const rawDate=record.inspectionDate||record.date||'';date.textContent=/^\d{4}-\d{2}-\d{2}/.test(rawDate)?rawDate.slice(8,10)+'-'+rawDate.slice(5,7)+'-'+rawDate.slice(0,4):'Niet opgegeven';const list=Array.isArray(record.defects)?record.defects:[];defects.textContent=list.length?list.map(d=>typeof d==='string'?d:(d.description||d.code||JSON.stringify(d))).join('; '):'Geen gebreken vermeld';tr.append(date,defects);table.append(tr)}box.append(table);
  }catch(e){const p=box.querySelector('.apk-defects-note');if(p)p.textContent='APK-keuringshistorie kon niet worden opgehaald: '+e.message+'. De APK-vervaldatum komt uit de basisgegevens.'}
 }
 function renderApkDefects(x){
