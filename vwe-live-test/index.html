@@ -1355,7 +1355,8 @@ function buildCompactPdfReport(x){
   };
   const first=x.datum_eerste_toelating;
   const firstNl=x.datum_eerste_tenaamstelling_in_nederland;
-  const imported=first&&firstNl?(String(first)===String(firstNl)?'Geen datumverschil':'Datumverschil; nader controleren'):'Niet vast te stellen';
+  const importCheck=isImportVehicle(x);
+  const imported=importCheck===null?'Niet vast te stellen':importCheck?'Ja':'Nee';
   section('Overzicht',[
     ['Kenteken',plate],['Merk',x.merk],['Model',x.handelsbenaming],
     ['Bouwjaar',String(first||'').slice(0,4)||null],['Eerste toelating',date(first)],
