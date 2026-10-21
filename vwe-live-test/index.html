@@ -498,6 +498,16 @@ body{background:#f5f8fc;color:#14243b}
 <div id="m" class="grid"></div>
 </section>
 
+<section class="section report-section" data-report-section="engine">
+<h2>VWE Emissie & transmissie</h2>
+<p class="muted">Milieuklasse, versnellingsbak, geluidswaarden en fiscale bijtelling rechtstreeks uit VWE Interdata. Ontbrekende gegevens worden niet geschat.</p>
+<div id="vweEmissionGrid" class="grid" aria-live="polite">Voer een kenteken in om emissiegegevens op te halen.</div>
+</section>
+<section class="section report-section" data-report-section="repair">
+<h2>VWE APK-reparatieregistraties</h2>
+<p class="muted">Afzonderlijke VWE-reparatiedataset. Dit is geen volledige onderhouds- of schadehistorie.</p>
+<div id="vweRepairs" aria-live="polite">Voer een kenteken in om reparatieregistraties op te halen.</div>
+</section>
 <section class="section report-section" data-report-section="dimensions">
 <h2>Afmetingen & gewichten</h2>
 <div id="d" class="grid"></div>
@@ -815,6 +825,7 @@ async function go(type='plate'){
     renderApkDefects(x);
     // APK-keuringshistorie is een afzonderlijke VWE-dataset, niet onderdeel van advanced.
     loadVweApkHistory(k);
+    loadVweExtras(k);
 
     q('m').innerHTML=[
       it('Brandstof',x.brandstof),
@@ -1183,6 +1194,45 @@ function setReportSelection(all){
   applyReportSelection();
 }
 
+function vwePlain(value){
+ if(value===null||value===undefined||value==='')return 'Niet beschikbaar';
+ if(typeof value==='boolean')return value?'Ja':'Nee';
+ if(typeof value==='object')return String(value.description||value.name||value.code||'Niet beschikbaar');
+ return String(value);
+}
+async function loadVweExtras(plate){
+ const emission=q('vweEmissionGrid'),repairs=q('vweRepairs');
+ if(emission)emission.textContent='VWE-emissiegegevens ophalen…';
+ if(repairs)repairs.textContent='VWE-reparatieregistraties ophalen…';
+ const fetchSet=async dataset=>{
+  const r=await fetch('/api/vwe-vehicle?dataset='+dataset+'&licensePlate='+encodeURIComponent(plate),{credentials:'same-origin'});
+  const j=await r.json();if(!r.ok)throw Error(j.error||'VWE-aanvraag mislukt');return j.vehicle;
+ };
+ const [e,p]=await Promise.allSettled([fetchSet('emission'),fetchSet('repairs')]);
+ if(emission){
+  emission.replaceChildren();
+  if(e.status==='rejected'){emission.textContent='Emissiegegevens niet beschikbaar: '+e.reason.message;}
+  else{
+   const d=e.value||{},gear=d.gearbox||{},noise=d.noiseLevel||{};
+   const fields=[['Emissieklasse',d.euroClass],['Energielabel',d.energyLabel],['Transmissie',gear.description||gear.code],['Aantal versnellingen',gear.numberOfGears],['Fiscale bijtelling',d.taxAddition],['Stationair geluid',noise.idle==null?null:noise.idle+' dB'],['Toerental bij meting',noise.idleAtRpm==null?null:noise.idleAtRpm+' rpm'],['Rijgeluid',noise.driving==null?null:noise.driving+' dB']];
+   for(const [label,value] of fields){const card=document.createElement('div');card.className='item';const name=document.createElement('div');name.className='label';name.textContent=label;const val=document.createElement('div');val.className='value';val.textContent=vwePlain(value);card.append(name,val);emission.append(card)}
+  }
+ }
+ if(repairs){
+  repairs.replaceChildren();
+  if(p.status==='rejected'){repairs.textContent='Reparatieregistraties niet beschikbaar: '+p.reason.message;}
+  else{
+   const raw=p.value,records=Array.isArray(raw)?raw:Array.isArray(raw?.repairs)?raw.repairs:Array.isArray(raw?.data)?raw.data:[];
+   if(!records.length){repairs.textContent='Geen reparatieregistraties beschikbaar in deze VWE-dataset (geen bewijs dat er nooit reparaties zijn uitgevoerd).';}
+   else{
+    const info=document.createElement('p');info.textContent=records.length+' registratie(s) ontvangen van VWE.';repairs.append(info);
+    const table=document.createElement('table');table.className='apk-defects-table';const head=document.createElement('tr');
+    for(const title of ['Datum','Omschrijving','Code']){const th=document.createElement('th');th.textContent=title;head.append(th)}table.append(head);
+    for(const record of records.slice(0,50)){const tr=document.createElement('tr');const date=record.repairDate||record.date||record.inspectionDate;const desc=record.description||record.repairDescription||record.name;const code=record.code||record.repairCode;for(const val of [date,desc,code]){const td=document.createElement('td');td.textContent=vwePlain(val);tr.append(td)}table.append(tr)}repairs.append(table);
+   }
+  }
+ }
+}
 async function loadVweApkHistory(plate){
  const box=q('apkDefects');if(!box)return;
  const title=box.querySelector('h3');if(title)title.textContent='APK-keuringshistorie (VWE)';
