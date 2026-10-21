@@ -945,7 +945,8 @@ async function go(type='plate'){
       it('Breedte',x.breedte?x.breedte+' mm':null)
     ].join('');
 
-    window.carData=x;\n    const motorInfo=document.createElement('div');motorInfo.className='vwe-source-note';motorInfo.textContent='Gegevensbron: VWE Interdata (acceptatie) · Motorcode: '+(x.motorcode||'Niet beschikbaar')+' · Ontbrekende velden worden niet aangevuld met RDW.';q('summary').prepend(motorInfo);
+    window.carData=x;
+    const motorInfo=document.createElement('div');motorInfo.className='vwe-source-note';motorInfo.textContent='Gegevensbron: VWE Interdata (acceptatie) · Motorcode: '+(x.motorcode||'Niet beschikbaar')+' · Ontbrekende velden worden niet aangevuld met RDW.';q('summary').prepend(motorInfo);
     const purchaseLink=q('purchaseAssistantLink');if(purchaseLink){const p=new URLSearchParams({kenteken:String(x.kenteken||k).replace(/[^A-Z0-9]/gi,''),voertuig:[x.merk,x.handelsbenaming].filter(Boolean).join(' ')});purchaseLink.href='/aankoopassistent/?'+p.toString();}
     try{sessionStorage.setItem('cf_last_plate',k)}catch{}
     q('printHeaderText').textContent=''+formatPlate(x.kenteken||'')+' · '+(x.merk||'')+' '+(x.handelsbenaming||'')+' · gegenereerd '+new Date().toLocaleDateString('nl-NL');
