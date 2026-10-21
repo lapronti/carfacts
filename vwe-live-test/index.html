@@ -813,6 +813,8 @@ async function go(type='plate'){
     ].join('');
 
     renderApkDefects(x);
+    // APK-keuringshistorie is een afzonderlijke VWE-dataset, niet onderdeel van advanced.
+    loadVweApkHistory(k);
 
     q('m').innerHTML=[
       it('Brandstof',x.brandstof),
@@ -1179,6 +1181,25 @@ function applyReportSelection(){
 function setReportSelection(all){
   document.querySelectorAll('[data-report]').forEach(box=>box.checked=all);
   applyReportSelection();
+}
+
+async function loadVweApkHistory(plate){
+ const box=q('apkDefects');if(!box)return;
+ const title=box.querySelector('h3');if(title)title.textContent='APK-keuringshistorie (VWE)';
+ const note=box.querySelector('.apk-defects-note');if(note)note.textContent='APK-keuringshistorie ophalen bij VWE…';
+ try{
+  const r=await fetch('/api/vwe-vehicle?dataset=inspections&licensePlate='+encodeURIComponent(plate),{credentials:'same-origin',headers:{Accept:'application/json'}});
+  const payload=await r.json();if(!r.ok)throw Error(payload.error||'HTTP '+r.status);
+  const raw=payload.vehicle;
+  const records=Array.isArray(raw)?raw:Array.isArray(raw?.inspections)?raw.inspections:Array.isArray(raw?.data)?raw.data:[];
+  box.replaceChildren();
+  const h=document.createElement('h3');h.textContent='APK-keuringshistorie (VWE)';box.append(h);
+  const p=document.createElement('p');p.className='apk-defects-note';p.textContent=records.length?records.length+' keuringsregistratie(s) ontvangen van VWE-acceptatie. Lege gebrekenlijsten betekenen uitsluitend dat VWE geen gebreken vermeldt.':'VWE heeft voor dit kenteken geen keuringsregistraties teruggegeven.';box.append(p);
+  if(!records.length)return;
+  const table=document.createElement('table');table.className='apk-defects-table';
+  const head=document.createElement('tr');for(const label of ['Keuringsdatum','Vermelde gebreken']){const th=document.createElement('th');th.textContent=label;head.append(th)}table.append(head);
+  for(const record of records){const tr=document.createElement('tr'),date=document.createElement('td'),defects=document.createElement('td');const rawDate=record.inspectionDate||record.date||'';date.textContent=/^\\d{4}-\\d{2}-\\d{2}/.test(rawDate)?rawDate.slice(8,10)+'-'+rawDate.slice(5,7)+'-'+rawDate.slice(0,4):'Niet opgegeven';const list=Array.isArray(record.defects)?record.defects:[];defects.textContent=list.length?list.map(d=>typeof d==='string'?d:(d.description||d.code||JSON.stringify(d))).join('; '):'Geen gebreken vermeld';tr.append(date,defects);table.append(tr)}box.append(table);
+ }catch(e){const p=box.querySelector('.apk-defects-note');if(p)p.textContent='APK-keuringshistorie kon niet worden opgehaald: '+e.message+'. De APK-vervaldatum komt uit de basisgegevens.'}
 }
 function renderApkDefects(x){
   const box=q('apkDefects');
