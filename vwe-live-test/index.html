@@ -822,8 +822,7 @@ async function go(type='plate'){
       it('Tenaamstellen mogelijk',x.tenaamstellen_mogelijk)
     ].join('');
 
-    renderApkDefects(x);
-    // APK-keuringshistorie is een afzonderlijke VWE-dataset, niet onderdeel van advanced.
+    // Toon uitsluitend de VWE-keuringshistorie; geen verouderde Open Data-meldingen.
     loadVweApkHistory(k);
     loadVweExtras(k);
 
