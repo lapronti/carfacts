@@ -409,7 +409,7 @@ body{background:#f5f8fc;color:#14243b}
 @media(max-width:560px){.search-card{padding:29px 18px}.search-card h1{font-size:34px;letter-spacing:-1px}.search-card .search-row{flex-direction:column}.search-card .search-row button{width:100%}.home-section,.v5-intro{padding:20px}.v5-audiences{grid-template-columns:1fr}.report-nav-v5{top:0}}
 @media print{.report-nav-v5,.v5-trust{display:none!important}}
 
-.cf-checklist-cta,.cf-checklist-cta:link,.cf-checklist-cta:visited{background:#1764e8!important;color:#fff!important;border:1px solid #1764e8!important;box-shadow:0 3px 9px rgba(23,100,232,.13)!important}.cf-checklist-cta:hover{background:#1353c3!important;border-color:#1353c3!important}</style>
+.cf-checklist-cta,.cf-checklist-cta:link,.cf-checklist-cta:visited{background:#1764e8!important;color:#fff!important;border:1px solid #1764e8!important;box-shadow:0 3px 9px rgba(23,100,232,.13)!important}.cf-checklist-cta:hover{background:#1353c3!important;border-color:#1353c3!important} .vwe-source-note{display:block;max-width:none;width:auto;box-sizing:border-box;margin:0 0 14px;padding:11px 14px;border:1px solid #c7dce7;border-radius:9px;background:#f0f7fb;color:#28465b;font-size:12px;line-height:1.5} </style>
 <link rel="stylesheet" href="/assets/site-shell.css">
 <link rel="stylesheet" href="/assets/bug-report.css"><link rel="stylesheet" href="/assets/theme-manager.css"><link rel="stylesheet" href="/assets/site-content.css"><style>.vwe-preview-strip{position:sticky;top:0;z-index:99999;background:#203c55;color:white;padding:11px 18px;text-align:center;font:700 14px system-ui}.vwe-preview-strip a{color:#d7f6ad}.vwe-source-note{padding:12px 16px;border:1px solid #c4d5df;border-radius:10px;background:#f1f8ff;margin:12px 0;font-size:14px}</style></head>
 <body><div class="vwe-preview-strip">TESTOMGEVING · VWE INTERDATA ALS BASIS · GEEN VWE-FALLBACK · <a href="/admin/" target="_blank" rel="noopener">Admin-login</a> · <a href="/vwe-test/">Uitgebreide VWE-bronnen</a></div>
@@ -779,7 +779,7 @@ async function go(type='plate'){
       it('Vermogen',formatPowerKw(x.vermogen)),
       it('0–100 km/u',formatAcceleration0100(x)),
       it('Eerste toelating',formatDate(x.datum_eerste_toelating)),
-      it('Geïmporteerd?',x.datum_eerste_toelating&&x.datum_eerste_tenaamstelling_in_nederland?(String(x.datum_eerste_toelating)===String(x.datum_eerste_tenaamstelling_in_nederland)?'Geen datumverschil':'Datumverschil — controleren'):'Niet vast te stellen'),
+      it('Importstatus','Niet vastgesteld via VWE'),
       it('WAM verzekerd',x.wam_verzekerd)
     ].join('');
     q('vehicleIntro').textContent=[x.merk,x.handelsbenaming].filter(Boolean).join(' ')+' · '+[String(x.datum_eerste_toelating||'').slice(0,4),x.voertuigsoort,x.brandstof,x.cilinderinhoud?Number(x.cilinderinhoud).toLocaleString('nl-NL')+' cc':null].filter(Boolean).join(' · ')+'. Gegevens volgens beschikbare VWE-registratie (acceptatieomgeving).';
@@ -840,7 +840,7 @@ async function go(type='plate'){
     ].join('');
 
     window.carData=x;
-    const motorInfo=document.createElement('div');motorInfo.className='vwe-source-note';motorInfo.textContent='Gegevensbron: VWE Interdata (acceptatie) · Motorcode: '+(x.motorcode||'Niet beschikbaar')+' · Ontbrekende velden worden niet aangevuld met VWE.';q('summary').prepend(motorInfo);
+    const motorInfo=document.createElement('p');motorInfo.className='vwe-source-note';motorInfo.textContent='Gegevensbron: VWE Interdata (acceptatie). Niet-beschikbare velden worden niet aangevuld met andere databronnen.';q('summarySectionV5').insertBefore(motorInfo,q('summary'));if(x.motorcode){q('summary').insertAdjacentHTML('beforeend',it('Motorcode',x.motorcode));}
     const purchaseLink=q('purchaseAssistantLink');if(purchaseLink){const p=new URLSearchParams({kenteken:String(x.kenteken||k).replace(/[^A-Z0-9]/gi,''),voertuig:[x.merk,x.handelsbenaming].filter(Boolean).join(' ')});purchaseLink.href='/aankoopassistent/?'+p.toString();}
     try{sessionStorage.setItem('cf_last_plate',k)}catch{}
     q('printHeaderText').textContent=''+formatPlate(x.kenteken||'')+' · '+(x.merk||'')+' '+(x.handelsbenaming||'')+' · gegenereerd '+new Date().toLocaleDateString('nl-NL');
