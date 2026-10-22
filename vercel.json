@@ -9,10 +9,33 @@
       "schedule": "0 9 * * 1"
     }
   ],
-  "rewrites": [
+  "headers": [
     {
       "source": "/",
-      "destination": "/vwe-dashboard/index.html"
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/vwe-dashboard/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, max-age=0, must-revalidate"
+        }
+      ]
     }
   ]
 }
