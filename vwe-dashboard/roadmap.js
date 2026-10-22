@@ -75,6 +75,20 @@
   if(engineInput)engineInput.value=String(v.engineCode||'').trim();
   const modelBadge=$('model-source');if(modelBadge)modelBadge.textContent=brandModel(v)||'Voertuiggegevens opgehaald';
  }
+ function renderEuroMark(target,rawValue){
+  if(!target)return;
+  const value=String(rawValue??'').trim();
+  const matched=value.match(/(?:^|[^0-9])([0-6])(?=[^0-9]|$)/);
+  if(!matched){target.textContent=value||'Niet beschikbaar';return}
+  const klass=matched[1];
+  const wrapper=section('span','euro-mark');
+  const disc=section('span','euro-mark-disc',klass);
+  disc.setAttribute('role','img');
+  disc.setAttribute('aria-label','Emissieklasse Euro '+klass);
+  const label=section('span','euro-mark-text','Euro '+klass);
+  wrapper.append(disc,label);
+  target.replaceChildren(wrapper);
+ }
  function buildEmission(data){
   const v=first(data),container=document.querySelector('#technical .fields');
   if(!container)return;
@@ -91,6 +105,11 @@
    ['Geluid tijdens rijden',has(v.noiseLevel?.driving)?v.noiseLevel.driving+' dB':null],
    ['Stationair toerental',v.noiseLevel?.idleAtRpm]
   ]);
+  // The inline VWE renderer writes the text first; this renders the same badge
+  // after the grouped fields have been refreshed.
+  const euroField=[...container.querySelectorAll('.field')].find(item=>item.querySelector('span')?.textContent==='Euroklasse');
+  renderEuroMark(euroField?.querySelector('strong'),v.euroClass);
+  renderEuroMark($('stat-euro'),v.euroClass);
  }
  function recordsFrom(data,type){
   if(Array.isArray(data))return data;
