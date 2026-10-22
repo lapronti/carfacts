@@ -66,6 +66,22 @@
   return {category,sourceType,fuels,electric,diesel,det:/^\d{4}-\d{2}-\d{2}$/.test(date)?date:'',euro:normalizeEmissions(e.euroClass),hasIdentity:!!vehicle.identity,hasEmission:!!vehicle.emission,manual:!!selected};
  };
  const categoryNames={car:'personenauto',van:'bestelauto',truck:'vrachtauto',bus:'autobus'};
+ function updateMainEuroCard(zone,assessment){
+  const badge=$('stat-zone-info'),note=$('stat-zone-note');
+  if(!badge||!note)return;
+  badge.className='vehicle-indicator';
+  if(!zone){
+   badge.textContent='Kies provincie en stad hieronder';
+   note.textContent='De toegangsregels hangen af van de gekozen zone en voertuigcategorie.';
+   return;
+  }
+  badge.textContent=zone.name+': '+assessment.headline;
+  if(assessment.tone==='good')badge.classList.add('good');
+  if(assessment.tone==='warn')badge.classList.add('warn');
+  if(assessment.tone==='bad')badge.classList.add('bad');
+  note.textContent='Dit is een indicatie. Bekijk de onderbouwing en officiële regels in de regio-check.';
+ }
+
  const labelType=x=>[x.z?'Zero-emissiezone':null,x.p?'Dieselpersonenauto':null,x.t?'Vrachtwagenmilieuzone':null,x.b?'Busmilieuzone':null].filter(Boolean).join(' · ');
  const message=(headline,description,tone='neutral')=>({headline,description,tone});
  function classicAssessment(zone,klass,minimum,extra=''){
@@ -131,8 +147,8 @@
   if(mLink)mLink.hidden=!(zone&&(zone.p||zone.t||zone.b));
   if(detail)detail.textContent=zone?labelType(zone):'Kies eerst een provincie en een plaats';
   out.replaceChildren();
-  if(!zone){const p=el('p','zone-placeholder',region.value?'Kies nu een stad met een actieve zone.':'Kies een provincie om alleen plaatsen met een actieve milieuzone of zero-emissiezone te zien.');out.append(p);return}
-  const p=profile(),assessment=evaluate(zone,p);
+  if(!zone){updateMainEuroCard(null);const p=el('p','zone-placeholder',region.value?'Kies nu een stad met een actieve zone.':'Kies een provincie om alleen plaatsen met een actieve milieuzone of zero-emissiezone te zien.');out.append(p);return}
+  const p=profile(),assessment=evaluate(zone,p);updateMainEuroCard(zone,assessment);
   out.className='zone-result zone-'+assessment.tone;
   const heading=el('strong','zone-result-head',assessment.headline);
   const desc=el('p','',assessment.description);
@@ -143,7 +159,7 @@
   if(zone.airport)out.append(el('p','zone-special','Let op: deze ZE-zone betreft Schiphol-Centrum, niet heel Haarlemmermeer.'));
   if(zone.maasvlakte)out.append(el('p','zone-special','Rotterdam heeft daarnaast een afzonderlijke vrachtwagenmilieuzone op de Maasvlakte.'));
   if(zone.coast)out.append(el('p','zone-special','Den Haag heeft gebiedsafhankelijke milieuzoneregels, waaronder de kuststrook.'));
-  out.append(el('p','zone-disclaimer','Dit is een indicatie, geen officiële ontheffing of toelatingsgarantie. Controleer de zonegrenzen, verkeersborden, vrijstellingen en actuele regelgeving.'));
+  out.append(el('p','zone-disclaimer','Dit is een momentopname (22 oktober 2026), geen realtime zonecheck, officiële ontheffing of toelatingsgarantie. Controleer de zonegrenzen, verkeersborden, vrijstellingen en actuele regelgeving.'));
  }
  function fillCities(){
   const region=$('zone-province'),select=$('zone-city');if(!region||!select)return;
@@ -165,7 +181,7 @@
    const label=el('label','zone-field'),description=el('span','',labelText),sel=el('select');sel.id=id;sel.name=id;
    const option=el('option','',prompt);option.value='';sel.append(option);label.append(description,sel);controls.append(label);return sel;
   }
-  const province=selectField('zone-province','Provincie','Kies provincie');
+  const province=selectField('zone-province','Regio / provincie','Kies provincie');
   provinces.forEach(name=>{const option=el('option','',name);option.value=name;province.append(option)});
   const city=selectField('zone-city','Plaats met actieve zone','Kies eerst provincie');city.disabled=true;
   const vehicleField=selectField('zone-vehicle-category','Voertuigcategorie','Automatisch (VWE)');
