@@ -12,7 +12,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/vwe-live-test/index.html"
+      "destination": "/vwe-dashboard/index.html"
     }
   ]
 }
