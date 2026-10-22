@@ -280,10 +280,14 @@
   snapshot.plate=String(event.detail?.plate||'');snapshot.results=null;
   const button=$('print-report-button');if(button)button.disabled=true;
   const summary=$('quality-completeness');if(summary)summary.textContent='Voertuiggegevens worden opgehaald…';
+  const current=$('model-source');if(current)current.textContent='Zoeken naar voertuig…';
+  const verified=$('model-source-chip');if(verified)verified.textContent='Bron: VWE-acceptatie · wachten op gegevens';
+  const engine=$('part-engine');if(engine)engine.value='';
   const origin=$('registration-insight');if(origin)origin.textContent='Registratiedatums worden opgehaald…';
   const box=$('maintenance-results');if(box)box.replaceChildren();
   const note=$('maintenance-message');if(note)note.textContent='Vul na de voertuigopvraag een actuele kilometerstand in.';
-  const part=$('parts-open');if(part)part.hidden=true;
+  const part=$('parts-open');if(part){part.hidden=true;part.removeAttribute('href')}
+  const partsNotice=$('parts-message');if(partsNotice)partsNotice.textContent='Zoek op motorcode, onderdeelnummer, versnellingsbakcode of vrije tekst. Een overeenkomst is geen bevestigde pasvorm.';
  });
  window.addEventListener('carfacts:dataset',event=>{
   const {type,data}=event.detail||{};if(!['advanced','emission','inspections','repairs'].includes(type))return;
@@ -297,7 +301,8 @@
   snapshot.results=event.detail?.results||null;
   const completed=Object.values(snapshot.results||{}).filter(item=>item?.ok).length;
   const summary=$('model-source-chip');
-  if(summary)summary.textContent='Bron: VWE-acceptatie · '+completed+'/4 modules ontvangen';
+  if(summary)summary.textContent='Bron: VWE-acceptatie · '+completed+'/3 bevestigde modules ontvangen';
+  const when=$('quality-completeness');if(when&&!snapshot.advanced)when.textContent='Voertuigidentiteit niet beschikbaar';
   const error=Object.entries(snapshot.results||{}).filter(([type,record])=>!record.ok);
   if(error.length){
    const messages=[];
