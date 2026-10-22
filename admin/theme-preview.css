@@ -181,3 +181,7 @@ body.admin-theme #status:empty{display:none}
  .admin-theme #dashboard .panel{padding:16px!important}
 }
 @media(prefers-reduced-motion:reduce){.admin-theme *{scroll-behavior:auto!important;transition:none!important}}
+
+/* Override the legacy global admin-link rule without affecting other pages. */
+body.admin-theme:has(#adminNav) .admin-sidebar a.admin-sidebar-brand{color:#fff!important}
+body.admin-theme:has(#adminNav) .admin-sidebar a.admin-sidebar-brand:hover{color:#fff!important}
