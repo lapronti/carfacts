@@ -62,3 +62,20 @@
  #print-report .print-disclaimer{margin-top:8mm;padding-top:3mm;border-top:1px solid #afc4d0;color:#506b79;font-size:8.5pt}
  #print-report .print-footer{margin-top:5mm;font-size:8pt;color:#789}
 }
+
+/* Small screens: keep source labels and long VWE descriptions readable. */
+@media(max-width:560px){
+ .fields{grid-template-columns:minmax(0,1fr)!important}
+ .field-group{margin-top:7px}
+ .hero .search{width:100%}
+ .hero .search .nl-plate{width:100%}
+ .hero .search .nl-plate input{flex:1;width:100%;min-width:0}
+ .hero .search button{width:100%}
+ .quality-strip{gap:6px}
+ .quality-chip{font-size:10px}
+ .utility-panel input{min-height:44px}
+ .inspection-event li{overflow-wrap:anywhere}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto!important}
+}
