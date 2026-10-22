@@ -15,30 +15,29 @@ async function loadModelPhoto(make,model){
  figure.hidden=true;img.removeAttribute('src');
  const brand=String(make||'').trim(),fullModel=String(model||'').trim();
  if(!brand||!fullModel)return;
- const modelName=fullModel.replace(/\\b(MODIFIED|PARTITION|WALL|VAN|PANEL|LWB|SWB)\\b/gi,' ').replace(/\\s+/g,' ').trim();
- const tokens=(brand+' '+modelName).toLowerCase().split(/\\s+/).filter(w=>w.length>1);
+ const modelName=fullModel.split(' ').filter(word=>!['MODIFIED','PARTITION','WALL','LWB','SWB'].includes(word.toUpperCase())).join(' ');
+ const tokens=(brand+' '+modelName).toLowerCase().split(' ').filter(word=>word.length>1);
  if(tokens.length<2)return;
  try{
-  const search='"'+brand+' '+modelName+'" automobile exterior';
-  const url='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(search)+'&gsrnamespace=6&gsrlimit=30&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=500&format=json&origin=*';
-  const res=await fetch(url);if(!res.ok)return;
-  const json=await res.json();
-  const candidates=Object.values(json.query?.pages||{}).map(page=>{
-   const info=page.imageinfo?.[0]||{};
-   const title=String(page.title||'').replace(/^File:/i,'').toLowerCase();
-   const meta=info.extmetadata||{};
-   const description=String(meta.ImageDescription?.value||'').replace(/<[^>]*>/g,' ').toLowerCase();
-   const url=String(info.thumburl||info.url||'');
+  const search='"'+brand+' '+modelName+'" studio showroom parked';
+  const url='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(search)+'&gsrnamespace=6&gsrlimit=40&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=500&format=json&origin=*';
+  const response=await fetch(url);if(!response.ok)return;
+  const data=await response.json();
+  const forbidden=['person','people','woman','man driving','driver','crowd','parade','rally','race','motor show','autoshow','salon','interior','dashboard','engine','logo','toy','diecast','wreck','accident','police','ambulance','fire brigade','driving','moving','on road','on street','highway','motorway','traffic','in motion','rolling shot','street scene','road test','test drive'];
+  const preferred=['studio','showroom','press photo','press image','official','parked','static','stationary','exterior'];
+  const candidates=Object.values(data.query?.pages||{}).map(page=>{
+   const info=page.imageinfo?.[0]||{},title=String(page.title||'').replace('File:','').toLowerCase();
+   const description=String(info.extmetadata?.ImageDescription?.value||'').replace(/<[^>]*>/g,' ').toLowerCase();
+   const combined=title+' '+description,url=String(info.thumburl||info.url||'');
    if(!['image/jpeg','image/png','image/webp'].includes(info.mime)||!url.startsWith('https://upload.wikimedia.org/'))return null;
    if(!tokens.every(token=>title.includes(token)))return null;
-   const excluded=/\\b(person|people|man|woman|driver|portrait|crowd|parade|rally|race|motor show|autoshow|salon|interior|dashboard|engine|badge|logo|toy|model car|diecast|wreck|accident|police|ambulance|fire brigade)\\b/i;
-   if(excluded.test(title+' '+description))return null;
-   const score=(/\\b(front|side|rear|exterior|parked|studio|vehicle)\\b/.test(title)?3:0)+(title.length<75?2:0);
-   return {url,score};
+   if(forbidden.some(term=>combined.includes(term)))return null;
+   if(!preferred.some(term=>combined.includes(term)))return null;
+   return {url,score:preferred.reduce((n,term)=>n+(title.includes(term)?3:combined.includes(term)?1:0),0)};
   }).filter(Boolean).sort((a,b)=>b.score-a.score);
   if(!candidates.length)return;
   img.onload=()=>{figure.hidden=false};img.onerror=()=>{figure.hidden=true};
-  img.alt='Voorbeeldfoto zonder herkenbare personen gezocht voor '+brand+' '+modelName;
+  img.alt='Statische voorbeeldfoto van '+brand+' '+modelName;
   img.src=candidates[0].url;
  }catch(e){figure.hidden=true}
 }
