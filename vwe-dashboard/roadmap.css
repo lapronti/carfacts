@@ -1,7 +1,7 @@
 /* Carfacts preview enhancements — test branch only */
 .vehicle-toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:18px 0 8px;padding:14px 17px;background:#fff;border:1px solid var(--line);border-radius:14px}
 .vehicle-toolbar .toolbar-copy{font-size:12px;color:#536a7f;max-width:580px}
-.vehicle-toolbar button,.utility-panel button,.parts-actions a{padding:11px 16px;font:700 13px/1.3 inherit;background:#0d776f;color:white;border:0;border-radius:9px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.vehicle-toolbar button,.utility-panel button,.parts-actions a{padding:11px 16px;font-size:13px;font-weight:700;line-height:1.3;background:#0d776f;color:white;border:0;border-radius:9px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}
 .vehicle-toolbar button:disabled,.utility-panel button:disabled{cursor:not-allowed;opacity:.45}
 .quality-strip{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
 .quality-chip{background:#edf7f6;color:#216b64;border:1px solid #d2ece7;padding:6px 10px;border-radius:99px;font-size:11px;font-weight:650}
