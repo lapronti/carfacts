@@ -1,4 +1,4 @@
-/* Carfacts preview roadmap: readable VWE presentation, report, maintenance guidance, parts search. */
+/* Carfacts preview roadmap: readable VWE presentation, report and maintenance guidance. Parts search lives at /parts/. */
 (function(){
  'use strict';
  const $=id=>document.getElementById(id);
@@ -71,8 +71,6 @@
   const present=fields.filter(key=>key==='make'?has(v.make?.name):key==='model'?has(v.model?.name):key==='fuels'?Array.isArray(v.fuels)&&v.fuels.length>0:has(v[key])).length;
   const badge=$('quality-completeness');
   if(badge)badge.textContent='Identiteit: '+present+' van '+fields.length+' basisvelden';
-  const engineInput=$('part-engine');
-  if(engineInput)engineInput.value=String(v.engineCode||'').trim();
   const modelBadge=$('model-source');if(modelBadge)modelBadge.textContent=brandModel(v)||'Voertuiggegevens opgehaald';
  }
  function renderEuroMark(target,rawValue){
@@ -201,25 +199,6 @@
   message.textContent='Indicatie op basis van door jou ingevoerde '+cleanNumber(km)+' km'+(Number.isFinite(age)?' en de eerste toelatingsdatum':'')+'. Geen werkplaats- of onderhoudshistorie beschikbaar.';
   notes.forEach(([heading,description])=>{const item=section('div','advice-item');item.append(section('strong','',heading),section('p','',description));box.append(item)});
  }
- function partsModule(){
-  const future=$('future');if(!future)return;
-  const wrapper=section('section','utility-section');wrapper.id='parts';
-  wrapper.innerHTML='<div class="utility-header"><div><div class="utility-eyebrow">Fase 3 · Onderdelen</div><h2>Zoeken op voertuig- en onderdeelgegevens</h2></div><span class="tag">Externe zoekopdracht</span></div><div class="utility-panel"><p>Stel een onderdelenzoekopdracht samen met motorcode, onderdeelnummer, versnellingsbakcode of vrije zoektekst. Pasvorm en voorraad worden nog niet door Carfacts bevestigd.</p><div class="utility-grid parts-grid"><label for="part-engine">Motorcode<input id="part-engine" maxlength="32" autocomplete="off" placeholder="Bijv. CFWA"></label><label for="part-number">Onderdeelnummer<input id="part-number" maxlength="64" autocomplete="off" placeholder="OEM-nummer"></label><label for="part-gearbox">Versnellingsbakcode<input id="part-gearbox" maxlength="32" autocomplete="off" placeholder="Versnellingsbakcode"></label><label for="part-free">Vrij zoeken<input id="part-free" maxlength="120" autocomplete="off" placeholder="Bijv. remschijf voor"></label></div><div class="parts-actions"><button id="parts-search" type="button">Stel zoekopdracht samen</button><a id="parts-open" href="#" target="_blank" rel="noopener noreferrer" hidden>Extern zoeken ↗</a></div><div id="parts-message" class="utility-note" role="status">Voor onderdelenmatching op kenteken of VIN is een leverancierskoppeling nodig. Controleer altijd de exacte compatibiliteit.</div></div>';
-  future.parentNode.insertBefore(wrapper,future);
-  $('parts-search').addEventListener('click',prepareParts);
- }
- function prepareParts(){
-  const keys=['part-engine','part-number','part-gearbox','part-free'],terms=keys.map(id=>$(id).value.trim()).filter(Boolean),message=$('parts-message'),link=$('parts-open');
-  link.hidden=true;link.removeAttribute('href');
-  if(!terms.length){message.textContent='Vul een motorcode, onderdeelnummer, versnellingsbakcode of vrije zoekterm in.';return}
-  const vehicle=first(snapshot.advanced),make=vehicle?.make?.name,model=String(vehicle?.model?.name||'').replace(/\s+MODIFIED\s+PARTITION\s+WALL\s*$/i,'');
-  const query=[make,model,...terms].filter(Boolean).join(' ');
-  link.href='https://www.google.com/search?q='+encodeURIComponent(query+' auto onderdelen');
-  link.hidden=false;
-  message.replaceChildren();
-  message.append(section('strong','','Zoekopdracht: '),section('span','parts-query',query));
-  message.append(section('div','preview-source','De externe zoekmachine toont algemene resultaten; Carfacts bevestigt niet dat een onderdeel past. Controleer het OEM-nummer en de fabrikantdocumentatie.'));
- }
  function preparePremium(){
   document.querySelectorAll('#future .buy').forEach(button=>{
    button.disabled=true;
@@ -290,9 +269,8 @@
   window.print();
  }
  function addModules(){
-  toolbar();maintenanceModule();partsModule();preparePremium();
+  toolbar();maintenanceModule();preparePremium();
   navLink('#future','#maintenance','⚒  Onderhoudscheck');
-  navLink('#future','#parts','⌕  Onderdelen zoeken');
  }
  window.addEventListener('carfacts:search-start',event=>{
   snapshot.advanced=snapshot.emission=snapshot.inspections=snapshot.repairs=null;
@@ -301,12 +279,9 @@
   const summary=$('quality-completeness');if(summary)summary.textContent='Voertuiggegevens worden opgehaald…';
   const current=$('model-source');if(current)current.textContent='Zoeken naar voertuig…';
   const verified=$('model-source-chip');if(verified)verified.textContent='Bron: VWE-acceptatie · wachten op gegevens';
-  const engine=$('part-engine');if(engine)engine.value='';
   const origin=$('registration-insight');if(origin)origin.textContent='Registratiedatums worden opgehaald…';
   const box=$('maintenance-results');if(box)box.replaceChildren();
   const note=$('maintenance-message');if(note)note.textContent='Vul na de voertuigopvraag een actuele kilometerstand in.';
-  const part=$('parts-open');if(part){part.hidden=true;part.removeAttribute('href')}
-  const partsNotice=$('parts-message');if(partsNotice)partsNotice.textContent='Zoek op motorcode, onderdeelnummer, versnellingsbakcode of vrije tekst. Een overeenkomst is geen bevestigde pasvorm.';
  });
  window.addEventListener('carfacts:dataset',event=>{
   const {type,data}=event.detail||{};if(!['advanced','emission','inspections','repairs'].includes(type))return;
