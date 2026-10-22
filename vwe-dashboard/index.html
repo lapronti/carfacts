@@ -11,35 +11,40 @@ function field(box,name,value){const div=document.createElement('div');div.class
 function flatten(v,prefix='',out=[],depth=0){if(depth>6||out.length>350)return out;if(v&&typeof v==='object'){if(Array.isArray(v)){v.slice(0,30).forEach((item,i)=>flatten(item,prefix+'['+i+']',out,depth+1))}else Object.entries(v).forEach(([key,val])=>flatten(val,prefix?prefix+'.'+key:key,out,depth+1))}else out.push([prefix,plain(v)]);return out}
 function updateMenuAvailability(results){const has=(type)=>results[type]?.ok===true;const count=(type)=>results[type]?.count||0;const settings={'#vehicle':has('advanced'),'#technical':has('emission'),'#history':!has('inspections')||count('inspections')>0};for(const [href,visible] of Object.entries(settings)){const link=document.querySelector('.nav a[href="'+href+'"]');if(link){link.hidden=!visible;link.style.display=visible?'':'none';}}updateActiveNav()}
 async function loadModelPhoto(make,model){
- const figure=$('vehicle-photo'),img=$('vehicle-photo-img');
- figure.hidden=true;img.removeAttribute('src');
+ const figure=$('vehicle-photo'),img=$('vehicle-photo-img'),caption=$('vehicle-photo-caption');
+ figure.hidden=false;img.hidden=true;img.removeAttribute('src');
  const brand=String(make||'').trim(),fullModel=String(model||'').trim();
- if(!brand||!fullModel)return;
- const modelName=fullModel.split(' ').filter(word=>!['MODIFIED','PARTITION','WALL','LWB','SWB'].includes(word.toUpperCase())).join(' ');
- const tokens=(brand+' '+modelName).toLowerCase().split(' ').filter(word=>word.length>1);
- if(tokens.length<2)return;
+ if(!brand||!fullModel){figure.hidden=true;return}
+ const cleaned=fullModel.split(' ').filter(word=>!['MODIFIED','PARTITION','WALL','LWB','SWB'].includes(word.toUpperCase())).join(' ').trim();
+ const primary=cleaned.split(' ').slice(0,2).join(' ');
+ const queries=[brand+' '+cleaned,brand+' '+primary].filter((x,i,a)=>x.trim()&&a.indexOf(x)===i);
+ const words=(brand+' '+primary).toLowerCase().split(' ').filter(w=>w.length>1);
+ caption.textContent='Modelfoto zoeken…';
+ const forbidden=['people','person','crowd','driver','rally','race','motorshow','interior','dashboard','engine bay','wreck','accident','driving','moving','highway','motorway','traffic','in motion','rolling shot','street scene','road test','test drive'];
  try{
-  const search='"'+brand+' '+modelName+'" studio showroom parked';
-  const url='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(search)+'&gsrnamespace=6&gsrlimit=40&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=500&format=json&origin=*';
-  const response=await fetch(url);if(!response.ok)return;
-  const data=await response.json();
-  const forbidden=['person','people','woman','man driving','driver','crowd','parade','rally','race','motor show','autoshow','salon','interior','dashboard','engine','logo','toy','diecast','wreck','accident','police','ambulance','fire brigade','driving','moving','on road','on street','highway','motorway','traffic','in motion','rolling shot','street scene','road test','test drive'];
-  const preferred=['studio','showroom','press photo','press image','official','parked','static','stationary','exterior'];
-  const candidates=Object.values(data.query?.pages||{}).map(page=>{
-   const info=page.imageinfo?.[0]||{},title=String(page.title||'').replace('File:','').toLowerCase();
-   const description=String(info.extmetadata?.ImageDescription?.value||'').replace(/<[^>]*>/g,' ').toLowerCase();
-   const combined=title+' '+description,url=String(info.thumburl||info.url||'');
-   if(!['image/jpeg','image/png','image/webp'].includes(info.mime)||!url.startsWith('https://upload.wikimedia.org/'))return null;
-   if(!tokens.every(token=>title.includes(token)))return null;
-   if(forbidden.some(term=>combined.includes(term)))return null;
-   if(!preferred.some(term=>combined.includes(term)))return null;
-   return {url,score:preferred.reduce((n,term)=>n+(title.includes(term)?3:combined.includes(term)?1:0),0)};
-  }).filter(Boolean).sort((a,b)=>b.score-a.score);
-  if(!candidates.length)return;
-  img.onload=()=>{figure.hidden=false};img.onerror=()=>{figure.hidden=true};
-  img.alt='Statische voorbeeldfoto van '+brand+' '+modelName;
-  img.src=candidates[0].url;
- }catch(e){figure.hidden=true}
+  let matches=[];
+  for(const term of queries){
+   const api='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(term)+'&gsrnamespace=6&gsrlimit=40&prop=imageinfo&iiprop=url|mime&iiurlwidth=500&format=json&origin=*';
+   const response=await fetch(api);if(!response.ok)continue;
+   const data=await response.json();
+   matches=Object.values(data.query?.pages||{}).map(page=>{
+    const info=page.imageinfo?.[0]||{},title=String(page.title||'').replace(/^File:/i,'').toLowerCase();
+    const url=String(info.thumburl||info.url||'');
+    if(!['image/jpeg','image/png','image/webp'].includes(info.mime)||!url.startsWith('https://upload.wikimedia.org/'))return null;
+    if(!words.every(word=>title.includes(word)))return null;
+    if(forbidden.some(term=>title.includes(term)))return null;
+    const preference=['studio','showroom','press','official','parked','static','exterior','front','side'];
+    const score=preference.reduce((n,word)=>n+(title.includes(word)?2:0),0);
+    return {url,score};
+   }).filter(Boolean).sort((a,b)=>b.score-a.score);
+   if(matches.length)break;
+  }
+  if(!matches.length){caption.textContent='Geen betrouwbare modelfoto beschikbaar.';return}
+  img.onload=()=>{img.hidden=false;caption.textContent='Indicatieve modelfoto; uitvoering, bouwjaar en kleur kunnen afwijken.'};
+  img.onerror=()=>{img.hidden=true;caption.textContent='Modelfoto kon niet worden geladen.'};
+  img.alt='Voorbeeldfoto van '+brand+' '+primary;
+  img.src=matches[0].url;
+ }catch(e){caption.textContent='Modelfoto tijdelijk niet beschikbaar.'}
 }
 function recordList(raw,type){if(Array.isArray(raw))return raw;if(!raw||typeof raw!=='object')return [];for(const key of type==='inspections'?['inspections','data','results','items']:['repairs','data','results','items'])if(Array.isArray(raw[key]))return raw[key];return []}
 function render(type,data){const panel=$(type==='emission'?'technical':type==='inspections'?'history':type),fields=panel.querySelector('.fields'),dl=panel.querySelector('dl');fields.replaceChildren();dl.replaceChildren();let v=Array.isArray(data)&&type!=='inspections'&&type!=='repairs'?data[0]||{}:data||{};if(type==='advanced'){[['Merk',v.make?.name],['Model',v.model?.name],['Voertuigtype',v.vehicleType?.description],['Eerste toelating',date(v.firstAdmissionDate)],['Eerste registratie',date(v.firstRegistrationDate)],['APK vervalt',date(v.motExpirationDate)],['Motorcode',v.engineCode],['Cilinderinhoud',v.engineCapacity? v.engineCapacity+' cc':null],['Vermogen',v.power? v.power+' kW':null],['Brandstof',v.fuels?.map(x=>x.description).join(', ')],['Deuren',v.numberOfDoors],['Zitplaatsen',v.numberOfSeats],['Leeggewicht',v.curbWeight?v.curbWeight+' kg':null],['Max. massa',v.maximumMass?v.maximumMass+' kg':null],['Laadvermogen',v.maximumLoad?v.maximumLoad+' kg':null],['Catalogusprijs',v.listPrice?'€ '+Number(v.listPrice).toLocaleString('nl-NL'):null],['Bruto BPM',v.bpmGross?'€ '+Number(v.bpmGross).toLocaleString('nl-NL'):null],['Verzekerd',typeof v.hasInsurance==='boolean'?(v.hasInsurance?'Ja':'Nee'):null],['Wielbasis',v.wheelbase?v.wheelbase+' cm':null]].forEach(([k,x])=>field(fields,k,x));$('stat-model').textContent=[v.make?.name,v.model?.name].filter(Boolean).join(' ')||'—';$('stat-engine').textContent=plain(v.engineCode);loadModelPhoto(v.make?.name,v.model?.name);currentFuel=(v.fuels||[]).map(x=>x.description||'').join(' ');currentVehicleType=v.vehicleType?.description||'';updateZone()}
