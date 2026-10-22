@@ -79,3 +79,12 @@
 @media(prefers-reduced-motion:reduce){
  html{scroll-behavior:auto!important}
 }
+
+/* Official emission-class visual: purple disc with dark outline and white numeral. */
+.euro-mark{display:inline-flex;align-items:center;gap:10px;vertical-align:middle;max-width:100%;white-space:nowrap}
+.euro-mark-disc{display:inline-flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;border:2.5px solid #222;border-radius:50%;background:#a500dd;color:#fff;font-size:19px;font-weight:800;line-height:1;box-sizing:border-box;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.euro-mark-text{font-size:inherit;font-weight:800;color:var(--ink,#142d43)}
+#stat-euro .euro-mark{margin-top:2px}
+#stat-euro .euro-mark-disc{flex-basis:39px;width:39px;height:39px;font-size:21px}
+#technical .euro-mark{gap:8px}
+#technical .euro-mark-disc{width:31px;height:31px;flex-basis:31px;font-size:17px;border-width:2px}
