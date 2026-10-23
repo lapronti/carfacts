@@ -40,7 +40,8 @@ module.exports=async(req,res)=>{
      at:v.at,dataset:v.dataset,outcome:v.outcome,
      stage:v.stage,status:v.status,upstreamStatus:v.upstreamStatus,
      code:v.code,durationMs:v.durationMs,
-     attempts:v.attempts,tokenRefreshes:v.tokenRefreshes
+     attempts:v.attempts,tokenRefreshes:v.tokenRefreshes,
+     coalesced:v.coalesced===true,dataStatus:v.dataStatus||null
     };
    }catch{return null}};
    const recent=(Array.isArray(stored)?stored:[]).map(parse).filter(Boolean);
@@ -53,6 +54,9 @@ module.exports=async(req,res)=>{
      dataset,observed:matches.length,success:successful.length,errors:failed.length,
      retried:matches.filter(event=>event.attempts>1).length,
      refreshed:matches.filter(event=>event.tokenRefreshes>0).length,
+     coalesced:matches.filter(event=>event.coalesced).length,
+     empty:matches.filter(event=>event.outcome==='success'&&event.dataStatus==='empty').length,
+     upstreamAttempts:matches.reduce((n,event)=>n+(event.attempts||0),0),
      lastSuccess:last[2*index]?parse(last[2*index]):successful[0]||null,
      lastFailure:last[2*index+1]?parse(last[2*index+1]):failed[0]||null,
      lastEvent:matches[0]||null,
@@ -63,7 +67,7 @@ module.exports=async(req,res)=>{
     measuredAt:iso(),source:'VWE acceptatie · preview',
     telemetryReady:true,retentionDays:7,
     sampleLimit:200,datasets,recent:recent.slice(0,20),
-    notice:'Passieve API-metingen. Geen live VWE-test, geen realtime uptimegarantie. Aantallen gelden alleen voor maximaal 200 recente events binnen zeven dagen. Er worden geen kentekens of toegangstokens opgeslagen.'
+    notice:'Passieve API-metingen. Geen live VWE-test, geen realtime uptimegarantie. Aantallen gelden alleen voor maximaal 200 recente events binnen zeven dagen, exclusief andere serverless instanties zolang de meting nog niet is verwerkt. Dubbele gelijktijdige aanvragen kunnen gedeelde responses zijn. Er worden geen kentekens of toegangstokens opgeslagen.'
    });
   }catch{
    return reply(res,503,{error:'VWE-monitoringgegevens tijdelijk niet beschikbaar'});
