@@ -103,10 +103,34 @@ header{margin-bottom:16px;padding-bottom:15px;border-bottom:1px solid var(--line
 <link rel="stylesheet" href="/assets/bug-report.css"><link rel="stylesheet" href="/assets/professional-v5.css"><link rel="stylesheet" href="/assets/theme-manager.css"><link rel="stylesheet" href="/assets/site-content.css"><style>
 .parts-search-tabs{display:flex;flex-wrap:wrap;gap:3px;margin:12px 0 0}.parts-search-tabs button{border:1px solid #cbd8e3;background:#fff;color:#243448;padding:11px 10px;font:inherit;font-size:12px;cursor:pointer}.parts-search-tabs button.active{border-color:#1878c9;border-bottom:2px solid #1878c9;font-weight:700}.parts-mode-input label{display:block;font-size:12px;color:#5b6978}.parts-mode-input input{display:block;width:100%;margin-top:9px;padding:13px;border:1px solid #1878c9;border-radius:4px;font:inherit}.parts-sidebar .search-form button[type=submit]{background:#587b26;color:white;border-radius:10px;font-weight:800}.parts-sidebar .search-form{margin-top:0}
 </style>
+<link rel="stylesheet" href="/parts/dashboard-theme.css?v=preview-20261023a">
 </head>
-<body>
+<body class="cf-parts-dashboard">
+<div class="cf-parts-app">
+<aside class="cf-parts-global-nav" aria-label="Carfacts hoofdnavigatie">
+  <a href="/" class="cf-parts-global-brand" aria-label="Carfacts voertuigdashboard">carfacts<b>.</b></a>
+  <div class="cf-parts-global-sub">VEHICLE INTELLIGENCE</div>
+  <div class="cf-parts-global-label">WERKRUIMTE</div>
+  <nav class="cf-parts-global-links" aria-label="Carfacts pagina's">
+    <a href="/"><span class="nav-icon" aria-hidden="true">◫</span> Kentekencheck</a>
+    <a href="/parts/" aria-current="page"><span class="nav-icon" aria-hidden="true">⌕</span> Onderdelen zoeken</a>
+    <a href="/pro/"><span class="nav-icon" aria-hidden="true">◇</span> Carfacts PRO</a>
+    <a href="/admin/"><span class="nav-icon" aria-hidden="true">⚙</span> Admin</a>
+    <a href="/vwe-lab/"><span class="nav-icon" aria-hidden="true">↗</span> API Testlab</a>
+  </nav>
+  <div class="cf-parts-global-footer">
+    <a href="/">↗ Terug naar voertuigcheck</a>
+    <div class="cf-parts-preview-label">VWE ACCEPTATIE · TEST</div>
+  </div>
+</aside>
+<div class="cf-parts-content">
 <div class="wrap cf-shell">
-<header class="cf-header"><a class="cf-brand cf-parts-brand" href="/parts/" aria-label="Carfacts Parts">Car<span>facts</span><span class="parts-brand-tag">Parts</span></a><nav class="cf-nav" aria-label="Hoofdnavigatie"><a href="/">Kentekencheck<small>Gratis voertuiggegevens</small></a><a href="/parts/" aria-current="page">Onderdelen zoeken<small>Zoek auto-onderdelen</small></a><a href="/pro/">Carfacts PRO<small>Onderhoudshistorie</small></a></nav></header>
+<header class="cf-parts-top">
+ <div><div class="cf-parts-top-kicker">CARFACTS DATA PLATFORM / PREVIEW</div>
+ <h1>Onderdelen zoeken.</h1>
+ <p>Doorzoek onderdelenaanbieders in Nederland en Europa vanuit één overzicht.</p></div>
+ <span class="cf-parts-test-pill">● Acceptatieomgeving</span>
+</header>
 <main>
 <section class="hero">
 <div class="eyebrow">Eén zoekopdracht · meerdere markten</div>
@@ -374,5 +398,5 @@ document.getElementById("searchForm").addEventListener("submit",async e=>{
  document.getElementById("resultsHeading").scrollIntoView({behavior:"smooth",block:"start"});
 });
 </script>
-<script defer src="/assets/analytics.js"></script><script defer src="/assets/bug-report.js"></script><script defer src="/assets/cookie-consent.js"></script><section class="cf-partner-callout" aria-labelledby="cf-partner-title"><div class="cf-partner-copy"><span class="cf-partner-eyebrow">Voor onderdelenplatforms en leveranciers</span><h2 id="cf-partner-title">Samenwerken met Carfacts Parts?</h2><p>Wij willen automobilisten en autobedrijven helpen om auto-onderdelen centraal en internationaal te vinden. Beheert jouw organisatie een onderdelenvoorraad, marktplaats of onderdelen-API? We komen graag in contact over een mogelijke technische integratie.</p><p class="cf-partner-detail">We bespreken graag API-toegang, product- en voorraadgegevens, zoekmogelijkheden, gebruiksvoorwaarden en een passende commerciële samenwerking. Integraties worden uitsluitend gerealiseerd na toestemming en technische afstemming.</p></div><a class="cf-partner-link" href="mailto:info@maesafety.nl?subject=API-samenwerking%20Carfacts%20Parts&amp;body=Bedrijfsnaam%3A%0AWebsite%3A%0AContactpersoon%3A%0ABeschikbare%20API%20of%20feed%3A%0A">Bespreek een API-samenwerking <span aria-hidden="true">↗</span></a></section><footer class="cf-legal-footer" style="padding:28px 18px;text-align:center;font:13px system-ui;color:#586e70"><a href="/privacy/">Privacyverklaring</a> · <a href="/cookies/">Cookies en instellingen</a> · <a href="/voorwaarden/">Gebruiksvoorwaarden</a> · Carfacts, handelsnaam van MAE Safety · KvK 97363642</footer><script defer src="/assets/theme-manager.js"></script><script defer src="/assets/site-content.js"></script></body>
+<script defer src="/assets/analytics.js"></script><script defer src="/assets/bug-report.js"></script><script defer src="/assets/cookie-consent.js"></script><section class="cf-partner-callout" aria-labelledby="cf-partner-title"><div class="cf-partner-copy"><span class="cf-partner-eyebrow">Voor onderdelenplatforms en leveranciers</span><h2 id="cf-partner-title">Samenwerken met Carfacts Parts?</h2><p>Wij willen automobilisten en autobedrijven helpen om auto-onderdelen centraal en internationaal te vinden. Beheert jouw organisatie een onderdelenvoorraad, marktplaats of onderdelen-API? We komen graag in contact over een mogelijke technische integratie.</p><p class="cf-partner-detail">We bespreken graag API-toegang, product- en voorraadgegevens, zoekmogelijkheden, gebruiksvoorwaarden en een passende commerciële samenwerking. Integraties worden uitsluitend gerealiseerd na toestemming en technische afstemming.</p></div><a class="cf-partner-link" href="mailto:info@maesafety.nl?subject=API-samenwerking%20Carfacts%20Parts&amp;body=Bedrijfsnaam%3A%0AWebsite%3A%0AContactpersoon%3A%0ABeschikbare%20API%20of%20feed%3A%0A">Bespreek een API-samenwerking <span aria-hidden="true">↗</span></a></section><footer class="cf-legal-footer" style="padding:28px 18px;text-align:center;font:13px system-ui;color:#586e70"><a href="/privacy/">Privacyverklaring</a> · <a href="/cookies/">Cookies en instellingen</a> · <a href="/voorwaarden/">Gebruiksvoorwaarden</a> · Carfacts, handelsnaam van MAE Safety · KvK 97363642</footer><script defer src="/assets/theme-manager.js"></script><script defer src="/assets/site-content.js"></script></div></div></body>
 </html>
