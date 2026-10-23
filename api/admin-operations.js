@@ -2,6 +2,7 @@ const {cmd,configured,reply}=require('./_analytics');
 const {session}=require('./_admin-security');
 const crypto=require('node:crypto');
 const monitor=require('./_monitor');
+const {DATASETS:VWE_DATASETS,PREFIX:VWE_PREFIX}=require('./_vwe-monitor');
 const auditKey='cf:admin:audit';
 const iso=()=>new Date().toISOString();
 async function audit(action,detail=''){try{await cmd('LPUSH',auditKey,JSON.stringify({date:iso(),action,detail}));await cmd('LTRIM',auditKey,0,199);await cmd('EXPIRE',auditKey,86400*90)}catch{}}
@@ -20,6 +21,54 @@ module.exports=async(req,res)=>{
  }
  if(req.method!=='GET')return reply(res,405,{error:'Method not allowed'});
  const action=String(req.query.action||'overview');
+ if(action==='vwe_status'){
+  // Never probe the external VWE API from Admin. Read only passive preview telemetry.
+  if(process.env.VERCEL_ENV!=='preview')return reply(res,404,{error:'Alleen beschikbaar op de previewomgeving'});
+  try{
+   const keys=VWE_DATASETS.flatMap(dataset=>[
+    VWE_PREFIX+'last:'+dataset+':success',
+    VWE_PREFIX+'last:'+dataset+':error'
+   ]);
+   const [stored,latest]=await Promise.all([
+    cmd('LRANGE',VWE_PREFIX+'recent',0,199),
+    cmd('MGET',...keys)
+   ]);
+   const parse=item=>{try{
+    const v=JSON.parse(item);
+    if(!VWE_DATASETS.includes(v.dataset)||!['success','error'].includes(v.outcome))return null;
+    return {
+     at:v.at,dataset:v.dataset,outcome:v.outcome,
+     stage:v.stage,status:v.status,upstreamStatus:v.upstreamStatus,
+     code:v.code,durationMs:v.durationMs,
+     attempts:v.attempts,tokenRefreshes:v.tokenRefreshes
+    };
+   }catch{return null}};
+   const recent=(Array.isArray(stored)?stored:[]).map(parse).filter(Boolean);
+   const last=Array.isArray(latest)?latest:[];
+   const datasets=VWE_DATASETS.map((dataset,index)=>{
+    const matches=recent.filter(event=>event.dataset===dataset);
+    const successful=matches.filter(event=>event.outcome==='success');
+    const failed=matches.filter(event=>event.outcome==='error');
+    return {
+     dataset,observed:matches.length,success:successful.length,errors:failed.length,
+     retried:matches.filter(event=>event.attempts>1).length,
+     refreshed:matches.filter(event=>event.tokenRefreshes>0).length,
+     lastSuccess:last[2*index]?parse(last[2*index]):successful[0]||null,
+     lastFailure:last[2*index+1]?parse(last[2*index+1]):failed[0]||null,
+     lastEvent:matches[0]||null,
+     avgDurationMs:matches.length?Math.round(matches.reduce((n,event)=>n+(event.durationMs||0),0)/matches.length):null
+    };
+   });
+   return reply(res,200,{
+    measuredAt:iso(),source:'VWE acceptatie · preview',
+    telemetryReady:true,retentionDays:7,
+    sampleLimit:200,datasets,recent:recent.slice(0,20),
+    notice:'Passieve API-metingen. Geen live VWE-test, geen realtime uptimegarantie. Aantallen gelden alleen voor maximaal 200 recente events binnen zeven dagen. Er worden geen kentekens of toegangstokens opgeslagen.'
+   });
+  }catch{
+   return reply(res,503,{error:'VWE-monitoringgegevens tijdelijk niet beschikbaar'});
+  }
+ }
  if(action==='monitor'){try{const [history,week,budget,abuse]=await Promise.all([cmd('LRANGE','cf:monitor:history',0,29),cmd('GET','cf:monitor:last_week'),cmd('GET','cf:admin:vwe_budget'),cmd('GET','cf:security:blocked:'+new Date().toISOString().slice(0,10))]);return reply(res,200,{history:(history||[]).map(v=>JSON.parse(v)),week:week?JSON.parse(week):null,budgetEur:budget===null?null:Number(budget),budgetEnforced:false,blockedRequests:Number(abuse||0),searchConsole:{connected:false,url:'https://search.google.com/search-console'}})}catch{return reply(res,503,{error:'Monitoringgegevens niet beschikbaar'})}}
  if(action==='health'){
   const [rdw,storage]=await Promise.all([check('https://opendata.rdw.nl/resource/m9d7-ebf2.json?%24limit=1'),cmd('PING').then(x=>({state:x==='PONG'?'ok':'error'})).catch(()=>({state:'error'}))]);
