@@ -2,20 +2,32 @@
 <html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Carfacts | VWE API Testlab</title>
 <style>
 :root{font-family:system-ui,Arial,sans-serif;color:#172b42;background:#f1f5fa}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1100px;margin:auto;padding:26px 18px}header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}a{color:#1756a0}h1{margin:18px 0 4px}p{line-height:1.5}.muted{color:#5c6c80}.panel{background:#fff;border:1px solid #dce5f0;border-radius:14px;padding:20px;margin:18px 0}input,button{font:inherit;padding:12px;border-radius:9px;border:1px solid #a9bacf}button{cursor:pointer;background:#1456a0;color:white;border:0}button:disabled{opacity:.55;cursor:wait}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px}.card{background:#fff;border:1px solid #dce5f0;border-radius:14px;padding:17px}.card h3{margin:0 0 8px}.status{font-weight:700;color:#345371}.small{font-size:13px}.data{display:grid;grid-template-columns:minmax(110px,1fr) 1.4fr;gap:7px 14px;margin-top:12px;overflow-wrap:anywhere}.data dt{color:#5c6c80}.data dd{margin:0;font-weight:600}details{margin-top:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f7fb;padding:12px;border-radius:8px;max-height:300px;overflow:auto}.note{border-left:4px solid #1d5a9e;padding-left:12px}.warning{color:#9c4d00}label{display:block;margin-bottom:8px;font-weight:700}
+
+#retryFailures{background:#eff9f6;color:#116b61;border:1px solid #b9ded6;margin-top:7px}
+#retryFailures[hidden]{display:none}
+.card .status{margin-top:14px;font-size:13px}
+.card[data-state="success"]{border-top:3px solid #1d9b79}
+.card[data-state="error"]{border-top:3px solid #d09135}
+.card[data-state="skipped"]{border-top:3px solid #b2bbc9}
+.card[data-state="error"] .status{color:#9e621d}
+.card[data-state="success"] .status{color:#14775d}
+.card .error-detail{font-size:12px;color:#5c7182;line-height:1.5;overflow-wrap:anywhere;margin:8px 0 0;padding:11px 12px;background:#f4f8fb;border-radius:9px}
+.card .error-detail a{font-weight:750}
+.api-diagnostic{color:#506c82;background:#f2f8fa;border:1px solid #dfe9ee;border-radius:9px;padding:11px 12px}
 </style></head><body><main class="wrap"><header><strong>Carfacts · VWE Testlab</strong><nav><a href="/">Terug naar rapport</a> · <a href="/admin/">Admin-login</a></nav></header>
 <h1>VWE Interdata: uitbreidingen testen</h1><p class="muted">Alle verzoeken verlopen via de VWE-acceptatie-API, uitsluitend op de Preview-omgeving en na admin-login. Er is geen RDW-fallback. Geen marktwaarde of schadehistorie wordt verzonnen.</p>
-<section class="panel"><label for="plate">Kenteken</label><input id="plate" placeholder="VDZ39P" maxlength="9" autocomplete="off"> <button id="run">Test beschikbare VWE-datasets</button><p id="feedback" role="status" class="status">Er worden pas API-verzoeken gedaan wanneer je op Test klikt.</p><p class="small muted">Vier afzonderlijke VWE-testaanvragen: voertuigdetails, APK-keuringen, APK-reparaties en emissie. Acceptatie is door VWE als kosteloos voor testen aangegeven; dit is geen toestemming voor productie- of betaalde aanvullende diensten.</p></section>
+<section class="panel"><label for="plate">Kenteken</label><input id="plate" placeholder="AB12CD" maxlength="9" autocomplete="off"> <button id="run" type="button">Test beschikbare VWE-datasets</button> <button id="retryFailures" type="button" hidden>Probeer mislukte tests opnieuw</button><p id="feedback" role="status" class="status">Er worden pas API-verzoeken gedaan wanneer je op Test klikt.</p><p class="small muted">Maximaal vier afzonderlijke VWE-testaanvragen: voertuigdetails, APK-keuringen, APK-reparaties en emissie. Bij een algemene authenticatiefout worden de volgende aanvragen overgeslagen. Acceptatie is door VWE als kosteloos voor testen aangegeven; dit is geen toestemming voor productie- of betaalde aanvullende diensten.</p></section>
 <h2>Beschikbare API-testmodules</h2><div class="cards">
 <article class="card" data-dataset="advanced"><h3>Voertuig & onderdelenidentificatie</h3><p class="muted small">Motorcode, uitvoering, voertuigtype, gewichten en technische specificaties. Geen onderdelencompatibiliteit zonder aparte catalogus.</p><p class="status">Nog niet getest</p><div class="result"></div></article>
 <article class="card" data-dataset="inspections"><h3>APK- en keuringshistorie</h3><p class="muted small">Bekijk aantallen, beschikbare datums en geregistreerde gebreken. Geen volledige kilometerhistorie gegarandeerd.</p><p class="status">Nog niet getest</p><div class="result"></div></article>
-<article class="card" data-dataset="repairs"><h3>APK-reparaties</h3><p class="muted small">Reparatieregistraties uit het VWE-keuringenproduct; niet gelijk aan volledige garage-onderhoudshistorie.</p><p class="status">Nog niet getest</p><div class="result"></div></article>
+<article class="card" data-dataset="repairs"><h3>APK-reparaties (test)</h3><p class="muted small">De betekenis van de VWE-respons is nog niet bevestigd: dit kan een algemene gebrekencodelijst zijn en geen reparatiehistorie van dit voertuig.</p><p class="status">Nog niet getest</p><div class="result"></div></article>
 <article class="card" data-dataset="emission"><h3>Milieu & transmissie</h3><p class="muted small">Euroklasse, versnellingsbak, aantal versnellingen, bijtelling en geluidswaarden.</p><p class="status">Nog niet getest</p><div class="result"></div></article></div>
 <h2>Extra VWE-producten: aansluiting nog te verifiëren</h2><div class="cards">
 <article class="card"><h3>Voertuigwaardering</h3><p class="warning">Niet aangesloten</p><p class="small">Geen bevestigd VWE-waarderingsendpoint of productrecht. Geen waardeschatting op basis van catalogusprijs.</p></article>
 <article class="card"><h3>Schadehistorie</h3><p class="warning">Niet aangesloten</p><p class="small">Geen bevestigd schadeproduct. Afwezigheid van schadegegevens betekent niet schadevrij.</p></article>
 <article class="card"><h3>Volledige onderhoudshistorie</h3><p class="warning">Niet aangesloten</p><p class="small">Geen bevestigd garage-onderhoudsproduct; APK-reparaties tellen niet als volledig onderhoud.</p></article>
 <article class="card"><h3>Kilometerhistorie & onderdelenmatching</h3><p class="warning">Niet aangesloten</p><p class="small">Volledige standenreeks en exacte onderdelencompatibiliteit vereisen bevestigde datasets en rechten.</p></article></div>
-<section class="panel note"><strong>Interpretatie</strong><p class="small">Een geslaagde API-aanvraag bevestigt alleen dat het endpoint voor dit kenteken antwoord geeft. Ontbrekende velden worden als ‘Niet beschikbaar’ getoond. Een foutcode 403 betekent dat het VWE-product niet is vrijgegeven. Een 401 betekent dat je eerst op dit domein via Admin moet inloggen.</p></section>
+<section class="panel note"><strong>Interpretatie</strong><p class="small">Een geslaagde API-aanvraag bevestigt alleen dat het endpoint voor dit kenteken antwoord geeft. Ontbrekende velden worden als ‘Niet beschikbaar’ getoond. Een foutcode 403 kan betekenen dat het product niet is vrijgegeven. Een 401 betekent dat je opnieuw via Admin moet inloggen. Fouten 502 en 504 wijzen op een mislukte verbinding, authenticatie bij VWE of serverrespons; de fase van de fout staat nu bij iedere test.</p></section>
 </main><script>
 const $=id=>document.getElementById(id);
 const format=x=>x===null||x===undefined||x===''?'Niet beschikbaar':typeof x==='object'?x.description||x.name||x.code||'Niet beschikbaar':String(x);
@@ -24,7 +36,110 @@ function row(root,label,value){const dt=document.createElement('dt'),dd=document
 function show(dataset,raw,box){const div=box.querySelector('.result');div.replaceChildren();const dl=document.createElement('dl');dl.className='data';
  if(dataset==='advanced'){const v=Array.isArray(raw)?raw[0]||{}:raw||{};[['Merk',v.make],['Model',v.model],['Motorcode',v.engineCode],['Cilinderinhoud',v.engineCapacity],['Vermogen',v.power],['Bouwvorm',v.construction],['Zitplaatsen',v.numberOfSeats],['Max. aanhanger geremd',v.towingCapacity?.centerAxleBraked],['APK-vervaldatum',v.motExpirationDate],['Eerste toelating',v.firstAdmissionDate],['Eerste registratie NL',v.firstRegistrationDate]].forEach(([k,v])=>row(dl,k,v))}
  if(dataset==='emission'){const v=raw||{};[['Euroklasse',v.euroClass],['Energielabel',v.energyLabel],['Transmissie',v.gearbox],['Versnellingen',v.gearbox?.numberOfGears],['Bijtelling',v.taxAddition],['Stationair geluid (dB)',v.noiseLevel?.idle],['Rijgeluid (dB)',v.noiseLevel?.driving]].forEach(([k,v])=>row(dl,k,v))}
- if(dataset==='inspections'||dataset==='repairs'){const records=findRecords(raw,dataset==='inspections'?['inspections','data']:['repairs','data']);row(dl,'Aantal registraties',records.length);records.slice(0,10).forEach((v,i)=>{row(dl,'Registratie '+(i+1),[v.inspectionDate||v.repairDate||v.date||'Datum onbekend',v.description||v.repairDescription||v.result||v.code||'Geen beschrijving'].join(' · '))});if(records.length>10)row(dl,'Overige',records.length-10+' niet getoond')}
+ if(dataset==='repairs'){row(dl,'Status','Antwoord ontvangen, niet bevestigd als voertuiggebonden reparatiehistorie');row(dl,'Interpretatie','Dit antwoord kan een algemene lijst APK-gebrekencodes bevatten. Er worden daarom geen reparaties of aantallen aan dit voertuig toegeschreven.')}
+ if(dataset==='inspections'){const records=findRecords(raw,['inspections','data']);row(dl,'Aantal keuringsregistraties',records.length);records.slice(0,10).forEach((v,i)=>{row(dl,'Keuring '+(i+1),[v.inspectionDate||v.date||'Datum onbekend',Array.isArray(v.defects)?v.defects.map(d=>d.description).filter(Boolean).join(' · '):v.description||v.result||'Geen opmerkingen vermeld'].join(' · '))});if(records.length>10)row(dl,'Overige',records.length-10+' niet getoond')}
  div.append(dl);const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Technische veldnamen (zonder volledige ruwe gegevens)';details.append(summary);const p=document.createElement('p');p.className='small muted';p.textContent=Object.keys(raw||{}).slice(0,80).join(', ')||'Geen velden';details.append(p);div.append(details)}
-$('run').addEventListener('click',async()=>{const plate=$('plate').value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(!/^[A-Z0-9]{4,8}$/.test(plate)){$('feedback').textContent='Voer een geldig kenteken in.';return}const button=$('run');button.disabled=true;$('feedback').textContent='VWE-acceptatie wordt getest…';const datasets=['advanced','inspections','repairs','emission'];let success=0;for(const dataset of datasets){const box=document.querySelector('[data-dataset="'+dataset+'"]'),status=box.querySelector('.status');status.textContent='Bezig…';box.querySelector('.result').replaceChildren();try{const r=await fetch('/api/vwe-vehicle?dataset='+dataset+'&licensePlate='+encodeURIComponent(plate),{credentials:'same-origin',headers:{Accept:'application/json'}});const j=await r.json();if(!r.ok)throw Error((j.error||'HTTP-fout')+' ('+r.status+')');show(dataset,j.vehicle,box);status.textContent='VWE-antwoord ontvangen';success++}catch(e){status.textContent='Niet beschikbaar: '+e.message}}$('feedback').textContent=success+' van 4 VWE-datasets succesvol opgehaald voor '+plate+'.';button.disabled=false});
+const DATASETS=['advanced','inspections','repairs','emission'];
+let previousPlate='';
+let failedDatasets=[];
+function statusDetail(box,text){
+ const previous=box.querySelector('.error-detail');
+ if(previous)previous.remove();
+ if(!text)return;
+ const p=document.createElement('p');p.className='error-detail';p.textContent=text;
+ box.querySelector('.status').insertAdjacentElement('afterend',p);
+}
+function describeFailure(result,httpStatus){
+ const upstream=result.upstreamStatus?'; VWE HTTP '+result.upstreamStatus:'';
+ const suffix=' (Carfacts HTTP '+httpStatus+upstream+')';
+ if(result.stage==='authentication')return {
+  title:'Authenticatie bij VWE mislukt',
+  detail:(result.error||'VWE heeft geen bruikbaar toegangstoken verstrekt')+suffix+'. Controleer de VWE-acceptatieconfiguratie en toegangsrechten.'
+ };
+ if(result.stage==='configuration')return {
+  title:'VWE-configuratie niet gereed',
+  detail:(result.error||'Configuratieprobleem')+suffix+'. Controleer de preview-omgevingsvariabelen.'
+ };
+ if(result.stage==='session'||httpStatus===401)return {
+  title:'Admin-login vereist',
+  detail:'Log opnieuw in via /admin/ op hetzelfde testdomein, en voer de test daarna opnieuw uit.'
+ };
+ if(httpStatus===403)return {
+  title:'VWE-product niet toegankelijk',
+  detail:(result.error||'Geen toegang tot deze dataset')+suffix+'. Vraag zo nodig bij VWE na of dit endpoint is toegestaan.'
+ };
+ if(httpStatus===504||result.code==='VWE_TIMEOUT')return {
+  title:'Time-out bij VWE',
+  detail:'VWE heeft niet op tijd geantwoord'+suffix+'. Je kunt later uitsluitend de mislukte datasets opnieuw testen.'
+ };
+ if(httpStatus===502||httpStatus===503)return {
+  title:'Technisch verbindingsprobleem',
+  detail:(result.error||'De VWE-server reageert niet correct')+suffix+'. Dit zegt niets over het voertuig en betekent niet dat deze gegevens ontbreken.'
+ };
+ return {title:'Aanvraag mislukt',detail:(result.error||'Geen bruikbare VWE-respons')+suffix};
+}
+async function runDataset(dataset,plate){
+ const box=document.querySelector('[data-dataset="'+dataset+'"]'),status=box.querySelector('.status');
+ box.dataset.state='pending';
+ status.textContent='Verzoek wordt uitgevoerd…';
+ box.querySelector('.result').replaceChildren();
+ statusDetail(box,'');
+ const abort=new AbortController();
+ const timeout=setTimeout(()=>abort.abort(),18000);
+ try{
+  const response=await fetch('/api/vwe-vehicle?dataset='+dataset+'&licensePlate='+encodeURIComponent(plate),{
+   credentials:'same-origin',headers:{Accept:'application/json'},signal:abort.signal
+  });
+  const payload=await response.json().catch(()=>({error:'Geen geldig JSON-antwoord van de test-API',stage:'vehicle'}));
+  if(!response.ok){
+   const details=describeFailure(payload,response.status);
+   box.dataset.state='error';status.textContent=details.title;
+   statusDetail(box,details.detail);
+   return {ok:false,dataset,status:response.status,stage:payload.stage||'',code:payload.code||''};
+  }
+  show(dataset,payload.vehicle,box);
+  box.dataset.state='success';status.textContent='● VWE-antwoord ontvangen';
+  return {ok:true,dataset};
+ }catch(error){
+  const timedOut=error?.name==='AbortError';
+  box.dataset.state='error';status.textContent=timedOut?'Aanvraag duurt te lang':'Verbinding met de test-API mislukt';
+  statusDetail(box,timedOut?'Na 18 seconden zonder antwoord gestopt. Er zijn geen gegevens bevestigd.':'Controleer de internetverbinding en de beschikbaarheid van test.car-facts.nl.');
+  return {ok:false,dataset,status:timedOut?504:0,stage:'network'};
+ }finally{clearTimeout(timeout)}
+}
+async function runTests(retryOnly=false){
+ const plate=$('plate').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+ if(!/^[A-Z0-9]{4,8}$/.test(plate)){$('feedback').textContent='Voer een geldig kenteken in.';$('plate').focus();return}
+ const button=$('run'),retry=$('retryFailures');
+ if(button.disabled)return;
+ let targets=retryOnly&&previousPlate===plate&&failedDatasets.length?[...failedDatasets]:[...DATASETS];
+ previousPlate=plate;button.disabled=true;retry.disabled=true;retry.hidden=true;
+ $('feedback').textContent=(retryOnly?'Mislukte datasets opnieuw testen':'VWE-acceptatie controleren')+' voor '+plate+'…';
+ try{
+  const result=[];
+  // A shared OAuth or session issue blocks every dataset. Test once before issuing more API requests.
+  const first=targets.includes('advanced')?'advanced':targets[0];
+  const primary=await runDataset(first,plate);result.push(primary);
+  targets=targets.filter(x=>x!==first);
+  const blocked=!primary.ok&&['authentication','configuration','session'].includes(primary.stage);
+  if(blocked){
+   for(const dataset of targets){
+    const box=document.querySelector('[data-dataset="'+dataset+'"]');
+    box.dataset.state='skipped';box.querySelector('.status').textContent='Niet getest vanwege eerdere authenticatie- of configuratiefout';
+    box.querySelector('.result').replaceChildren();
+    statusDetail(box,'Verhelp eerst de fout bij de vorige aanvraag. Om onnodige VWE-verzoeken te voorkomen zijn de overige datasets overgeslagen.');
+    result.push({ok:false,dataset,skipped:true});
+   }
+  }else{
+   result.push(...await Promise.all(targets.map(dataset=>runDataset(dataset,plate))));
+  }
+  if(!retryOnly){failedDatasets=DATASETS.filter(x=>!result.some(item=>item.dataset===x&&item.ok))}
+  else failedDatasets=DATASETS.filter(x=>failedDatasets.includes(x)&&!result.some(item=>item.dataset===x&&item.ok));
+  const success=DATASETS.length-failedDatasets.length;
+  $('feedback').textContent=success+' van 4 datasets met succes getest voor '+plate+'.'+(failedDatasets.length?' Bij de overige is een fout opgetreden of de test overgeslagen. Dit bewijst niet dat voertuiggegevens ontbreken.':'');
+  retry.hidden=!failedDatasets.length;
+ }finally{button.disabled=false;retry.disabled=false}
+}
+$('run').addEventListener('click',()=>runTests(false));
+$('retryFailures').addEventListener('click',()=>runTests(true));
 </script></body></html>
