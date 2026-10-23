@@ -1,0 +1,43 @@
+/* Carfacts preview — stable photo panel with graceful fallbacks. */
+.vehicle-photo{display:block;max-width:330px;width:100%;margin:15px 0 20px}
+.vehicle-photo[hidden]{display:none!important}
+.vehicle-photo-frame{
+ display:flex;align-items:center;justify-content:center;position:relative;
+ height:190px;min-height:150px;background:linear-gradient(135deg,#f4f8fb,#eaf2f5);
+ border:1px solid #dbe5ec;border-radius:13px;overflow:hidden;
+}
+.vehicle-photo-frame img{
+ display:block;width:100%!important;height:100%!important;
+ object-fit:contain!important;border:0!important;border-radius:0!important;
+ background:#f4f8fb!important;
+}
+.vehicle-photo-frame img[hidden]{display:none!important}
+.vehicle-photo-placeholder{
+ display:flex;align-items:center;justify-content:center;flex-direction:column;
+ gap:9px;padding:18px;text-align:center;font-size:12px;
+ line-height:1.5;color:#577085;max-width:260px;
+}
+.vehicle-photo-placeholder::before{
+ content:"🚙";font-size:36px;line-height:1;filter:grayscale(.6);opacity:.63;
+}
+.vehicle-photo-placeholder[hidden]{display:none}
+.vehicle-photo figcaption{font-size:11px;color:#60778b;line-height:1.55;margin:8px 0 0;overflow-wrap:anywhere}
+.vehicle-photo-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:7px}
+.vehicle-photo-actions button{
+ border:1px solid #a7d9ce;border-radius:8px;
+ background:#ecfaf6;color:#086f68;
+ font-size:11px;font-weight:780;line-height:1.25;min-height:32px;
+ padding:7px 10px;cursor:pointer;
+}
+.vehicle-photo-actions button:hover{background:#daf3eb}
+.vehicle-photo-actions button[hidden],.vehicle-photo-actions a[hidden]{display:none!important}
+.vehicle-photo-actions a{
+ font-size:10px;color:#167785;text-decoration:underline;
+ text-underline-offset:2px;overflow-wrap:anywhere;
+}
+.vehicle-photo-actions :is(button,a):focus-visible{outline:3px solid #9de0d6;outline-offset:3px}
+@media(max-width:600px){
+ .vehicle-photo{max-width:100%}
+ .vehicle-photo-frame{height:175px}
+ .vehicle-photo-actions{align-items:flex-start;gap:8px}
+}
