@@ -147,6 +147,12 @@
  const VERIFIED_POLO_PHOTOS=Object.freeze({
   'Volkswagen Polo VI (2021)':Object.freeze([
    {
+    title:'File:2024 Volkswagen Polo Life front.jpg',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/2024_Volkswagen_Polo_Life_front.jpg/960px-2024_Volkswagen_Polo_Life_front.jpg',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:2024_Volkswagen_Polo_Life_front.jpg',
+    artist:'LuvsMG481',license:'CC BY-SA 4.0',score:240,kind:'curated'
+   },
+   {
     title:'File:Volkswagen Polo VI (2021) IMG 5730.jpg',
     url:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Volkswagen_Polo_VI_%282021%29_IMG_5730.jpg/960px-Volkswagen_Polo_VI_%282021%29_IMG_5730.jpg',
     pageUrl:'https://commons.wikimedia.org/wiki/File:Volkswagen_Polo_VI_(2021)_IMG_5730.jpg',
@@ -174,13 +180,18 @@
   // Commons API call is necessary when two verified photo alternatives exist.
   if(verified.length>=2)return verified;
   const found=new Map(verified.map(photo=>[photo.title,photo]));
-  const collect=data=>{
+  const collect=(data,fromExactCategory=false)=>{
    for(const page of Object.values(data.query?.pages||{})){
-    const photo=generationPhoto(page,make,model,plan);
+    // A direct categorymembers response itself proves membership. Wikimedia
+    // can omit categories[] on these pages due to API limits or incomplete props.
+    const decorated=fromExactCategory
+     ?{...page,categories:[...(page.categories||[]),{title:'Category:'+plan.category}]}
+     :page;
+    const photo=generationPhoto(decorated,make,model,plan);
     if(photo)found.set(photo.title,photo);
    }
   };
-  try{collect(await requestJSON(categoryUrl(plan.category)))}catch{}
+  try{collect(await requestJSON(categoryUrl(plan.category)),true)}catch{}
   if(requestId!==sequence)return [];
   if(found.size<5){
    const names={4:'IV',5:'V',6:'VI'};
