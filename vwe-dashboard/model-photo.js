@@ -141,13 +141,39 @@
   return {title:page.title,url,pageUrl:String(info.descriptionurl||fileUrl(page.title)),
    score,kind:'commons',generation:plan.label};
  }
+ // These files were individually checked on Wikimedia Commons (category and licence).
+ // A known correct gallery must still work when Wikimedia's search/category API
+ // is unavailable or returns incomplete categories.
+ const VERIFIED_POLO_PHOTOS=Object.freeze({
+  'Volkswagen Polo VI (2021)':Object.freeze([
+   {
+    title:'File:Volkswagen Polo VI (2021) IMG 5730.jpg',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Volkswagen_Polo_VI_%282021%29_IMG_5730.jpg/960px-Volkswagen_Polo_VI_%282021%29_IMG_5730.jpg',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:Volkswagen_Polo_VI_(2021)_IMG_5730.jpg',
+    artist:'Alexander Migl',license:'CC BY-SA 4.0',score:200,kind:'curated'
+   },
+   {
+    title:'File:Volkswagen Polo VI (2021) IMG 5322.jpg',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Volkswagen_Polo_VI_%282021%29_IMG_5322.jpg/960px-Volkswagen_Polo_VI_%282021%29_IMG_5322.jpg',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:Volkswagen_Polo_VI_(2021)_IMG_5322.jpg',
+    artist:'Alexander Migl',license:'CC BY-SA 4.0',score:190,kind:'curated'
+   }
+  ])
+ });
+ function verifiedGenerationPhotos(plan){
+  return (VERIFIED_POLO_PHOTOS[plan.category]||[]).map(item=>({...item,generation:plan.label}));
+ }
  const categoryUrl=category=>'https://commons.wikimedia.org/w/api.php?'+new URLSearchParams({
   action:'query',generator:'categorymembers',gcmtitle:'Category:'+category,
   gcmnamespace:'6',gcmlimit:'150',prop:'imageinfo|categories',cllimit:'max',
   iiprop:'url|mime|size',iiurlwidth:'640',format:'json',origin:'*'
  }).toString();
  async function generationSearch(make,model,plan,requestId){
-  const found=new Map();
+  const verified=verifiedGenerationPhotos(plan);
+  // Prefer the previously reviewed and correctly categorised images. No external
+  // Commons API call is necessary when two verified photo alternatives exist.
+  if(verified.length>=2)return verified;
+  const found=new Map(verified.map(photo=>[photo.title,photo]));
   const collect=data=>{
    for(const page of Object.values(data.query?.pages||{})){
     const photo=generationPhoto(page,make,model,plan);
@@ -282,6 +308,10 @@
   const p=state();if(!p.credit)return;
   p.credit.href=photo.pageUrl;p.credit.hidden=false;
   p.credit.textContent='Wikimedia Commons · bron en licentie ↗';
+  if(photo.kind==='curated'){
+   p.credit.textContent='Foto: '+photo.artist+' · '+photo.license+' · bron ↗';
+   return;
+  }
   if(photo.kind==='wikipedia')p.credit.textContent='Wikipedia / Wikimedia Commons · bron en licentie ↗';
   if(photo.kind==='wikipedia')return;
   const url='https://commons.wikimedia.org/w/api.php?'+new URLSearchParams({
