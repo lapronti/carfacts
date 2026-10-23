@@ -1,7 +1,8 @@
 const {session,configured}=require('./_admin-security');
 const {record}=require('./_vwe-monitor');
+const traffic=require('./_vwe-traffic');
 
-// Only VWE acceptance requests. Never expose or persist OAuth credentials or vehicle data.
+// Isolated VWE acceptance environment; never make RDW requests or store vehicle data.
 let cachedToken=null,tokenExpiry=0,pendingAuth=null;
 const ENDPOINTS=Object.freeze({
  advanced:'/rdw/vehicle/advanced',
@@ -10,65 +11,121 @@ const ENDPOINTS=Object.freeze({
  emission:'/rdw/emission'
 });
 const RETRYABLE=new Set([502,503,504]);
-const WAIT_MS=220;
-const AUTH_TIMEOUT_MS=8000;
-const VEHICLE_TIMEOUT_MS=9000;
-
+const WAIT_MS=220,AUTH_TIMEOUT_MS=8000,VEHICLE_TIMEOUT_MS=9000;
+const elapsed=t=>Date.now()-t;
+const details=metrics=>({attempts:metrics.attempts,tokenRefreshed:metrics.tokenRefreshes>0});
 function explainUpstream(status,stage){
  if(status===400)return 'VWE accepteert de parameters voor dit endpoint niet';
  if(status===401)return stage==='authentication'?'VWE weigert de authenticatiegegevens':'VWE heeft het toegangstoken geweigerd';
- if(status===403)return 'Geen toegang tot dit VWE-product';
- if(status===404)return 'VWE-endpoint of kenteken niet gevonden';
- if(status===429)return 'VWE heeft de aanvraaglimiet bereikt';
- if(status>=500)return 'De VWE-server geeft tijdelijk een fout';
- return stage==='authentication'?'VWE-authenticatie mislukt':'VWE heeft de voertuigaanvraag afgewezen';
+ if(status===403)return 'Geen toestemming voor deze VWE-dataset';
+ if(status===404)return 'VWE kon de gevraagde bron of het kenteken niet vinden; dit bevestigt geen ontbrekende voertuighistorie';
+ if(status===429)return 'De VWE-aanvraaglimiet is bereikt';
+ if(status>=500)return 'VWE geeft tijdelijk een serverfout';
+ return 'VWE heeft de voertuigaanvraag afgewezen';
 }
-function clearTokenIfCurrent(value){
- if(cachedToken===value){cachedToken=null;tokenExpiry=0}
-}
+function clearRejectedToken(token){if(cachedToken===token){cachedToken=null;tokenExpiry=0}}
 async function getAccessToken(base){
  if(cachedToken&&Date.now()<tokenExpiry)return {ok:true,access_token:cachedToken};
  if(pendingAuth)return pendingAuth;
  pendingAuth=(async()=>{
   const form=new URLSearchParams({
-   grant_type:process.env.VWE_GRANT_TYPE,
-   client_id:process.env.VWE_CLIENT_ID,
-   client_secret:process.env.VWE_CLIENT_SECRET,
-   scope:process.env.VWE_SCOPE
+   grant_type:process.env.VWE_GRANT_TYPE,client_id:process.env.VWE_CLIENT_ID,
+   client_secret:process.env.VWE_CLIENT_SECRET,scope:process.env.VWE_SCOPE
   });
   const response=await fetch(new URL('/authenticate/token',base),{
-   method:'POST',
-   headers:{'Content-Type':'application/x-www-form-urlencoded'},
+   method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
    body:form,signal:AbortSignal.timeout(AUTH_TIMEOUT_MS)
   });
-  const token=await response.json().catch(()=>({}));
-  if(!response.ok)return {ok:false,status:response.status,code:'VWE_AUTH_REJECTED'};
-  if(!token.access_token)return {ok:false,status:response.status,code:'VWE_AUTH_TOKEN_MISSING'};
-  cachedToken=token.access_token;
-  const seconds=Number(token.expires_in)||0;
+  const json=await response.json().catch(()=>({}));
+  if(!response.ok){traffic.noteUpstream(response.status);return {ok:false,status:response.status,code:'VWE_AUTH_REJECTED'}}
+  if(!json.access_token)return {ok:false,status:response.status,code:'VWE_AUTH_TOKEN_MISSING'};
+  cachedToken=json.access_token;
+  const seconds=Number(json.expires_in)||0;
   tokenExpiry=Date.now()+Math.max(0,Math.min(seconds,3600)-60)*1000;
   return {ok:true,access_token:cachedToken};
  })();
  try{return await pendingAuth}finally{pendingAuth=null}
 }
 async function refreshRejectedToken(base,rejected){
- // Another request may have already refreshed the shared token.
  if(cachedToken&&cachedToken!==rejected&&Date.now()<tokenExpiry)return {ok:true,access_token:cachedToken};
- clearTokenIfCurrent(rejected);
+ clearRejectedToken(rejected);
  return getAccessToken(base);
 }
-const elapsed=start=>Date.now()-start;
-async function finish(res,code,payload,metrics){
- // Passive, best-effort telemetry; storage failure never masks a vehicle result.
- await record({
-  ...metrics,ok:code===200,status:code,
-  stage:payload.stage||'vehicle',code:payload.code||'',
-  upstreamStatus:payload.upstreamStatus||null,
-  durationMs:elapsed(metrics.startedAt)
- });
- return res.status(code).json(payload);
+function output(http,data,metrics){return {http,data:{...data,diagnostics:{...details(metrics),...data.diagnostics}},metrics}}
+async function retrieveVehicle(plate,dataset,base){
+ const metrics={attempts:0,tokenRefreshes:0};
+ let stage='authentication';
+ try{
+  let token=await getAccessToken(base);
+  if(!token.ok)return output(token.status===429?503:502,{
+   error:token.code==='VWE_AUTH_TOKEN_MISSING'?'VWE heeft geen bruikbaar toegangstoken teruggegeven':explainUpstream(token.status,'authentication'),
+   code:token.code,stage,upstreamStatus:token.status,dataset
+  },metrics);
+  stage='vehicle';
+  const endpoint=new URL(ENDPOINTS[dataset],base);
+  endpoint.searchParams.set('licensePlate',plate);
+  for(let attempt=1;attempt<=2;attempt++){
+   metrics.attempts=attempt;
+   const response=await fetch(endpoint,{
+    method:'GET',headers:{Authorization:'Bearer '+token.access_token,Accept:'application/json'},
+    signal:AbortSignal.timeout(VEHICLE_TIMEOUT_MS)
+   });
+   if(response.status===401&&attempt===1){
+    stage='authentication';metrics.tokenRefreshes++;
+    token=await refreshRejectedToken(base,token.access_token);
+    if(!token.ok)return output(token.status===429?503:502,{
+     error:explainUpstream(token.status,'authentication'),
+     code:token.code,stage,upstreamStatus:token.status,dataset
+    },metrics);
+    stage='vehicle';continue;
+   }
+   if(!response.ok)traffic.noteUpstream(response.status);
+   if(RETRYABLE.has(response.status)&&attempt===1){
+    await new Promise(resolve=>setTimeout(resolve,WAIT_MS));
+    continue;
+   }
+   if(response.status===401)clearRejectedToken(token.access_token);
+   if(!response.ok){
+    const http=response.status===403?403:response.status===429?503:response.status===404?404:502;
+    return output(http,{
+     error:explainUpstream(response.status,'vehicle'),code:'VWE_UPSTREAM_'+response.status,
+     stage:'vehicle',upstreamStatus:response.status,dataset
+    },metrics);
+   }
+   const vehicle=await response.json().catch(()=>null);
+   if(vehicle===null)return output(502,{
+    error:'VWE heeft geen geldig JSON-antwoord teruggegeven',code:'VWE_INVALID_RESPONSE',
+    stage:'vehicle',dataset
+   },metrics);
+   const empty=Array.isArray(vehicle)?vehicle.length===0:
+    vehicle&&typeof vehicle==='object'?Object.keys(vehicle).length===0:false;
+   return output(200,{
+    licensePlate:plate,source:'VWE acceptatie',dataset,vehicle,
+    dataStatus:empty?'empty':'received'
+   },metrics);
+  }
+ }catch(err){
+  const timedOut=err?.name==='TimeoutError'||err?.name==='AbortError';
+  console.warn('VWE preview error',{stage,category:timedOut?'TIMEOUT':'NETWORK_OR_PARSE'});
+  return output(timedOut?504:502,{
+   error:timedOut?'VWE reageert niet op tijd':'VWE kan momenteel niet worden bereikt',
+   code:timedOut?'VWE_TIMEOUT':'VWE_NETWORK_ERROR',stage,dataset
+  },metrics);
+ }
+ return output(502,{error:'VWE-aanvraag niet voltooid',code:'VWE_UNEXPECTED_STATE',stage:'vehicle',dataset},metrics);
 }
-
+async function finish(res,http,data,metric,startedAt,dataset,coalesced=false){
+ const diagnostics={...(data.diagnostics||{}),coalesced,durationMs:elapsed(startedAt)};
+ const body={...data,diagnostics};
+ // A shared response is counted as a user request, but not as a second upstream call.
+ await record({
+  dataset,ok:http===200,status:http,stage:body.stage||'vehicle',code:body.code||'',
+  upstreamStatus:body.upstreamStatus??null,durationMs:diagnostics.durationMs,
+  attempts:coalesced?0:metric.attempts||0,
+  tokenRefreshes:coalesced?0:metric.tokenRefreshes||0,coalesced
+ });
+ return res.status(http).json(body);
+}
 module.exports=async(req,res)=>{
  res.setHeader('Cache-Control','no-store');
  res.setHeader('Content-Type','application/json');
@@ -80,77 +137,25 @@ module.exports=async(req,res)=>{
  if(!/^[A-Z0-9]{4,8}$/.test(plate))return res.status(400).json({error:'Ongeldig kenteken',code:'INVALID_PLATE',stage:'validation'});
  const dataset=String(req.query.dataset||'advanced');
  if(!Object.prototype.hasOwnProperty.call(ENDPOINTS,dataset))return res.status(400).json({error:'Onbekende VWE-testfunctie',code:'UNKNOWN_DATASET',stage:'validation'});
- const metrics={dataset,startedAt:Date.now(),attempts:0,tokenRefreshes:0};
+ const startedAt=Date.now(),metrics={attempts:0,tokenRefreshes:0};
  const keys=['VWE_CLIENT_ID','VWE_CLIENT_SECRET','VWE_SCOPE','VWE_GRANT_TYPE','VWE_BASE_URL'];
- if(keys.some(key=>!process.env[key]))return finish(res,503,{error:'VWE-configuratie ontbreekt',code:'VWE_NOT_CONFIGURED',stage:'configuration'},metrics);
- let stage='configuration';
+ if(keys.some(key=>!process.env[key]))return finish(res,503,{
+  error:'VWE-configuratie ontbreekt',code:'VWE_NOT_CONFIGURED',stage:'configuration'
+ },metrics,startedAt,dataset);
+ let base;
  try{
-  const base=new URL(process.env.VWE_BASE_URL);
-  if(base.origin!=='https://acceptatie-interdata-rest.vwe.nl')
-   return finish(res,400,{error:'Ongeldige VWE-omgeving',code:'VWE_INVALID_ENV',stage:'configuration'},metrics);
-  stage='authentication';
-  let token=await getAccessToken(base);
-  if(!token.ok)return finish(res,token.status===429?503:502,{
-   error:token.code==='VWE_AUTH_TOKEN_MISSING'?'VWE heeft geen bruikbaar toegangstoken teruggegeven':explainUpstream(token.status,'authentication'),
-   code:token.code,stage,upstreamStatus:token.status
-  },metrics);
-  stage='vehicle';
-  const endpoint=new URL(ENDPOINTS[dataset],base);
-  endpoint.searchParams.set('licensePlate',plate);
-  // Max 2 vehicle GETs: one original + one retry, regardless of the trigger.
-  // Never retry 400/403/404/429 or uncertain network failures (risk of extra charges).
-  for(let attempt=1;attempt<=2;attempt++){
-   metrics.attempts=attempt;
-   const response=await fetch(endpoint,{
-    method:'GET',
-    headers:{Authorization:'Bearer '+token.access_token,Accept:'application/json'},
-    signal:AbortSignal.timeout(VEHICLE_TIMEOUT_MS)
-   });
-   if(response.status===401&&attempt===1){
-    stage='authentication';
-    token=await refreshRejectedToken(base,token.access_token);
-    metrics.tokenRefreshes++;
-    if(!token.ok)return finish(res,token.status===429?503:502,{
-     error:explainUpstream(token.status,'authentication'),code:token.code,stage,
-     upstreamStatus:token.status,dataset
-    },metrics);
-    stage='vehicle';
-    continue;
-   }
-   if(RETRYABLE.has(response.status)&&attempt===1){
-    await new Promise(resolve=>setTimeout(resolve,WAIT_MS));
-    continue;
-   }
-   if(response.status===401)clearTokenIfCurrent(token.access_token);
-   if(!response.ok){
-    const upstreamStatus=response.status;
-    return finish(res,upstreamStatus===403?403:upstreamStatus===429?503:502,{
-     error:explainUpstream(upstreamStatus,'vehicle'),
-     code:'VWE_UPSTREAM_'+upstreamStatus,
-     stage:'vehicle',upstreamStatus,dataset,
-     diagnostics:{attempts:metrics.attempts,tokenRefreshed:metrics.tokenRefreshes>0}
-    },metrics);
-   }
-   const data=await response.json().catch(()=>null);
-   if(data===null)return finish(res,502,{
-    error:'VWE heeft geen geldig JSON-antwoord teruggegeven',
-    code:'VWE_INVALID_RESPONSE',stage:'vehicle',dataset,
-    diagnostics:{attempts:metrics.attempts,tokenRefreshed:metrics.tokenRefreshes>0}
-   },metrics);
-   return finish(res,200,{
-    licensePlate:plate,source:'VWE acceptatie',dataset,vehicle:data,
-    diagnostics:{attempts:metrics.attempts,tokenRefreshed:metrics.tokenRefreshes>0,durationMs:elapsed(metrics.startedAt)}
-   },metrics);
-  }
- }catch(err){
-  const timedOut=err?.name==='TimeoutError'||err?.name==='AbortError';
-  // Never log tokens, passwords, plates, detailed upstream URLs or response bodies.
-  console.warn('VWE preview error',{stage,category:timedOut?'TIMEOUT':'NETWORK_OR_PARSE'});
-  return finish(res,timedOut?504:502,{
-   error:timedOut?'VWE reageert niet op tijd':'VWE kan momenteel niet worden bereikt',
-   code:timedOut?'VWE_TIMEOUT':'VWE_NETWORK_ERROR',stage,dataset,
-   diagnostics:{attempts:metrics.attempts,tokenRefreshed:metrics.tokenRefreshes>0}
-  },metrics);
+  base=new URL(process.env.VWE_BASE_URL);
+  if(base.origin!=='https://acceptatie-interdata-rest.vwe.nl')return finish(res,400,{
+   error:'Ongeldige VWE-omgeving',code:'VWE_INVALID_ENV',stage:'configuration'
+  },metrics,startedAt,dataset);
+ }catch{return finish(res,400,{error:'Ongeldige VWE-omgeving',code:'VWE_INVALID_ENV',stage:'configuration'},metrics,startedAt,dataset)}
+ const scheduled=traffic.submit(plate,dataset,()=>retrieveVehicle(plate,dataset,base));
+ try{
+  const result=await scheduled.promise;
+  return finish(res,result.http,result.data,result.metrics||metrics,startedAt,dataset,scheduled.coalesced);
+ }catch{
+  return finish(res,502,{
+   error:'Voertuigaanvraag tijdelijk niet beschikbaar',code:'VWE_INTERNAL_ERROR',stage:'traffic'
+  },metrics,startedAt,dataset,scheduled.coalesced);
  }
- return finish(res,502,{error:'VWE-aanvraag niet voltooid',code:'VWE_UNEXPECTED_STATE',stage:'vehicle',dataset},metrics);
 };
