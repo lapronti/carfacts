@@ -1,5 +1,5 @@
 /* Carfacts · resilient, model-matched vehicle photography.
-   Wikimedia Commons images are credited with links to source and licence;
+   Wikimedia Commons images are screened for normal production cars (not race, tuned, sponsor-wrapped or concept vehicles) and credited with links to source and licence;
    Wikipedia page image is used only as a clearly labelled last-resort model reference.
    No plate, VIN, personal data or vehicle API credential is sent to Wikimedia. */
 (function(){
@@ -7,11 +7,39 @@
  const $=id=>document.getElementById(id);
  const TTL=30*60*1000,MAX_RESULTS=16,SEARCH_TIMEOUT=5500;
  const cache=new Map();
+ const dismissed=new Set();
  let sequence=0;
  const controllers=new Set();
  let current=[],position=0,currentBrand='',currentModel='',lastSource='',fallbackAttempted=false;
- const badWords=['people','person','crowd','driver','woman','man standing','man sitting','family portrait','police','ambulance','fire engine','fire truck','emergency','taxi','rally','race car','racing','drifting','crash','wreck','accident','accidental','burnt','driving','moving car','highway','motorway','traffic','in motion','rolling shot','test drive','road test','drift','interior','dashboard','engine bay','engine compartment','toy car','diecast','die cast','scale model','miniature','lego','video','screenshot','game screenshot','car crash','motor show','motorshow','auto show','car show','salon de'];
- const goodWords=[['studio',45],['showroom',45],['press',36],['official',28],['catalog',28],['brochure',27],['stationary',23],['parked',18],['parking',12],['display',16],['exterior',13],['front',10],['three quarter',10],['side view',9],['front view',10],['museum',12]];
+ // Negative evidence comes from filename AND Wikimedia Commons category names.
+ // Prefer no photo over a rally car, exhibition concept, heavily modified car or sponsorship livery.
+ const badWords=[
+  'people','person','crowd','driver','woman','man standing','man sitting','family portrait',
+  'police','ambulance','fire engine','fire truck','emergency','taxi','military',
+  'rally','rallye','wrc','wrx rally','racing','racecar','race car','race cars','racing car','race track',
+  'motorsport','motor sport','motorsports','circuit racing','touring car racing',
+  'raceway','trackday','track day','rallycross','autocross','hillclimb','hill climb',
+  'drag racing','drifting','drift','formula racing','gt3','gt4','tcr','btcc','dtm','fia',
+  'red bull','redbull','castrol rally','monster energy','motul racing','sponsored',
+  'sponsor','sponsors','sponsorship','race livery','livery','liveries','vinyl wrap',
+  'wrapped car','car wrap','decals','sticker bomb','stickers','advertising vehicle',
+  'tuned','tuning','customized','customised','custom build','custom body',
+  'bodykit','body kit','widebody','wide body','lowered car','stanced','modified',
+  'concept car','concept vehicle','prototype','showcar','show car','exhibition prototype',
+  'motorshow','motor show','auto show','car show','car exhibition','car expo',
+  'geneva motor show','frankfurt motor show','international motor show','salon de',
+  'crash','wreck','accident','accidental','burnt','driving','moving car','highway',
+  'motorway','traffic','in motion','rolling shot','test drive','road test',
+  'interior','dashboard','engine bay','engine compartment','toy car','diecast',
+  'die cast','scale model','miniature','lego','video','screenshot','game screenshot'
+ ];
+ // Composite category names often contain WRC / race / motorsport even if filename is generic.
+ const badPatterns=[
+  /\b(?:wrc|wtcc|wtcr|btcc|dtm|tcr|gt3|gt4|fia|rally|rallye|racing|racecar|motorsport|hillclimb)\b/,
+  /\b(?:red\s?bull|monster\s?energy|livery|decals|sponsor(?:ed|ship)?|motorshow|tuning|bodykit|widebody)\b/,
+  /\b(?:r\s+wrc|rally\s+car|race\s+car|race\s+track|racing\s+team)\b/
+ ];
+ const goodWords=[['studio',48],['showroom',38],['press',42],['official',38],['catalog',37],['brochure',37],['stock',44],['production',30],['standard',42],['original',22],['unmodified',42],['stationary',32],['parked',28],['parking',17],['exterior',25],['front',12],['three quarter',16],['side view',14],['front view',15],['dealership',26],['manufacturer',36]];
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
   .replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
  const brandAliases={
@@ -49,6 +77,11 @@
  const isImage=url=>{
   try{return new URL(url).protocol==='https:'&&new URL(url).hostname==='upload.wikimedia.org'}catch{return false}
  };
+ const isUnsuitable=text=>badWords.some(word=>allWords(text,word))||badPatterns.some(pattern=>pattern.test(text));
+ const pageContext=page=>{
+  const categories=Array.isArray(page?.categories)?page.categories.map(cat=>String(cat?.title||'')).join(' '):'';
+  return normalize(String(page?.title||'')+' '+categories);
+ };
  const fileUrl=title=>'https://commons.wikimedia.org/wiki/'+encodeURIComponent(String(title||'').replace(/ /g,'_'));
  function candidate(page,make,model){
   const image=page.imageinfo?.[0]||{};
@@ -59,7 +92,7 @@
   if(!base||!allWords(text,base))return null;
   const alternatives=aliases(make).map(normalize);
   if(!alternatives.some(alias=>allWords(text,alias)))return null;
-  if(badWords.some(bad=>allWords(text,bad)))return null;
+  if(isUnsuitable(pageContext(page)))return null;
   if(image.width&&image.height&&image.width<image.height*.77)return null;
   let score=65;
   for(const [word,points] of goodWords)if(allWords(text,word))score+=points;
@@ -74,7 +107,7 @@
  }
  const state=()=>({
   figure:$('vehicle-photo'),img:$('vehicle-photo-img'),caption:$('vehicle-photo-caption'),
-  placeholder:$('vehicle-photo-placeholder'),next:$('vehicle-photo-next'),credit:$('vehicle-photo-credit')
+  placeholder:$('vehicle-photo-placeholder'),next:$('vehicle-photo-next'),report:$('vehicle-photo-report'),credit:$('vehicle-photo-credit')
  });
  function reset(){
   sequence++;
@@ -86,6 +119,8 @@
   if(p.figure)p.figure.hidden=true;
   if(p.placeholder)p.placeholder.hidden=false;
   if(p.next)p.next.hidden=true;
+  if(p.report)p.report.hidden=true;
+  dismissed.clear();
   if(p.credit){p.credit.hidden=true;p.credit.removeAttribute('href')}
  }
  async function requestJSON(url){
@@ -99,7 +134,7 @@
  }
  const searchUrl=query=>'https://commons.wikimedia.org/w/api.php?'+new URLSearchParams({
   action:'query',generator:'search',gsrsearch:query,gsrnamespace:'6',gsrlimit:'45',
-  prop:'imageinfo',iiprop:'url|mime|size',iiurlwidth:'640',format:'json',origin:'*'
+  prop:'imageinfo|categories',cllimit:'max',iiprop:'url|mime|size',iiurlwidth:'640',format:'json',origin:'*'
  }).toString();
  function queriesFor(make,model){
   const cleaned=stripDescriptors(model),base=coreOf(cleaned);
@@ -156,7 +191,7 @@
    if(!isImage(imageUrl)||!/\.(?:jpe?g|png|webp)$/i.test(page.pageimage))return [];
    const imgTitle='File:'+page.pageimage;
    const bad=normalize(page.pageimage);
-   if(badWords.some(x=>allWords(bad,x)))return [];
+   if(isUnsuitable(bad))return [];
    return [{title:imgTitle,url:imageUrl,pageUrl:fileUrl(imgTitle),score:15,kind:'wikipedia'}];
   }catch{return []}
  }
@@ -186,7 +221,7 @@
  function showAt(start,requestId){
   const p=state();if(!p.img||!p.caption||!p.figure||requestId!==sequence)return;
   if(start>=current.length){
-   if(!fallbackAttempted){
+   if(!fallbackAttempted&&!dismissed.size){
     fallbackAttempted=true;
     if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Alternatieve fotobron controleren…'}
     wikipediaFallback(currentBrand,currentModel,requestId).then(more=>{
@@ -197,11 +232,13 @@
     }).catch(()=>{if(requestId===sequence)showAt(start,requestId)});
     return;
    }
-   p.img.hidden=true;if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Geen geschikte foto geladen.'}
+   p.img.hidden=true;if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Geen geschikte standaardfoto beschikbaar.'}
    p.caption.textContent='Voor dit model kon geen passende afbeelding worden geladen. Er wordt geen willekeurig voertuig getoond.';
    if(p.next)p.next.hidden=true;if(p.credit)p.credit.hidden=true;
    return;
   }
+  while(start<current.length&&dismissed.has(current[start].title))start++;
+  if(start>=current.length){if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Geen andere passende standaardfoto beschikbaar.'}p.img.hidden=true;if(p.next)p.next.hidden=true;if(p.report)p.report.hidden=true;if(p.credit)p.credit.hidden=true;return}
   position=start;
   const photo=current[position];
   p.img.hidden=true;if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Foto laden…'}
@@ -214,7 +251,8 @@
    p.caption.textContent='Voorbeeldfoto '+(position+1)+'/'+current.length+
     ' · '+currentBrand+' '+currentModel+
     ' · uitvoering, bouwjaar en kleur kunnen afwijken.';
-   if(p.next)p.next.hidden=current.length<2;
+   if(p.next)p.next.hidden=current.filter(x=>!dismissed.has(x.title)).length<2;
+   if(p.report)p.report.hidden=false;
    lastSource=photo.title;
    sourceView(photo,requestId);
   };
@@ -234,7 +272,18 @@
   if(p.figure)p.figure.hidden=false;
   if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Modelfoto zoeken…'}
   if(p.caption)p.caption.textContent='We zoeken passende voertuigfoto’s zonder verkeers- of racescènes.';
-  if(p.next)p.next.onclick=()=>{if(current.length>1)showAt((position+1)%current.length,sequence)};
+  if(p.next)p.next.onclick=()=>{const available=current.filter(x=>!dismissed.has(x.title));if(available.length>1){const next=available.findIndex(x=>x.title===current[position]?.title);const nextPhoto=available[(next+1)%available.length];showAt(current.findIndex(x=>x.title===nextPhoto.title),sequence)}};
+  if(p.report)p.report.onclick=()=>{
+   const rejected=current[position];if(!rejected)return;
+   dismissed.add(rejected.title);
+   const next=current.findIndex(x=>!dismissed.has(x.title));
+   if(next>=0)showAt(next,sequence);
+   else{
+    p.img.hidden=true;if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Geen andere passende standaardfoto beschikbaar.'}
+    if(p.caption)p.caption.textContent='De vorige foto is verborgen. Er is geen andere geschikte modelfoto beschikbaar.';
+    if(p.next)p.next.hidden=true;if(p.report)p.report.hidden=true;if(p.credit)p.credit.hidden=true;
+   }
+  };
   const cacheKey=normalize(brand)+'|'+normalize(cleanModel);
   const cacheHit=cache.get(cacheKey);
   try{
