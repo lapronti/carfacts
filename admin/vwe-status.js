@@ -12,9 +12,10 @@
  const fmt=value=>value===null||value===undefined?'—':Number(value).toLocaleString('nl-NL');
  const statusText=e=>{
   if(!e)return 'Nog geen metingen';
-  if(e.outcome==='success')return 'Laatste aanvraag succesvol';
+  if(e.outcome==='success')return e.dataStatus==='empty'?'VWE antwoord ontvangen, zonder bruikbare gegevens':'Laatste aanvraag succesvol';
   if(e.stage==='authentication')return 'Authenticatie bij VWE mislukt';
   if(e.stage==='configuration')return 'Configuratiefout';
+  if(e.stage==='traffic')return 'Aanvragen tijdelijk beperkt';
   if(e.code==='VWE_TIMEOUT')return 'Time-out';
   return 'Laatste aanvraag mislukt';
  };
@@ -23,7 +24,9 @@
   const upstream=e.upstreamStatus?' · VWE HTTP '+e.upstreamStatus:'';
   const attempts=e.attempts>1?' · '+e.attempts+' pogingen':'';
   const renewed=e.tokenRefreshes>0?' · token vernieuwd':'';
-  return 'Carfacts HTTP '+(e.status??'—')+upstream+' · '+(e.code||'Geen foutcode')+attempts+renewed;
+  const saved=e.coalesced?' · aanvraag gedeeld (extra VWE-call voorkomen)':'';
+  const empty=e.dataStatus==='empty'?' · leeg antwoord (geen bewijs van ontbrekende historie)':'';
+  return 'Carfacts HTTP '+(e.status??'—')+upstream+' · '+(e.code||'Geen foutcode')+attempts+renewed+saved+empty;
  };
  function cardFor(item){
   const last=item.lastEvent;
@@ -41,6 +44,9 @@
   add('Gemiddelde (steekproef)',item.avgDurationMs===null?'—':fmt(item.avgDurationMs)+' ms');
   add('Successen / fouten',fmt(item.success)+' / '+fmt(item.errors));
   add('Herhaalpogingen / tokenvernieuwingen',fmt(item.retried)+' / '+fmt(item.refreshed));
+  add('Gedeelde dubbele aanvragen',fmt(item.coalesced||0));
+  add('Lege VWE-antwoorden',fmt(item.empty||0));
+  add('Totaal VWE-voertuigpogingen',fmt(item.upstreamAttempts||0));
   card.append(metrics);
   card.append(make('p','vwe-card-detail',detailText(last)));
   return card;
@@ -55,7 +61,7 @@
   if(!(data.recent||[]).length){list.append(make('p','vwe-no-data','Nog geen gebeurtenissen opgeslagen.'));return}
   const table=make('table','vwe-status-table');
   const head=make('thead'),tr=make('tr');
-  ['Moment','Dataset','Resultaat','Fase','Carfacts HTTP','VWE HTTP','Duur','Pogingen'].forEach(name=>tr.append(make('th','',name)));
+  ['Moment','Dataset','Resultaat','Fase','Carfacts HTTP','VWE HTTP','Duur','Pogingen','Gegevens','Gedeeld'].forEach(name=>tr.append(make('th','',name)));
   head.append(tr);table.append(head);
   const body=make('tbody');
   for(const e of data.recent){
@@ -64,7 +70,7 @@
     asDate(e.at),names[e.dataset]||e.dataset,e.outcome==='success'?'Succes':'Fout',
     e.stage||'—',e.status??'—',e.upstreamStatus??'—',
     e.durationMs===null||e.durationMs===undefined?'—':e.durationMs+' ms',
-    e.attempts??'—'
+    e.attempts??'—',e.dataStatus==='empty'?'Leeg':e.dataStatus==='received'?'Ontvangen':'—',e.coalesced?'Ja':'Nee'
    ].forEach(value=>row.append(make('td','',value)));
    body.append(row);
   }
