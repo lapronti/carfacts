@@ -122,7 +122,8 @@ async function finish(res,http,data,metric,startedAt,dataset,coalesced=false){
   dataset,ok:http===200,status:http,stage:body.stage||'vehicle',code:body.code||'',
   upstreamStatus:body.upstreamStatus??null,durationMs:diagnostics.durationMs,
   attempts:coalesced?0:metric.attempts||0,
-  tokenRefreshes:coalesced?0:metric.tokenRefreshes||0,coalesced
+  tokenRefreshes:coalesced?0:metric.tokenRefreshes||0,coalesced,
+  dataStatus:http===200?body.dataStatus||null:null
  });
  return res.status(http).json(body);
 }
