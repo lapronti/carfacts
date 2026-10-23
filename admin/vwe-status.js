@@ -39,7 +39,7 @@
   add('Laatste fout',asDate(item.lastFailure?.at));
   add('Reactietijd (laatste)',last?.durationMs===null||last?.durationMs===undefined?'—':fmt(last.durationMs)+' ms');
   add('Gemiddelde (steekproef)',item.avgDurationMs===null?'—':fmt(item.avgDurationMs)+' ms');
-  add('Sucessen / fouten',fmt(item.success)+' / '+fmt(item.errors));
+  add('Successen / fouten',fmt(item.success)+' / '+fmt(item.errors));
   add('Herhaalpogingen / tokenvernieuwingen',fmt(item.retried)+' / '+fmt(item.refreshed));
   card.append(metrics);
   card.append(make('p','vwe-card-detail',detailText(last)));
