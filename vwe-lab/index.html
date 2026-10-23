@@ -51,7 +51,9 @@ function statusDetail(box,text){
 }
 function describeFailure(result,httpStatus){
  const upstream=result.upstreamStatus?'; VWE HTTP '+result.upstreamStatus:'';
- const suffix=' (Carfacts HTTP '+httpStatus+upstream+')';
+ const tries=result.diagnostics?.attempts>1?'; '+result.diagnostics.attempts+' pogingen':'';
+ const refreshed=result.diagnostics?.tokenRefreshed?'; token vernieuwd':'';
+ const suffix=' (Carfacts HTTP '+httpStatus+upstream+tries+refreshed+')';
  if(result.stage==='authentication')return {
   title:'Authenticatie bij VWE mislukt',
   detail:(result.error||'VWE heeft geen bruikbaar toegangstoken verstrekt')+suffix+'. Controleer de VWE-acceptatieconfiguratie en toegangsrechten.'
@@ -85,7 +87,7 @@ async function runDataset(dataset,plate){
  box.querySelector('.result').replaceChildren();
  statusDetail(box,'');
  const abort=new AbortController();
- const timeout=setTimeout(()=>abort.abort(),18000);
+ const timeout=setTimeout(()=>abort.abort(),42000);
  try{
   const response=await fetch('/api/vwe-vehicle?dataset='+dataset+'&licensePlate='+encodeURIComponent(plate),{
    credentials:'same-origin',headers:{Accept:'application/json'},signal:abort.signal
@@ -98,12 +100,12 @@ async function runDataset(dataset,plate){
    return {ok:false,dataset,status:response.status,stage:payload.stage||'',code:payload.code||''};
   }
   show(dataset,payload.vehicle,box);
-  box.dataset.state='success';status.textContent='● VWE-antwoord ontvangen';
+  box.dataset.state='success';status.textContent='● VWE-antwoord ontvangen'+(payload.diagnostics?.tokenRefreshed?' · token vernieuwd':'')+(payload.diagnostics?.attempts>1?' · na '+payload.diagnostics.attempts+' pogingen':'');
   return {ok:true,dataset};
  }catch(error){
   const timedOut=error?.name==='AbortError';
   box.dataset.state='error';status.textContent=timedOut?'Aanvraag duurt te lang':'Verbinding met de test-API mislukt';
-  statusDetail(box,timedOut?'Na 18 seconden zonder antwoord gestopt. Er zijn geen gegevens bevestigd.':'Controleer de internetverbinding en de beschikbaarheid van test.car-facts.nl.');
+  statusDetail(box,timedOut?'Na 42 seconden zonder antwoord gestopt. Er zijn geen gegevens bevestigd.':'Controleer de internetverbinding en de beschikbaarheid van test.car-facts.nl.');
   return {ok:false,dataset,status:timedOut?504:0,stage:'network'};
  }finally{clearTimeout(timeout)}
 }
