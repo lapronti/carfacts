@@ -97,8 +97,11 @@ async function retrieveVehicle(plate,dataset,base){
     error:'VWE heeft geen geldig JSON-antwoord teruggegeven',code:'VWE_INVALID_RESPONSE',
     stage:'vehicle',dataset
    },metrics);
-   const empty=Array.isArray(vehicle)?vehicle.length===0:
-    vehicle&&typeof vehicle==='object'?Object.keys(vehicle).length===0:false;
+   const empty=dataset==='inspections'
+    ?!(Array.isArray(vehicle)?vehicle.some(Boolean):
+       ['inspections','data','results','items'].some(key=>Array.isArray(vehicle?.[key])&&vehicle[key].length>0))
+    :Array.isArray(vehicle)?vehicle.length===0:
+     vehicle&&typeof vehicle==='object'?Object.keys(vehicle).length===0:false;
    return output(200,{
     licensePlate:plate,source:'VWE acceptatie',dataset,vehicle,
     dataStatus:empty?'empty':'received'
