@@ -92,21 +92,46 @@
   {start:2018,end:2020,category:'Volkswagen Polo VI',family:6,phase:'pre',label:'Polo VI (2017–2021)'},
   {start:2022,end:2027,category:'Volkswagen Polo VI (2021)',family:6,phase:'facelift',label:'Polo VI facelift (vanaf 2021)'}
  ]);
+
+ // Caddy chronology: Caddy III 2003–2015, IV 2015–2020, V from late 2020.
+ // Admission dates in the 2015 and late-2020 transitions cannot reliably prove a generation.
+ const CADDY_GENERATIONS=Object.freeze([
+  {start:2004,end:2009,category:'Volkswagen Caddy Typ 2K',family:3,phase:'early',label:'Caddy III (2003–2010)'},
+  {start:2011,end:2014,category:'Volkswagen Caddy Typ 2K (2010)',family:3,phase:'facelift',label:'Caddy III facelift (2010–2015)'},
+  {start:2016,end:2019,category:'Volkswagen Caddy Typ 2K (2015)',family:4,phase:'all',label:'Caddy IV (2015–2020)'},
+  {start:2021,end:2026,category:'Volkswagen Caddy Typ SB',family:5,phase:'all',label:'Caddy V (vanaf 2020)'}
+ ]);
  const vwBrand=value=>['volkswagen','vw'].includes(normalize(value));
  function generationPlan(make,model,firstAdmissionDate){
-  if(!vwBrand(make)||coreOf(model)!=='polo')return null;
+  const modelName=coreOf(model);
+  if(!vwBrand(make)||!['polo','caddy'].includes(modelName))return null;
   const admitted=String(firstAdmissionDate||'').trim();
-  const year=/^\d{4}(?:-|$)/.test(admitted)?Number(admitted.slice(0,4)):
-   /^\d{8}$/.test(admitted)?Number(admitted.slice(0,4)):null;
-  const generation=POLO_GENERATIONS.find(entry=>year>=entry.start&&year<=entry.end);
-  if(generation)return {...generation,year};
-  return {uncertain:true,year,
-   explanation:year===2009||year===2014||year===2017||year===2021
-    ?'De datum eerste toelating valt in een overgangsjaar van de Polo. De precieze generatie is niet bevestigd.'
-    :'De datum eerste toelating ontbreekt of valt buiten de gecontroleerde Polo-generaties.'};
+  const matched=admitted.match(/^(\d{4})(?:[-/]?(\d{2}))?/);
+  const year=matched?Number(matched[1]):null;
+  const month=matched&&matched[2]?Number(matched[2]):null;
+  const generations=modelName==='polo'?POLO_GENERATIONS:CADDY_GENERATIONS;
+  let generation=year!==null&&year>=1990&&year<=2030
+   ?generations.find(entry=>year>=entry.start&&year<=entry.end):null;
+  // The outgoing Caddy IV was still produced before the late-2020 launch of V.
+  // An early-2020 first admission therefore supports the old 2K model.
+  if(modelName==='caddy'&&year===2020&&month!==null&&month>=1&&month<=6)
+   generation=CADDY_GENERATIONS.find(entry=>entry.family===4);
+  if(generation)return {...generation,year,month,model:modelName};
+  const uncertainYear=modelName==='caddy'?[2003,2010,2015,2020].includes(year):
+   [2009,2014,2017,2021].includes(year);
+  return {uncertain:true,year,model:modelName,
+   explanation:uncertainYear
+    ?'De datum eerste toelating valt in een overgangsperiode van de '+(modelName==='polo'?'Polo':'Caddy')+'. De precieze generatie is niet bevestigd.'
+    :'De datum eerste toelating ontbreekt of valt buiten de gecontroleerde '+(modelName==='polo'?'Polo':'Caddy')+'-generaties.'};
  }
- function generationCode(context){
+ function generationCode(context,model){
   const text=normalize(context);
+  if(model==='caddy'){
+   if(/\bcaddy\s+(?:typ\s+sb|(?:mk\s*)?v|5)\b/.test(text))return 5;
+   if(/\bcaddy\s+(?:typ\s+2k\s+2015|(?:mk\s*)?iv|4)\b/.test(text))return 4;
+   if(/\bcaddy\s+(?:typ\s+2k\s+2010|(?:mk\s*)?iii|3)\b/.test(text))return 3;
+   return null;
+  }
   if(/\bpolo\s+(?:mk\s*)?(?:vi|6)\b/.test(text)||/\bpolo\s+(?:aw|ae)\b/.test(text))return 6;
   if(/\bpolo\s+(?:mk\s*)?(?:v|5)\b/.test(text)||/\bpolo\s+(?:6r|6c)\b/.test(text))return 5;
   if(/\bpolo\s+(?:mk\s*)?(?:iv|4)\b/.test(text)||/\bpolo\s+(?:9n3?|9n)\b/.test(text))return 4;
@@ -117,11 +142,11 @@
   if(!isImage(url)||!['image/jpeg','image/png','image/webp'].includes(info.mime))return null;
   const filename=String(page.title||'').replace(/^File:/i,'').replace(/\.[^.]+$/,'');
   const title=normalize(filename),full=pageContext(page);
-  if(!contains(title,'polo')||isUnsuitable(full))return null;
+  if(!contains(title,coreOf(model))||isUnsuitable(full))return null;
   if(info.width&&info.height&&info.width<info.height*.77)return null;
   const familyEvidence=[
-   generationCode(title),
-   ...(page.categories||[]).map(cat=>generationCode(String(cat.title||'')))
+   generationCode(title,plan.model),
+   ...(page.categories||[]).map(cat=>generationCode(String(cat.title||''),plan.model))
   ].filter(Boolean);
   if(familyEvidence.some(family=>family!==plan.family))return null;
   const categoryMatches=(page.categories||[]).some(cat=>
@@ -166,8 +191,70 @@
    }
   ])
  });
+
+ // Manually reviewed Wikimedia Commons images of normal factory Caddy bodies.
+ // The Caddy IV pictures apply to early-2020 first admission such as the
+ // registered 2020 model; never label them as a Caddy V.
+ const VERIFIED_CADDY_PHOTOS=Object.freeze({
+  'Volkswagen Caddy Typ 2K':Object.freeze([
+   {
+    title:'File:VW Caddy.jpg',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/VW_Caddy.jpg/960px-VW_Caddy.jpg',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:VW_Caddy.jpg',
+    artist:'Thomas doerfer',license:'CC BY-SA 3.0',score:220,kind:'curated'
+   },
+   {
+    title:'File:VW Caddy front 20071026.jpg',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/VW_Caddy_front_20071026.jpg/960px-VW_Caddy_front_20071026.jpg',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:VW_Caddy_front_20071026.jpg',
+    artist:'Rudolf Stricker',license:'CC BY-SA 3.0',score:180,kind:'curated'
+   }
+  ]),
+  'Volkswagen Caddy Typ 2K (2010)':Object.freeze([
+   {
+    title:'File:VW Caddy Kasten 1.6 TDI Facelift.JPG',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/VW_Caddy_Kasten_1.6_TDI_Facelift.JPG/960px-VW_Caddy_Kasten_1.6_TDI_Facelift.JPG',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:VW_Caddy_Kasten_1.6_TDI_Facelift.JPG',
+    artist:'Thomas doerfer',license:'CC BY 3.0',score:220,kind:'curated'
+   }
+  ]),
+  'Volkswagen Caddy Typ 2K (2015)':Object.freeze([
+   {
+    title:'File:2018 Volkswagen Caddy C20 Highline TDi 2.0 Front.jpg',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/2018_Volkswagen_Caddy_C20_Highline_TDi_2.0_Front.jpg/960px-2018_Volkswagen_Caddy_C20_Highline_TDi_2.0_Front.jpg',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:2018_Volkswagen_Caddy_C20_Highline_TDi_2.0_Front.jpg',
+    artist:'Vauxford',license:'CC BY-SA 4.0',score:260,kind:'curated'
+   },
+   {
+    title:'File:Volkswagen Caddy Maxi postfacelift in Deidesheim.jpg',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Volkswagen_Caddy_Maxi_postfacelift_in_Deidesheim.jpg/960px-Volkswagen_Caddy_Maxi_postfacelift_in_Deidesheim.jpg',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:Volkswagen_Caddy_Maxi_postfacelift_in_Deidesheim.jpg',
+    artist:'Charles01',license:'CC BY-SA 4.0',score:230,kind:'curated'
+   },
+   {
+    title:'File:2018 Volkswagen Caddy C20 Highline TDi 2.0 Rear.jpg',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/2018_Volkswagen_Caddy_C20_Highline_TDi_2.0_Rear.jpg/960px-2018_Volkswagen_Caddy_C20_Highline_TDi_2.0_Rear.jpg',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:2018_Volkswagen_Caddy_C20_Highline_TDi_2.0_Rear.jpg',
+    artist:'Vauxford',license:'CC BY-SA 4.0',score:150,kind:'curated'
+   }
+  ]),
+  'Volkswagen Caddy Typ SB':Object.freeze([
+   {
+    title:'File:2021 Volkswagen Caddy C20 Commerce Pro TD 2.0 Front.jpg',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/2021_Volkswagen_Caddy_C20_Commerce_Pro_TD_2.0_Front.jpg/960px-2021_Volkswagen_Caddy_C20_Commerce_Pro_TD_2.0_Front.jpg',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:2021_Volkswagen_Caddy_C20_Commerce_Pro_TD_2.0_Front.jpg',
+    artist:'Vauxford',license:'CC BY-SA 4.0',score:250,kind:'curated'
+   },
+   {
+    title:'File:2021 Volkswagen Caddy C20 Commerce Pro TD 2.0 Rear.jpg',
+    url:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/2021_Volkswagen_Caddy_C20_Commerce_Pro_TD_2.0_Rear.jpg/960px-2021_Volkswagen_Caddy_C20_Commerce_Pro_TD_2.0_Rear.jpg',
+    pageUrl:'https://commons.wikimedia.org/wiki/File:2021_Volkswagen_Caddy_C20_Commerce_Pro_TD_2.0_Rear.jpg',
+    artist:'Vauxford',license:'CC BY-SA 4.0',score:170,kind:'curated'
+   }
+  ])
+ });
  function verifiedGenerationPhotos(plan){
-  return (VERIFIED_POLO_PHOTOS[plan.category]||[]).map(item=>({...item,generation:plan.label}));
+  return ((plan.model==='caddy'?VERIFIED_CADDY_PHOTOS:VERIFIED_POLO_PHOTOS)[plan.category]||[]).map(item=>({...item,generation:plan.label}));
  }
  const categoryUrl=category=>'https://commons.wikimedia.org/w/api.php?'+new URLSearchParams({
   action:'query',generator:'categorymembers',gcmtitle:'Category:'+category,
@@ -194,8 +281,8 @@
   try{collect(await requestJSON(categoryUrl(plan.category)),true)}catch{}
   if(requestId!==sequence)return [];
   if(found.size<5){
-   const names={4:'IV',5:'V',6:'VI'};
-   const term='Volkswagen Polo '+names[plan.family]+(plan.phase==='facelift'?' facelift':'');
+   const names={3:'III',4:'IV',5:'V',6:'VI'};
+   const term='Volkswagen '+(plan.model==='caddy'?'Caddy':'Polo')+' '+names[plan.family]+(plan.phase==='facelift'?' facelift':'');
    try{collect(await requestJSON(searchUrl(term)))}catch{}
   }
   if(requestId!==sequence)return [];
@@ -382,6 +469,12 @@
   };
   p.img.onerror=()=>{
    if(requestId!==sequence||current[position]!==photo)return;
+   if(photo.kind==='curated'&&!photo.redirectTried){
+    photo.redirectTried=true;
+    const name=String(photo.title||'').replace(/^File:/i,'').replace(/ /g,'_');
+    const redirect='https://commons.wikimedia.org/wiki/Special:Redirect/file/'+encodeURIComponent(name)+'?width=640';
+    if(p.img.src!==redirect){p.img.src=redirect;return}
+   }
    showAt(position+1,requestId);
   };
   p.img.alt='Stilstaande voorbeeldfoto van '+currentBrand+' '+currentModel+' (uitvoering kan afwijken)';
@@ -402,7 +495,7 @@
    return;
   }
   if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Modelfoto zoeken…'}
-  if(p.caption)p.caption.textContent='We zoeken passende voertuigfoto’s zonder verkeers- of racescènes.';
+  if(p.caption)p.caption.textContent='We zoeken een gewone auto uit de juiste generatie; uitvoering en kleur kunnen afwijken.';
   if(p.next)p.next.onclick=()=>{const available=current.filter(x=>!dismissed.has(x.title));if(available.length>1){const next=available.findIndex(x=>x.title===current[position]?.title);const nextPhoto=available[(next+1)%available.length];showAt(current.findIndex(x=>x.title===nextPhoto.title),sequence)}};
   if(p.report)p.report.onclick=()=>{
    const rejected=current[position];if(!rejected)return;
