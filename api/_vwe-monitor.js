@@ -16,13 +16,15 @@ function normalize(input){
   at:now,
   dataset,
   outcome:input.ok===true?'success':'error',
-  stage:['authentication','configuration','vehicle'].includes(input.stage)?input.stage:'vehicle',
+  stage:['authentication','configuration','vehicle','traffic'].includes(input.stage)?input.stage:'vehicle',
   status:safeInt(input.status,599),
   upstreamStatus:safeInt(input.upstreamStatus,599),
   code:String(input.code||'').slice(0,60).replace(/[^A-Z0-9_]/g,''),
   durationMs:safeInt(input.durationMs,120000),
   attempts:safeInt(input.attempts,2),
-  tokenRefreshes:safeInt(input.tokenRefreshes,1)
+  tokenRefreshes:safeInt(input.tokenRefreshes,1),
+  coalesced:input.coalesced===true,
+  dataStatus:['received','empty'].includes(input.dataStatus)?input.dataStatus:null
  };
 }
 async function record(event){
