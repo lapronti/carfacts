@@ -9,7 +9,7 @@
  const cache=new Map();
  let sequence=0;
  const controllers=new Set();
- let current=[],position=0,currentBrand='',currentModel='',lastSource='';
+ let current=[],position=0,currentBrand='',currentModel='',lastSource='',fallbackAttempted=false;
  const badWords=['police','ambulance','fire engine','fire truck','emergency','taxi','rally','race car','racing','drifting','crash','wreck','accident','accidental','burnt','driving','moving car','highway','motorway','traffic','in motion','rolling shot','test drive','road test','drift','interior','dashboard','engine bay','engine compartment','toy car','diecast','die cast','scale model','miniature','lego','video','screenshot','game screenshot','car crash','motor show','motorshow','auto show','car show','salon de'];
  const goodWords=[['studio',45],['showroom',45],['press',36],['official',28],['catalog',28],['brochure',27],['stationary',23],['parked',18],['parking',12],['display',16],['exterior',13],['front',10],['three quarter',10],['side view',9],['front view',10],['museum',12]];
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
@@ -80,7 +80,7 @@
   sequence++;
   for(const ctl of controllers)ctl.abort();
   controllers.clear();
-  current=[];position=0;lastSource='';
+  current=[];position=0;lastSource='';fallbackAttempted=false;
   const p=state();
   if(p.img){p.img.onload=null;p.img.onerror=null;p.img.hidden=true;p.img.removeAttribute('src')}
   if(p.figure)p.figure.hidden=true;
@@ -109,7 +109,9 @@
   for(const brand of alternatives.slice(0,2))first.push([brand,cleaned].join(' '));
   const fallback=[];
   for(const brand of alternatives.slice(0,2))fallback.push([brand,base].join(' '));
-  return {first:[...new Set(first)].filter(Boolean),fallback:[...new Set(fallback)].filter(q=>!first.includes(q))};
+  const unique=items=>items.filter((q,i,list)=>q.trim()&&list.findIndex(other=>normalize(other)===normalize(q))===i);
+  const primary=unique(first);
+  return {first:primary,fallback:unique(fallback).filter(q=>!primary.some(existing=>normalize(existing)===normalize(q)))};
  }
  async function commonsSearch(make,model,queries,requestId){
   const batches=queriesFor(make,model);
@@ -180,6 +182,17 @@
  function showAt(start,requestId){
   const p=state();if(!p.img||!p.caption||!p.figure||requestId!==sequence)return;
   if(start>=current.length){
+   if(!fallbackAttempted){
+    fallbackAttempted=true;
+    if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Alternatieve fotobron controleren…'}
+    wikipediaFallback(currentBrand,currentModel,requestId).then(more=>{
+     if(requestId!==sequence)return;
+     const available=more.filter(candidate=>!current.some(photo=>photo.title===candidate.title));
+     if(available.length){current.push(...available);showAt(start,requestId);return}
+     showAt(start,requestId);
+    }).catch(()=>{if(requestId===sequence)showAt(start,requestId)});
+    return;
+   }
    p.img.hidden=true;if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Geen geschikte foto geladen.'}
    p.caption.textContent='Voor dit model kon geen passende afbeelding worden geladen. Er wordt geen willekeurig voertuig getoond.';
    if(p.next)p.next.hidden=true;if(p.credit)p.credit.hidden=true;
@@ -221,11 +234,11 @@
   const cacheKey=normalize(brand)+'|'+normalize(cleanModel);
   const cacheHit=cache.get(cacheKey);
   try{
-   if(cacheHit&&Date.now()-cacheHit.at<TTL)current=cacheHit.items;
+   if(cacheHit&&Date.now()-cacheHit.at<(cacheHit.items.length?TTL:120000))current=cacheHit.items;
    else {
     current=await commonsSearch(brand,cleanModel,null,requestId);
     if(requestId!==sequence)return;
-    if(!current.length)current=await wikipediaFallback(brand,cleanModel,requestId);
+    if(!current.length){fallbackAttempted=true;current=await wikipediaFallback(brand,cleanModel,requestId)}
     if(requestId!==sequence)return;
     cache.set(cacheKey,{at:Date.now(),items:current});
     if(cache.size>60)cache.delete(cache.keys().next().value);
