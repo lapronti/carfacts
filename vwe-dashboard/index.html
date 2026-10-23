@@ -107,7 +107,7 @@ $('form').addEventListener('submit',async e=>{
   await Promise.all(ACTIVE_DATASETS.map(async type=>{
    const panel=$(type==='emission'?'technical':type==='inspections'?'history':type);
    const status=panel.querySelector('.status'),controller=new AbortController();
-   const timeout=setTimeout(()=>controller.abort(),18000);
+   const timeout=setTimeout(()=>controller.abort(),42000);
    status.textContent='Ophalen…';status.className='status';
    try{
     const res=await fetch('/api/vwe-vehicle?dataset='+type+'&licensePlate='+encodeURIComponent(plate),{
@@ -117,8 +117,13 @@ $('form').addEventListener('submit',async e=>{
     if(!res.ok){
      let reason=body.error||'Aanvraag mislukt';
      if(res.status===401)reason='Admin-login vereist. Log eerst in via Admin.';
-     if(res.status===403)reason='Deze VWE-dataset is niet beschikbaar voor jouw account.';
-     throw Error(reason+' (HTTP '+res.status+')');
+     else if(body.stage==='authentication')reason='VWE-authenticatie mislukt. Controleer de toegangsgegevens in de VWE-acceptatieomgeving.';
+     else if(res.status===403)reason='Geen toegang tot deze VWE-dataset. Controleer de productrechten.';
+     else if(body.code==='VWE_TIMEOUT')reason='De VWE-server heeft niet op tijd geantwoord.';
+     else if(body.upstreamStatus>=500)reason='VWE-server tijdelijk niet bereikbaar.';
+     const upstream=body.upstreamStatus?' · VWE HTTP '+body.upstreamStatus:'';
+     const tries=body.diagnostics?.attempts>1?' · '+body.diagnostics.attempts+' pogingen':'';
+     throw Error(reason+' (Carfacts HTTP '+res.status+upstream+tries+')');
     }
     if(body.vehicle===null||body.vehicle===undefined)throw Error('VWE heeft geen voertuiggegevens teruggegeven.');
     render(type,body.vehicle);
@@ -126,7 +131,7 @@ $('form').addEventListener('submit',async e=>{
     results[type]={ok:true,count:type==='inspections'?recordList(body.vehicle,type).length:1};
     status.textContent='● VWE-gegevens ontvangen';status.className='status available';ok++;
    }catch(err){
-    const message=err.name==='AbortError'?'VWE antwoordt niet binnen 18 seconden. Probeer opnieuw.':err.message||'Er is iets misgegaan.';
+    const message=err.name==='AbortError'?'Na 42 seconden nog geen VWE-antwoord. Probeer later opnieuw.':err.message||'Er is iets misgegaan.';
     results[type]={ok:false,count:0,error:message};
     status.textContent=message;status.className='status error';
    }finally{clearTimeout(timeout)}
