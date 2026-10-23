@@ -16,10 +16,18 @@ function status(){
   concurrencyLimit:limit(),slowMode:now()<slowUntil,rateLimited:now()<rateLimitUntil};
 }
 function noteUpstream(status){
- if(status===429){rateLimitUntil=Math.max(rateLimitUntil,now()+15000);slowUntil=Math.max(slowUntil,now()+45000)}
+ if(status===429){rateLimitUntil=Math.max(rateLimitUntil,now()+15000);slowUntil=Math.max(slowUntil,now()+45000);pump()}
  else if([502,503,504].includes(status)){slowUntil=Math.max(slowUntil,now()+45000)}
 }
 function pump(){
+ if(now()<rateLimitUntil){
+  // Drop queued work after VWE announces an upstream 429, even if it was queued earlier.
+  while(queue.length){
+   const queued=queue.shift();
+   queued.resolve({http:503,data:{error:'VWE-aanvragen tijdelijk afgeremd na limietmelding',code:'VWE_BACKOFF',stage:'traffic',upstreamStatus:429},metrics:{attempts:0,tokenRefreshes:0}});
+  }
+  return;
+ }
  while(running<limit()&&queue.length){
   const job=queue.shift();running++;
   Promise.resolve().then(job.fn).then(job.resolve,job.reject).finally(()=>{
