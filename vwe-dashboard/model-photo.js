@@ -10,7 +10,7 @@
  let sequence=0;
  const controllers=new Set();
  let current=[],position=0,currentBrand='',currentModel='',lastSource='',fallbackAttempted=false;
- const badWords=['police','ambulance','fire engine','fire truck','emergency','taxi','rally','race car','racing','drifting','crash','wreck','accident','accidental','burnt','driving','moving car','highway','motorway','traffic','in motion','rolling shot','test drive','road test','drift','interior','dashboard','engine bay','engine compartment','toy car','diecast','die cast','scale model','miniature','lego','video','screenshot','game screenshot','car crash','motor show','motorshow','auto show','car show','salon de'];
+ const badWords=['people','person','crowd','driver','woman','man standing','man sitting','family portrait','police','ambulance','fire engine','fire truck','emergency','taxi','rally','race car','racing','drifting','crash','wreck','accident','accidental','burnt','driving','moving car','highway','motorway','traffic','in motion','rolling shot','test drive','road test','drift','interior','dashboard','engine bay','engine compartment','toy car','diecast','die cast','scale model','miniature','lego','video','screenshot','game screenshot','car crash','motor show','motorshow','auto show','car show','salon de'];
  const goodWords=[['studio',45],['showroom',45],['press',36],['official',28],['catalog',28],['brochure',27],['stationary',23],['parked',18],['parking',12],['display',16],['exterior',13],['front',10],['three quarter',10],['side view',9],['front view',10],['museum',12]];
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
   .replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
@@ -109,6 +109,10 @@
   for(const brand of alternatives.slice(0,2))first.push([brand,cleaned].join(' '));
   const fallback=[];
   for(const brand of alternatives.slice(0,2))fallback.push([brand,base].join(' '));
+  // A broad search may be dominated by irrelevant files; targeted queries surface
+  // additional stationary / official shots without lowering the model-match rule.
+  fallback.push(alternatives[0]+' '+base+' showroom');
+  if(alternatives[1])fallback.push(alternatives[1]+' '+base+' parked');
   const unique=items=>items.filter((q,i,list)=>q.trim()&&list.findIndex(other=>normalize(other)===normalize(q))===i);
   const primary=unique(first);
   return {first:primary,fallback:unique(fallback).filter(q=>!primary.some(existing=>normalize(existing)===normalize(q)))};
