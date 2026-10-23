@@ -10,7 +10,7 @@
  const dismissed=new Set();
  let sequence=0;
  const controllers=new Set();
- let current=[],position=0,currentBrand='',currentModel='',lastSource='',fallbackAttempted=false;
+ let current=[],position=0,currentBrand='',currentModel='',currentGeneration='',lastSource='',fallbackAttempted=false;
  // Negative evidence comes from filename AND Wikimedia Commons category names.
  // Prefer no photo over a rally car, exhibition concept, heavily modified car or sponsorship livery.
  const badWords=[
@@ -82,6 +82,88 @@
   const categories=Array.isArray(page?.categories)?page.categories.map(cat=>String(cat?.title||'')).join(' '):'';
   return normalize(String(page?.title||'')+' '+categories);
  };
+
+ /* Manufacturer-verified Polo generations; first admission is an estimate, not a
+    certified model code. Transition years are left ambiguous, not guessed. */
+ const POLO_GENERATIONS=Object.freeze([
+  {start:2002,end:2008,category:'Volkswagen Polo IV',family:4,phase:'all',label:'Polo IV (2001–2009)'},
+  {start:2010,end:2013,category:'Volkswagen Polo V (2009)',family:5,phase:'pre',label:'Polo V (2009–2014)'},
+  {start:2015,end:2016,category:'Volkswagen Polo V (2014)',family:5,phase:'facelift',label:'Polo V facelift (2014–2017)'},
+  {start:2018,end:2020,category:'Volkswagen Polo VI',family:6,phase:'pre',label:'Polo VI (2017–2021)'},
+  {start:2022,end:2027,category:'Volkswagen Polo VI (2021)',family:6,phase:'facelift',label:'Polo VI facelift (vanaf 2021)'}
+ ]);
+ const vwBrand=value=>['volkswagen','vw'].includes(normalize(value));
+ function generationPlan(make,model,firstAdmissionDate){
+  if(!vwBrand(make)||coreOf(model)!=='polo')return null;
+  const admitted=String(firstAdmissionDate||'').trim();
+  const year=/^\d{4}(?:-|$)/.test(admitted)?Number(admitted.slice(0,4)):
+   /^\d{8}$/.test(admitted)?Number(admitted.slice(0,4)):null;
+  const generation=POLO_GENERATIONS.find(entry=>year>=entry.start&&year<=entry.end);
+  if(generation)return {...generation,year};
+  return {uncertain:true,year,
+   explanation:year===2009||year===2014||year===2017||year===2021
+    ?'De datum eerste toelating valt in een overgangsjaar van de Polo. De precieze generatie is niet bevestigd.'
+    :'De datum eerste toelating ontbreekt of valt buiten de gecontroleerde Polo-generaties.'};
+ }
+ function generationCode(context){
+  const text=normalize(context);
+  if(/\bpolo\s+(?:mk\s*)?(?:vi|6)\b/.test(text)||/\bpolo\s+(?:aw|ae)\b/.test(text))return 6;
+  if(/\bpolo\s+(?:mk\s*)?(?:v|5)\b/.test(text)||/\bpolo\s+(?:6r|6c)\b/.test(text))return 5;
+  if(/\bpolo\s+(?:mk\s*)?(?:iv|4)\b/.test(text)||/\bpolo\s+(?:9n3?|9n)\b/.test(text))return 4;
+  return null;
+ }
+ function generationPhoto(page,make,model,plan){
+  const info=page.imageinfo?.[0]||{},url=String(info.thumburl||info.url||'');
+  if(!isImage(url)||!['image/jpeg','image/png','image/webp'].includes(info.mime))return null;
+  const filename=String(page.title||'').replace(/^File:/i,'').replace(/\.[^.]+$/,'');
+  const title=normalize(filename),full=pageContext(page);
+  if(!contains(title,'polo')||isUnsuitable(full))return null;
+  if(info.width&&info.height&&info.width<info.height*.77)return null;
+  const familyEvidence=[
+   generationCode(title),
+   ...(page.categories||[]).map(cat=>generationCode(String(cat.title||'')))
+  ].filter(Boolean);
+  if(familyEvidence.some(family=>family!==plan.family))return null;
+  const categoryMatches=(page.categories||[]).some(cat=>
+   normalize(String(cat.title||'').replace(/^Category:/i,''))===normalize(plan.category));
+  // No category evidence means no verified generation. Filenames alone are insufficient.
+  if(!categoryMatches)return null;
+  if(plan.phase==='pre'){
+   const contradicts=plan.family===6?/\b202[1-9]\b|\b(?:facelift|fl)\b/:
+    /\b201[4-9]\b|\b(?:facelift|fl)\b/;
+   if(contradicts.test(title))return null;
+  }
+  let score=110;
+  for(const [word,points] of goodWords)if(allWords(title,word))score+=points;
+  if(/\b(?:front|frontview|frontal|frontansicht|vorne)\b/.test(title))score+=24;
+  if(/\b(?:rear|back|heck|hinten)\b/.test(title))score-=20;
+  if(info.width&&info.height&&info.width/info.height>1.2)score+=8;
+  return {title:page.title,url,pageUrl:String(info.descriptionurl||fileUrl(page.title)),
+   score,kind:'commons',generation:plan.label};
+ }
+ const categoryUrl=category=>'https://commons.wikimedia.org/w/api.php?'+new URLSearchParams({
+  action:'query',generator:'categorymembers',gcmtitle:'Category:'+category,
+  gcmnamespace:'6',gcmlimit:'150',prop:'imageinfo|categories',cllimit:'max',
+  iiprop:'url|mime|size',iiurlwidth:'640',format:'json',origin:'*'
+ }).toString();
+ async function generationSearch(make,model,plan,requestId){
+  const found=new Map();
+  const collect=data=>{
+   for(const page of Object.values(data.query?.pages||{})){
+    const photo=generationPhoto(page,make,model,plan);
+    if(photo)found.set(photo.title,photo);
+   }
+  };
+  try{collect(await requestJSON(categoryUrl(plan.category)))}catch{}
+  if(requestId!==sequence)return [];
+  if(found.size<5){
+   const names={4:'IV',5:'V',6:'VI'};
+   const term='Volkswagen Polo '+names[plan.family]+(plan.phase==='facelift'?' facelift':'');
+   try{collect(await requestJSON(searchUrl(term)))}catch{}
+  }
+  if(requestId!==sequence)return [];
+  return [...found.values()].sort((a,b)=>b.score-a.score).slice(0,MAX_RESULTS);
+ }
  const fileUrl=title=>'https://commons.wikimedia.org/wiki/'+encodeURIComponent(String(title||'').replace(/ /g,'_'));
  function candidate(page,make,model){
   const image=page.imageinfo?.[0]||{};
@@ -113,7 +195,7 @@
   sequence++;
   for(const ctl of controllers)ctl.abort();
   controllers.clear();
-  current=[];position=0;lastSource='';fallbackAttempted=false;
+  current=[];position=0;lastSource='';currentGeneration='';fallbackAttempted=false;
   const p=state();
   if(p.img){p.img.onload=null;p.img.onerror=null;p.img.hidden=true;p.img.removeAttribute('src')}
   if(p.figure)p.figure.hidden=true;
@@ -221,7 +303,7 @@
  function showAt(start,requestId){
   const p=state();if(!p.img||!p.caption||!p.figure||requestId!==sequence)return;
   if(start>=current.length){
-   if(!fallbackAttempted&&!dismissed.size){
+   if(!currentGeneration&&!fallbackAttempted&&!dismissed.size){
     fallbackAttempted=true;
     if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Alternatieve fotobron controleren…'}
     wikipediaFallback(currentBrand,currentModel,requestId).then(more=>{
@@ -250,7 +332,8 @@
    p.figure.hidden=false;
    p.caption.textContent='Voorbeeldfoto '+(position+1)+'/'+current.length+
     ' · '+currentBrand+' '+currentModel+
-    ' · uitvoering, bouwjaar en kleur kunnen afwijken.';
+    (currentGeneration?' · '+currentGeneration+' (indicatie op eerste toelating)':'')+
+    ' · uitvoering en kleur kunnen afwijken.';
    if(p.next)p.next.hidden=current.filter(x=>!dismissed.has(x.title)).length<2;
    if(p.report)p.report.hidden=false;
    lastSource=photo.title;
@@ -263,13 +346,20 @@
   p.img.alt='Stilstaande voorbeeldfoto van '+currentBrand+' '+currentModel+' (uitvoering kan afwijken)';
   p.img.src=photo.url;
  }
- async function load(make,model){
+ async function load(make,model,firstAdmissionDate){
   reset();
   const requestId=sequence,p=state();
   const brand=String(make||'').trim(),cleanModel=stripDescriptors(model);
   if(!brand||!cleanModel)return;
   currentBrand=brand;currentModel=cleanModel;
+  const plan=generationPlan(brand,cleanModel,firstAdmissionDate);
+  currentGeneration=plan&&!plan.uncertain?plan.label:'';
   if(p.figure)p.figure.hidden=false;
+  if(plan?.uncertain){
+   if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Generatie nog niet te bepalen'}
+   if(p.caption)p.caption.textContent=plan.explanation+' Daarom tonen we geen mogelijk verkeerde modelfoto.';
+   return;
+  }
   if(p.placeholder){p.placeholder.hidden=false;p.placeholder.textContent='Modelfoto zoeken…'}
   if(p.caption)p.caption.textContent='We zoeken passende voertuigfoto’s zonder verkeers- of racescènes.';
   if(p.next)p.next.onclick=()=>{const available=current.filter(x=>!dismissed.has(x.title));if(available.length>1){const next=available.findIndex(x=>x.title===current[position]?.title);const nextPhoto=available[(next+1)%available.length];showAt(current.findIndex(x=>x.title===nextPhoto.title),sequence)}};
@@ -284,22 +374,24 @@
     if(p.next)p.next.hidden=true;if(p.report)p.report.hidden=true;if(p.credit)p.credit.hidden=true;
    }
   };
-  const cacheKey=normalize(brand)+'|'+normalize(cleanModel);
+  const cacheKey=normalize(brand)+'|'+normalize(cleanModel)+'|'+(plan?.category||'');
   const cacheHit=cache.get(cacheKey);
   try{
    if(cacheHit&&Date.now()-cacheHit.at<(cacheHit.items.length?TTL:120000))current=cacheHit.items;
    else {
-    current=await commonsSearch(brand,cleanModel,null,requestId);
+    current=plan
+     ?await generationSearch(brand,cleanModel,plan,requestId)
+     :await commonsSearch(brand,cleanModel,null,requestId);
     if(requestId!==sequence)return;
-    if(!current.length){fallbackAttempted=true;current=await wikipediaFallback(brand,cleanModel,requestId)}
+    if(!current.length&&!plan){fallbackAttempted=true;current=await wikipediaFallback(brand,cleanModel,requestId)}
     if(requestId!==sequence)return;
     cache.set(cacheKey,{at:Date.now(),items:current});
     if(cache.size>60)cache.delete(cache.keys().next().value);
    }
    if(requestId!==sequence)return;
    if(!current.length){
-    if(p.placeholder)p.placeholder.textContent='Geen passende foto gevonden.';
-    if(p.caption)p.caption.textContent='Er is geen voldoende herkenbare modelfoto gevonden. Probeer later opnieuw; er wordt geen ander merk of model getoond.';
+    if(p.placeholder)p.placeholder.textContent=plan?'Geen bevestigde generatiefoto beschikbaar':'Geen passende foto gevonden.';
+    if(p.caption)p.caption.textContent=plan?'Er is geen foto gevonden die bij '+plan.label+' als generatie bevestigd kon worden. We tonen daarom geen ouder of nieuwer model.':'Er is geen voldoende herkenbare modelfoto gevonden. Probeer later opnieuw; er wordt geen ander merk of model getoond.';
     return;
    }
    showAt(0,requestId);
