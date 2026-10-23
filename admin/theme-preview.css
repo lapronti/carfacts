@@ -185,3 +185,32 @@ body.admin-theme #status:empty{display:none}
 /* Override the legacy global admin-link rule without affecting other pages. */
 body.admin-theme:has(#adminNav) .admin-sidebar a.admin-sidebar-brand{color:#fff!important}
 body.admin-theme:has(#adminNav) .admin-sidebar a.admin-sidebar-brand:hover{color:#fff!important}
+
+/* Preview VWE API status dashboard */
+.admin-theme #adminNav button[data-target="vwe"]::before{content:"⌁"}
+.admin-theme .vwe-api-header{display:flex;align-items:start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.admin-theme .vwe-api-header h2{margin:0 0 5px}
+.admin-theme .vwe-api-header p{max-width:730px;font-size:12px}
+.admin-theme #vweApiFeedback{font-size:12px;padding:9px 0}
+.admin-theme .vwe-status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:14px 0 20px}
+.admin-theme .vwe-status-card{border:1px solid #dfebf0;border-top:3px solid #94afbf;background:#fbfdfd;border-radius:13px;padding:17px;min-width:0}
+.admin-theme .vwe-status-card.vwe-ok{border-top-color:#16a088}
+.admin-theme .vwe-status-card.vwe-problem{border-top-color:#d2943b}
+.admin-theme .vwe-card-heading{display:flex;justify-content:space-between;align-items:start;gap:10px;flex-wrap:wrap;font-size:13px}
+.admin-theme .vwe-card-heading strong{font-weight:850;color:#173648}
+.admin-theme .vwe-card-state{background:#edf4f8;color:#52778c;padding:4px 8px;font-size:10px;font-weight:800;border-radius:99px}
+.admin-theme .vwe-ok .vwe-card-state{background:#e2f7ef;color:#087a60}
+.admin-theme .vwe-problem .vwe-card-state{background:#fff0da;color:#935d11}
+.admin-theme .vwe-card-summary{font-size:12px;font-weight:750;margin:9px 0 12px;color:#536f83}
+.admin-theme .vwe-card-metrics{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;font-size:11px;margin:0;color:#486479}
+.admin-theme .vwe-card-metrics dt{margin:0;color:#6c8190}
+.admin-theme .vwe-card-metrics dd{margin:0;font-weight:700;overflow-wrap:anywhere;text-align:right;color:#214658}
+.admin-theme .vwe-card-detail{background:#f0f6f9;padding:10px;border-radius:9px;margin:13px 0 0;font-size:11px;color:#547286;line-height:1.6;overflow-wrap:anywhere}
+.admin-theme .vwe-recent-list{width:100%;overflow:auto;border:1px solid #dfe9ee;border-radius:12px}
+.admin-theme .vwe-status-table{width:100%;min-width:710px}
+.admin-theme .vwe-status-table :is(td,th){text-align:left!important;font-size:11px;white-space:nowrap}
+.admin-theme .vwe-status-table tr:nth-child(even) td{background:#f9fbfc}
+.admin-theme .vwe-no-data{font-size:12px;padding:15px;color:#657e90}
+.admin-theme #vweApiNotice{font-size:11px;margin-top:13px;line-height:1.6}
+@media(max-width:1100px){.admin-theme .vwe-status-grid{grid-template-columns:1fr}}
+@media(max-width:650px){.admin-theme .vwe-api-header{display:block}.admin-theme #vweApiRefresh{width:100%;margin-top:8px}.admin-theme .vwe-status-card{padding:14px}}
