@@ -3,6 +3,20 @@
   "dependencies": {
     "imapflow": "^1.0.180",
     "mailparser": "^3.7.2",
-    "nodemailer": "^6.10.1"
+    "nodemailer": "^6.10.1",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "typescript": "^5.9.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:contracts": "node --test tests/unit/*.test.cjs",
+    "test:e2e": "playwright test --config=playwright.config.ts",
+    "test": "npm run typecheck && npm run test:contracts && npm run test:e2e"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
