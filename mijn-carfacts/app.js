@@ -12,7 +12,7 @@
   garageMessage:$('garage-message'),vehicleForm:$('vehicle-form'),
   list:$('vehicles-list'),reports:$('reports-list')
  };
- let pendingEmail='',signedIn=false;
+ let pendingEmail='',signedIn=false,demoMode=false,authEnabled=false,authUnavailableReason='';
  function message(node,text,error=false){
   if(!node)return;
   node.textContent=text;
@@ -35,20 +35,26 @@
   if(button)button.disabled=!!on;
  }
  function displayAccount(email){
-  signedIn=true;
+  signedIn=true;demoMode=false;
   ui.auth.hidden=true;
   ui.account.hidden=false;
   ui.signedInEmail.textContent=email||'Ingelogd';
+  $('logout-button').textContent='Uitloggen';
+  $('save-vehicle').disabled=false;
+  $('delete-data-button').disabled=false;
   message(ui.global,'Je account is veilig geopend. Alleen jouw opgeslagen gegevens zijn zichtbaar.');
  }
  function displayLogin(available,reason=''){
-  signedIn=false;
+  signedIn=false;demoMode=false;authEnabled=!!available;authUnavailableReason=reason||'';
   ui.auth.hidden=false;
   ui.account.hidden=true;
   ui.request.hidden=false;
   ui.verify.hidden=true;
   ui.code.value='';
   pendingEmail='';
+  $('logout-button').textContent='Uitloggen';
+  $('save-vehicle').disabled=false;
+  $('delete-data-button').disabled=false;
   const submit=$('request-button');
   submit.disabled=!available;
   if(!available){
@@ -91,7 +97,10 @@
    const button=makeElement('button','remove','Verwijderen');
    button.type='button';
    button.setAttribute('aria-label','Verwijder '+vehicle.plate);
+   button.disabled=demoMode;
+   if(demoMode)button.title='Alleen beschikbaar na inloggen';
    button.addEventListener('click',async()=>{
+    if(demoMode)return;
     if(!window.confirm('Wil je kenteken '+vehicle.plate+' uit Mijn Carfacts verwijderen?'))return;
     busy(button,true);
     try{
@@ -168,16 +177,17 @@
   message(ui.loginMessage,'Vul je e-mailadres in om een nieuwe code te ontvangen.');
  });
  $('logout-button').addEventListener('click',async()=>{
+  if(demoMode){displayLogin(authEnabled,authUnavailableReason);return}
   const button=$('logout-button');busy(button,true);
   try{
    await api('auth',{action:'logout'});
-   displayLogin(true);
+   displayLogin(authEnabled,authUnavailableReason);
   }catch(e){message(ui.global,e.message,true)}
   finally{busy(button,false)}
  });
  ui.vehicleForm.addEventListener('submit',async event=>{
   event.preventDefault();
-  if(!signedIn)return;
+  if(!signedIn){message(ui.garageMessage,'Dit is een voorbeeld. Log in om een echt voertuig te bewaren.',true);return}
   const button=$('save-vehicle');busy(button,true);
   const payload={
    action:'save',
@@ -204,15 +214,31 @@
   }catch(e){message(ui.global,e.message,true)}
   finally{busy(button,false)}
  });
+ $('demo-button').addEventListener('click',()=>{
+  signedIn=false;demoMode=true;
+  ui.auth.hidden=true;
+  ui.account.hidden=false;
+  ui.signedInEmail.textContent='Voorbeeld — fictieve gegevens';
+  $('logout-button').textContent='Voorbeeld sluiten';
+  $('save-vehicle').disabled=true;
+  $('delete-data-button').disabled=true;
+  message(ui.garageMessage,'Voorbeeldmodus: deze voertuigen zijn fictief; opslaan of verwijderen is uitgeschakeld.');
+  showVehicles([
+   {plate:'AB12CD',label:'Voorbeeld gezinsauto',make:'Volkswagen',model:'Polo',savedAt:'2026-10-25T08:00:00Z'},
+   {plate:'XY98ZT',label:'Voorbeeld bedrijfswagen',make:'Volkswagen',model:'Caddy',savedAt:'2026-10-24T08:00:00Z'}
+  ]);
+  ui.reportCount.textContent='0';
+  message(ui.global,'Voorbeeldmodus: fictieve voertuigen, zonder account of opslag. Alle acties zijn uitgeschakeld.');
+ });
  (async()=>{
   try{
    const data=await api('auth');
    if(data.loggedIn){
     displayAccount(data.email);
     await loadAccount();
-   }else displayLogin(!!data.enabled,data.reason);
+   }else if(!demoMode)displayLogin(!!data.enabled,data.reason);
   }catch{
-   displayLogin(false,'Accountstatus is niet bereikbaar. Probeer later opnieuw.');
+   if(!demoMode)displayLogin(false,'Accountstatus is niet bereikbaar. Probeer later opnieuw.');
   }
  })();
 })();
