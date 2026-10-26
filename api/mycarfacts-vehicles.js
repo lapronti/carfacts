@@ -2,7 +2,7 @@
 /* Saved vehicle bookmarks only: never stores VWE payload, VIN, ownership or reports. */
 const p=require('./_mycarfacts');
 const {vehicleSchema,onlyPreview,validOrigin,authorized,reply,cmd,redisPairs,
- safeObjectEntries,userVehiclesKey,userReportsKey,revoke}=p;
+ safeObjectEntries,userVehiclesKey,userReportsKey,sessionIndexKey,PREFIX,revoke}=p;
 const MAX_VEHICLES=25;
 async function listVehicles(uid){
  const rows=await cmd('HGETALL',userVehiclesKey(uid));
@@ -50,8 +50,15 @@ module.exports=async(req,res)=>{
   if(action==='delete_account_data'){
    await cmd('DEL',userVehiclesKey(user.uid));
    await cmd('DEL',userReportsKey(user.uid));
-   await revoke(req,res);
-   return reply(res,200,{ok:true,loggedIn:false,message:'Bewaarde gegevens verwijderd en afgemeld'});
+   await cmd('DEL',PREFIX+':otp:'+user.uid);
+   const active=await cmd('SMEMBERS',sessionIndexKey(user.uid));
+   for(const hashed of Array.isArray(active)?active.slice(0,250):[]){
+    if(/^[a-f0-9]{64}$/.test(hashed))await cmd('DEL',PREFIX+':session:'+hashed);
+   }
+   await cmd('DEL',sessionIndexKey(user.uid));
+   // Cookie clear is intentionally independent of the now-revoked server session.
+   res.setHeader('Set-Cookie','cf_portal=; HttpOnly; Secure; SameSite=Strict; Path=/api/mycarfacts; Max-Age=0');
+   return reply(res,200,{ok:true,loggedIn:false,message:'Alle bewaarde gegevens verwijderd en sessies afgemeld'});
   }
   return reply(res,400,{error:'Onbekende actie'});
  }catch{
