@@ -3,7 +3,7 @@ const crypto=require('node:crypto');
 const portal=require('./_mycarfacts');
 const {
  PREFIX,OTP_SECONDS,emailSchema,codeSchema,userKey,digest,
- storageReady,portalReady,validOrigin,rateLimit,sendCode,session,
+ storageReady,portalReady,allowedEmail,missingSettings,validOrigin,rateLimit,sendCode,session,
  issueSession,revoke,reply,onlyPreview,publicSession,cmd
 }=portal;
 const genericMessage='Als het e-mailadres bereikbaar is, ontvang je een inlogcode.';
@@ -26,7 +26,9 @@ module.exports=async(req,res)=>{
     enabled:portalReady(),
     ...publicSession(account),
     ...(!portalReady()?{
-     reason:'E-mailverzending voor deze testomgeving is nog niet ingesteld. Bekijk alvast de voorbeeldmodus.'
+     reason:missingSettings().some(name=>name.startsWith('SMTP_')||name.startsWith('MAIL_'))
+      ?'De aparte e-mailinstellingen ontbreken nog in Vercel Preview. Bekijk alvast de voorbeeldmodus.'
+      :'Het testaccount is nog niet volledig geconfigureerd. Bekijk voorlopig de voorbeeldmodus.'
     }:{})
    });
   }catch{return reply(res,503,{error:'Accountstatus tijdelijk niet beschikbaar'})}
@@ -45,8 +47,12 @@ module.exports=async(req,res)=>{
  if(!parsed.success)return reply(res,400,{error:'Vul een geldig e-mailadres in'});
  const email=parsed.data;
  try{
+  if(!portalReady())return reply(res,503,{error:'E-mailinloggen is nog niet geconfigureerd'});
+  // Preview-only allowlist. Do not expose whether an address is approved.
+  if(!allowedEmail(email))return action==='request_code'
+   ?reply(res,200,{ok:true,message:genericMessage,validMinutes:10})
+   :reply(res,401,{error:'Code onjuist of verlopen'});
   if(action==='request_code'){
-   if(!portalReady())return reply(res,503,{error:'E-mailinloggen is nog niet geconfigureerd'});
    if(!await rateLimit('otp-email',email,4,3600)
      ||!await rateLimit('otp-ip',attemptSource(req),20,3600))
     return reply(res,429,{error:'Er zijn te veel inlogpogingen. Probeer het later opnieuw.'});
