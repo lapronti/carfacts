@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="Mijn Carfacts testomgeving: veilig inloggen, kentekens bewaren en toekomstige PRO-rapporten bekijken.">
+<title>Mijn Carfacts | Persoonlijk voertuigenoverzicht</title>
+<link rel="stylesheet" href="/mijn-carfacts/app.css?v=20261026a">
+</head>
+<body>
+<div class="shell">
+ <aside class="sidebar">
+  <a class="brand" href="/"><span>carfacts</span><b>.</b></a>
+  <div class="subbrand">VEHICLE INTELLIGENCE</div>
+  <div class="navlabel">MIJN WERKRUIMTE</div>
+  <nav aria-label="Mijn Carfacts navigatie">
+   <a class="selected" href="/mijn-carfacts/"><span aria-hidden="true">▦</span> Mijn Carfacts</a>
+   <a href="/"><span aria-hidden="true">▤</span> Kentekencheck</a>
+   <a href="/parts/"><span aria-hidden="true">⌕</span> Onderdelen zoeken</a>
+   <a href="/pro/"><span aria-hidden="true">◇</span> Carfacts PRO</a>
+  </nav>
+  <div class="sidebar-bottom"><span class="dot"></span><span>TESTOMGEVING<br><small>Geen betaalde voertuigaanvragen</small></span></div>
+ </aside>
+ <main class="main">
+  <div class="topbar">
+   <div><div class="eyebrow">CARFACTS 2.0 / KLANTENPORTAAL</div><h1>Mijn Carfacts<span class="accent">.</span></h1>
+    <p class="intro">Jouw voertuigen, overzichtelijk op één plek. Bewaar kentekens en maak je account klaar voor toekomstige PRO-rapporten.</p>
+   </div>
+   <span class="environment">● Preview</span>
+  </div>
+  <div id="global-message" class="notice" role="status" aria-live="polite">Beveiligde accountstatus controleren…</div>
+
+  <section id="auth-section" class="auth-section" aria-labelledby="auth-heading">
+   <div class="auth-content">
+    <div class="eyebrow">TOEGANG TOT JE ACCOUNT</div>
+    <h2 id="auth-heading">Inloggen zonder wachtwoord</h2>
+    <p>Ontvang een eenmalige zescijferige code op je e-mailadres. Je hoeft geen nieuw wachtwoord te onthouden.</p>
+    <form id="request-form" autocomplete="on">
+     <label for="email">E-mailadres</label>
+     <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="jij@voorbeeld.nl" maxlength="254" required>
+     <button id="request-button" type="submit" class="primary">Stuur mij een inlogcode</button>
+    </form>
+    <form id="verify-form" hidden>
+     <label for="login-code">Eenmalige code</label>
+     <p class="form-hint">Vul de zes cijfers uit de e-mail in. De code is 10 minuten geldig.</p>
+     <input id="login-code" name="code" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" required>
+     <div class="button-row">
+      <button id="verify-button" class="primary" type="submit">Inloggen</button>
+      <button id="back-to-email" class="ghost" type="button">Ander e-mailadres</button>
+     </div>
+    </form>
+    <p id="login-message" class="form-hint" role="status" aria-live="polite"></p>
+    <div class="fineprint">Je account is privé. De beheerder-login van Carfacts staat hier los van. Er worden geen betaalde VWE-diensten gestart.</div>
+   </div>
+   <div class="auth-art" aria-hidden="true">
+    <div class="auth-plate"><span>NL</span><b>CF&nbsp;20&nbsp;26</b></div>
+    <div class="art-orbit"><span>✓</span></div>
+    <h3>Jouw eigen garage.</h3>
+    <p>Persoonlijk, overzichtelijk en alleen toegankelijk na verificatie.</p>
+   </div>
+  </section>
+
+  <section id="account-section" hidden aria-labelledby="garage-heading">
+   <div class="account-strip">
+    <div class="account-avatar" aria-hidden="true">✓</div>
+    <div class="account-details"><strong>Ingelogd bij Mijn Carfacts</strong><span id="signed-in-email">—</span></div>
+    <button id="logout-button" class="ghost" type="button">Uitloggen</button>
+   </div>
+   <div class="kpis">
+    <div class="kpi"><span>BEWAARDE VOERTUIGEN</span><strong id="vehicle-count">0</strong><small>Maximaal 25 voertuigen</small></div>
+    <div class="kpi"><span>PRO-RAPPORTEN</span><strong id="report-count">0</strong><small>Beschikbaar zodra geactiveerd</small></div>
+    <div class="kpi"><span>BEVEILIGING</span><strong class="kpi-word">Actief</strong><small>Persoonlijke sessie · e-mailcode</small></div>
+   </div>
+   <div class="panel-grid">
+    <section class="panel" id="garage" aria-labelledby="garage-heading">
+     <div class="panel-heading"><div><div class="eyebrow">MIJN GARAGE</div><h2 id="garage-heading">Bewaarde voertuigen</h2></div><span id="limit-info" class="tag">0 / 25</span></div>
+     <p class="muted">Bewaar hier zelf een kenteken en een omschrijving. Dit toont geen actuele VWE-gegevens of eigendomsinformatie.</p>
+     <form id="vehicle-form" class="vehicle-form">
+      <div class="field-row">
+       <div class="field"><label for="vehicle-plate">Kenteken *</label><input id="vehicle-plate" class="plate-input" placeholder="AB-12-CD" autocomplete="off" maxlength="11" required></div>
+       <div class="field"><label for="vehicle-label">Bijnaam (optioneel)</label><input id="vehicle-label" placeholder="Bijvoorbeeld: gezinsauto" maxlength="80"></div>
+      </div>
+      <div class="field-row">
+       <div class="field"><label for="vehicle-make">Merk (optioneel)</label><input id="vehicle-make" placeholder="Volkswagen" maxlength="70"></div>
+       <div class="field"><label for="vehicle-model">Model (optioneel)</label><input id="vehicle-model" placeholder="Caddy" maxlength="100"></div>
+      </div>
+      <button type="submit" id="save-vehicle" class="primary">+ Voertuig bewaren</button>
+     </form>
+     <div id="garage-message" class="form-hint" role="status" aria-live="polite"></div>
+     <div id="vehicles-list" class="vehicle-list" aria-live="polite"><p class="empty">Je hebt nog geen voertuigen opgeslagen.</p></div>
+    </section>
+    <section class="panel" id="reports" aria-labelledby="reports-heading">
+     <div class="panel-heading"><div><div class="eyebrow">COMING SOON</div><h2 id="reports-heading">Mijn PRO-rapporten</h2></div><span class="tag amber">In ontwikkeling</span></div>
+     <p class="muted">Hier komen later je aangekochte rapporten, met bronvermelding en downloadmogelijkheden.</p>
+     <div id="reports-list" class="reports-list">
+      <div class="report-feature"><div class="report-icon" aria-hidden="true">▤</div><div><strong>Aankooprapport</strong><span>Technische en administratieve inzichten, waar beschikbaar</span></div><span class="report-flag">Binnenkort</span></div>
+      <div class="report-feature"><div class="report-icon" aria-hidden="true">◇</div><div><strong>Onderhoudsrapport</strong><span>Alleen gegevens van toegestane, aangesloten bronnen</span></div><span class="report-flag">Binnenkort</span></div>
+      <div class="report-feature"><div class="report-icon" aria-hidden="true">⇩</div><div><strong>PDF-archief</strong><span>Een centrale plek voor toekomstige rapportdownloads</span></div><span class="report-flag">Binnenkort</span></div>
+     </div>
+     <p class="callout">PRO is nog niet geactiveerd. Je kunt hier niets kopen en er worden geen betaalde API-aanvragen gedaan.</p>
+     <a class="outline-link" href="/pro/">Meer over Carfacts PRO ↗</a>
+    </section>
+   </div>
+   <section class="data-panel" aria-labelledby="privacy-heading">
+    <div><div class="eyebrow">PRIVACY & CONTROLE</div><h2 id="privacy-heading">Jouw gegevens blijven van jou</h2>
+      <p>Opgeslagen kentekens en notities zijn alleen zichtbaar in jouw account. Je kunt voertuigen afzonderlijk verwijderen of je opgeslagen gegevens volledig wissen.</p>
+    </div>
+    <button id="delete-data-button" type="button" class="danger">Alle accountgegevens verwijderen</button>
+   </section>
+  </section>
+
+  <section class="bottom-note">
+   <div class="note-mark" aria-hidden="true">i</div>
+   <p><strong>Dit is een testomgeving.</strong> Mijn Carfacts is onafhankelijk van het Carfacts-beheerdersaccount. Je kunt hier uitsluitend eigen voertuignotities bewaren; eigendom of onderhoud wordt niet automatisch gecontroleerd.</p>
+  </section>
+  <footer><span>© Carfacts · Mijn Carfacts 2.0 Preview</span><div><a href="/privacy/">Privacy</a><a href="/voorwaarden/">Voorwaarden</a><a href="/">Terug naar kentekencheck</a></div></footer>
+ </main>
+</div>
+<script src="/mijn-carfacts/app.js?v=20261026a" defer></script>
+</body>
+</html>
