@@ -132,3 +132,22 @@ test('mobile layout shows functional navigation and garage form',async({page})=>
  await expect(page.locator('#vehicle-plate')).toBeVisible();
  await expect(page.locator('#save-vehicle')).toBeVisible();
 });
+
+
+test('preview demo shows clearly fictional vehicles without requiring an account or writes',async({page})=>{
+ const mock=await portalMock(page,{enabled:false});
+ await page.goto('/mijn-carfacts/');
+ await expect(page.locator('#request-button')).toBeDisabled();
+ await page.locator('#demo-button').click();
+ await expect(page.locator('#account-section')).toBeVisible();
+ await expect(page.locator('#signed-in-email')).toContainText('fictieve gegevens');
+ await expect(page.locator('#vehicle-count')).toHaveText('2');
+ await expect(page.locator('#save-vehicle')).toBeDisabled();
+ await expect(page.locator('#delete-data-button')).toBeDisabled();
+ await expect(page.locator('.vehicle-item .remove').first()).toBeDisabled();
+ expect(mock.vehicles).toHaveLength(0);
+ expect(mock.requests).not.toContain('/api/mycarfacts-vehicles');
+ await page.locator('#logout-button').click();
+ await expect(page.locator('#auth-section')).toBeVisible();
+ await expect(page.locator('#request-button')).toBeDisabled();
+});
