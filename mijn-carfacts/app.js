@@ -58,8 +58,10 @@
   const submit=$('request-button');
   submit.disabled=!available;
   if(!available){
-   message(ui.loginMessage,reason||'E-mailinloggen is nog niet ingeschakeld in deze testomgeving.',true);
-   message(ui.global,'De interface is beschikbaar, maar aanmelden is nog niet geconfigureerd.',true);
+   const explanation=reason||'E-mailinloggen is nog niet ingeschakeld in deze testomgeving.';
+   message(ui.loginMessage,explanation);
+   ui.loginMessage.classList.remove('success');
+   message(ui.global,'Inloggen is nog niet geactiveerd. De voorbeeldmodus is wel beschikbaar.');
   }else{
    message(ui.global,'Gebruik je e-mailadres om eenmalig veilig in te loggen.');
    message(ui.loginMessage,'');
