@@ -130,7 +130,7 @@ function publicSession(record){
 }
 async function authorized(req,res){
  try{
-  if(!storageReady())return reply(res,503,{error:'Klantenportaal nog niet geconfigureerd'});
+  if(!storageReady()){reply(res,503,{error:'Klantenportaal nog niet geconfigureerd'});return null}
   const user=await session(req);
   if(!user){reply(res,401,{error:'Log in bij Mijn Carfacts'});return null}
   return user;
