@@ -17,10 +17,18 @@ module.exports=async(req,res)=>{
  if(!onlyPreview(req,res))return;
  res.setHeader('Cache-Control','no-store');
  if(req.method==='GET'){
-  if(!storageReady())return reply(res,200,{enabled:false,loggedIn:false,reason:'Klantenportaal nog niet geconfigureerd'});
+  if(!storageReady())return reply(res,200,{
+   enabled:false,loggedIn:false,reason:'Beveiligde klantenopslag is nog niet geconfigureerd.'
+  });
   try{
    const account=await session(req);
-   return reply(res,200,{enabled:portalReady(),...publicSession(account)});
+   return reply(res,200,{
+    enabled:portalReady(),
+    ...publicSession(account),
+    ...(!portalReady()?{
+     reason:'E-mailverzending voor deze testomgeving is nog niet ingesteld. Bekijk alvast de voorbeeldmodus.'
+    }:{})
+   });
   }catch{return reply(res,503,{error:'Accountstatus tijdelijk niet beschikbaar'})}
  }
  if(req.method!=='POST')return reply(res,405,{error:'Methode niet toegestaan'});
