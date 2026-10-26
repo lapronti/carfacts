@@ -20,11 +20,27 @@ const vehicleSchema=z.object({
  label:z.string().trim().max(80).default('')
 }).strict();
 
-const secret=()=>process.env.CARFACTS_PORTAL_SECRET||process.env.CARFACTS_ADMIN_SECRET||'';
+const secret=()=>process.env.CARFACTS_PORTAL_SECRET||'';
 const storageReady=()=>!!((process.env.KV_REST_API_URL||process.env.UPSTASH_REDIS_REST_URL)
  &&(process.env.KV_REST_API_TOKEN||process.env.UPSTASH_REDIS_REST_TOKEN)&&secret().length>=24);
-const mailReady=()=>!!(process.env.SMTP_HOST&&process.env.MAIL_USER&&process.env.MAIL_PASSWORD);
-const portalReady=()=>storageReady()&&mailReady();
+const allowedEmails=()=>String(process.env.CARFACTS_PORTAL_ALLOWED_EMAILS||'')
+ .split(',').map(item=>item.trim().toLowerCase())
+ .filter(item=>emailSchema.safeParse(item).success);
+const allowedEmail=email=>allowedEmails().includes(String(email||'').toLowerCase());
+const mailReady=()=>!!(process.env.SMTP_HOST&&process.env.MAIL_USER
+ &&process.env.MAIL_PASSWORD
+ &&[465,587].includes(Number(process.env.SMTP_PORT||465)));
+const portalReady=()=>storageReady()&&mailReady()&&allowedEmails().length>0;
+function missingSettings(){
+ const required=[
+  'CARFACTS_PORTAL_SECRET','SMTP_HOST','SMTP_PORT','MAIL_USER',
+  'MAIL_PASSWORD','CARFACTS_PORTAL_ALLOWED_EMAILS'
+ ];
+ const missing=required.filter(key=>!process.env[key]);
+ if(!(process.env.KV_REST_API_URL||process.env.UPSTASH_REDIS_REST_URL))missing.push('KV_REST_API_URL');
+ if(!(process.env.KV_REST_API_TOKEN||process.env.UPSTASH_REDIS_REST_TOKEN))missing.push('KV_REST_API_TOKEN');
+ return missing;
+}
 function digest(purpose,value){
  // Domain-separated HMAC ensures this portal cannot forge the existing admin session.
  return crypto.createHmac('sha256',secret()).update(PREFIX+'|'+purpose+'|'+String(value)).digest('hex');
@@ -95,6 +111,7 @@ async function session(req){
  try{
   const record=JSON.parse(encoded);
   if(!emailSchema.safeParse(record.email).success)return null;
+  if(!allowedEmail(record.email))return null;
   if(record.uid!==userKey(record.email))return null;
   return {email:record.email,uid:record.uid};
  }catch{return null}
@@ -150,7 +167,7 @@ async function authorized(req,res){
 }
 module.exports={
  PREFIX,OTP_SECONDS,SESSION_SECONDS,emailSchema,codeSchema,vehicleSchema,
- digest,userKey,cookieFrom,storageReady,mailReady,portalReady,
+ digest,userKey,cookieFrom,storageReady,mailReady,portalReady,allowedEmail,missingSettings,
  onlyPreview,validOrigin,rateLimit,sendCode,session,issueSession,revoke,
  reply,publicSession,authorized,redisPairs,safeObjectEntries,
  userVehiclesKey,userReportsKey,sessionIndexKey,cmd
