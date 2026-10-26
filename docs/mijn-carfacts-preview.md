@@ -36,7 +36,7 @@ Voor de mailcode-login:
 - CARFACTS_PORTAL_MAIL_FROM (optioneel; afzender moet toegestaan zijn).
 - CARFACTS_PORTAL_ALLOWED_EMAILS (verplicht: komma-gescheiden testadressen; momenteel beperkt tot het expliciet voor deze test aangewezen adres).
 
-De productieserver heeft SMTP_HOST, SMTP_PORT en MAIL_USER; het MAIL_PASSWORD is door Vercel als gevoelig geheim afgeschermd en kan niet naar Preview worden overgenomen. Een poging om production-SMTP-instellingen naar Preview te kopiëren werd door de beveiligingscontroles geblokkeerd. Er zijn daarom geen productiegeheimen gekopieerd.
+De productieserver heeft SMTP_HOST, SMTP_PORT en MAIL_USER; MAIL_PASSWORD is door Vercel als gevoelig geheim afgeschermd en kan niet worden uitgelezen. Bij de voorbereidingspoging is de SMTP_HOST-waarde (een servernaam, geen wachtwoord) voor de testbranch ingesteld; het overzetten van de overige SMTP-instellingen werd door de beveiligingscontroles geblokkeerd. SMTP_PORT, MAIL_USER en MAIL_PASSWORD zijn voor Preview nog niet ingesteld. Er zijn geen productie-wachtwoorden of tokens overgezet.
 
 CARFACTS_PORTAL_SECRET en CARFACTS_PORTAL_ALLOWED_EMAILS zijn nu al op Preview ingesteld, alleen voor branch test/vwe-interdata.
 
