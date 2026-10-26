@@ -1,6 +1,7 @@
 const {session,configured}=require('./_admin-security');
 const {record}=require('./_vwe-monitor');
 const traffic=require('./_vwe-traffic');
+const {validateToken,validateVehicle}=require('./_vwe-validation');
 
 // Isolated VWE acceptance environment; never make RDW requests or store vehicle data.
 let cachedToken=null,tokenExpiry=0,pendingAuth=null;
@@ -38,8 +39,9 @@ async function getAccessToken(base){
   });
   const json=await response.json().catch(()=>({}));
   if(!response.ok){traffic.noteUpstream(response.status);return {ok:false,status:response.status,code:'VWE_AUTH_REJECTED'}}
-  if(!json.access_token)return {ok:false,status:response.status,code:'VWE_AUTH_TOKEN_MISSING'};
-  cachedToken=json.access_token;
+  const tokenValidation=validateToken(json);
+  if(!tokenValidation.ok)return {ok:false,status:response.status,code:tokenValidation.code};
+  cachedToken=tokenValidation.data.access_token;
   const seconds=Number(json.expires_in)||0;
   tokenExpiry=Date.now()+Math.max(0,Math.min(seconds,3600)-60)*1000;
   return {ok:true,access_token:cachedToken};
@@ -58,7 +60,7 @@ async function retrieveVehicle(plate,dataset,base){
  try{
   let token=await getAccessToken(base);
   if(!token.ok)return output(token.status===429?503:502,{
-   error:token.code==='VWE_AUTH_TOKEN_MISSING'?'VWE heeft geen bruikbaar toegangstoken teruggegeven':explainUpstream(token.status,'authentication'),
+   error:token.code==='VWE_AUTH_TOKEN_INVALID'?'VWE heeft een onjuist opgebouwd toegangstoken teruggegeven':explainUpstream(token.status,'authentication'),
    code:token.code,stage,upstreamStatus:token.status,dataset
   },metrics);
   stage='vehicle';
@@ -74,7 +76,7 @@ async function retrieveVehicle(plate,dataset,base){
     stage='authentication';metrics.tokenRefreshes++;
     token=await refreshRejectedToken(base,token.access_token);
     if(!token.ok)return output(token.status===429?503:502,{
-     error:explainUpstream(token.status,'authentication'),
+     error:token.code==='VWE_AUTH_TOKEN_INVALID'?'VWE heeft een onjuist opgebouwd toegangstoken teruggegeven':explainUpstream(token.status,'authentication'),
      code:token.code,stage,upstreamStatus:token.status,dataset
     },metrics);
     stage='vehicle';continue;
@@ -97,14 +99,14 @@ async function retrieveVehicle(plate,dataset,base){
     error:'VWE heeft geen geldig JSON-antwoord teruggegeven',code:'VWE_INVALID_RESPONSE',
     stage:'vehicle',dataset
    },metrics);
-   const empty=dataset==='inspections'
-    ?!(Array.isArray(vehicle)?vehicle.some(Boolean):
-       ['inspections','data','results','items'].some(key=>Array.isArray(vehicle?.[key])&&vehicle[key].length>0))
-    :Array.isArray(vehicle)?vehicle.length===0:
-     vehicle&&typeof vehicle==='object'?Object.keys(vehicle).length===0:false;
+   const checked=validateVehicle(dataset,vehicle);
+   if(!checked.ok)return output(502,{
+    error:'VWE heeft gegevens in een ongeldige structuur teruggegeven',
+    code:checked.code,stage:'validation',dataset
+   },metrics);
    return output(200,{
-    licensePlate:plate,source:'VWE acceptatie',dataset,vehicle,
-    dataStatus:empty?'empty':'received'
+    licensePlate:plate,source:'VWE acceptatie',dataset,
+    vehicle:checked.data,dataStatus:checked.dataStatus
    },metrics);
   }
  }catch(err){
