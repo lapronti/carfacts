@@ -14,7 +14,7 @@ async function createHarness(){
   const key=String(args[0]);
   if(name==='GET')return redis.get(key)??null;
   if(name==='SET'){redis.set(key,args[1]);return 'OK'}
-  if(name==='DEL'){const present=redis.delete(key);const hashPresent=hashes.delete(key);const setPresent=sets.delete(key);return Number(present||hashPresent||setPresent)}
+  if(name==='DEL'){let count=0;for(const keyToDelete of args){const removed=redis.delete(String(keyToDelete))||hashes.delete(String(keyToDelete))||sets.delete(String(keyToDelete));if(removed)count++}return count}
   if(name==='GETDEL'){const value=redis.get(key)??null;redis.delete(key);return value}
   if(name==='INCR'){const n=Number(redis.get(key)||0)+1;redis.set(key,String(n));return n}
   if(name==='EXPIRE')return 1;
