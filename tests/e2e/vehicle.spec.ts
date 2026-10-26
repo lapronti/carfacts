@@ -107,7 +107,7 @@ test('repeat search within 30 seconds reuses current results',async({page})=>{
  expect(calls).toHaveLength(3);
 });
 
-test('generation change does not retain an old Caddy image',async({page})=>{
+test('ambiguous Polo transition year does not display a wrong-generation photo',async({page})=>{
  const calls=await mockExternal(page,{
   ...defaultScenario,
   advanced:{
@@ -118,7 +118,7 @@ test('generation change does not retain an old Caddy image',async({page})=>{
  await page.goto('/');
  await lookUp(page,'AB12CD');
  await expect(page.locator('#counter')).toContainText('3 / 3');
- await expect(page.locator('#vehicle-photo-caption')).toContainText('overgangsjaar');
+ await expect(page.locator('#vehicle-photo-caption')).toContainText('overgangsperiode');
  await expect(page.locator('#vehicle-photo-img')).toBeHidden();
  expect(calls).toHaveLength(3);
 });
