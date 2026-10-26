@@ -52,9 +52,12 @@ module.exports=async(req,res)=>{
    await cmd('DEL',userReportsKey(user.uid));
    await cmd('DEL',PREFIX+':otp:'+user.uid);
    const active=await cmd('SMEMBERS',sessionIndexKey(user.uid));
-   for(const hashed of Array.isArray(active)?active.slice(0,250):[]){
-    if(/^[a-f0-9]{64}$/.test(hashed))await cmd('DEL',PREFIX+':session:'+hashed);
-   }
+   const sessionKeys=(Array.isArray(active)?active:[])
+    .filter(hashed=>typeof hashed==='string'&&/^[a-f0-9]{64}$/.test(hashed))
+    .map(hashed=>PREFIX+':session:'+hashed);
+   // One Redis DEL can revoke a batch of sessions without one request per device.
+   for(let index=0;index<sessionKeys.length;index+=100)
+    await cmd('DEL',...sessionKeys.slice(index,index+100));
    await cmd('DEL',sessionIndexKey(user.uid));
    // Cookie clear is intentionally independent of the now-revoked server session.
    res.setHeader('Set-Cookie','cf_portal=; HttpOnly; Secure; SameSite=Strict; Path=/api/mycarfacts; Max-Age=0');
