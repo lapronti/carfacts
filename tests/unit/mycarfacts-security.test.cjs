@@ -9,15 +9,18 @@ const HOST='test.car-facts.nl';
 
 async function createHarness(){
  const originalLoad=Module._load,originalEnv={...process.env};
- const redis=new Map(),hashes=new Map(),mails=[],network=[];
+ const redis=new Map(),hashes=new Map(),sets=new Map(),mails=[],network=[];
  const redisCall=async(name,...args)=>{
   const key=String(args[0]);
   if(name==='GET')return redis.get(key)??null;
   if(name==='SET'){redis.set(key,args[1]);return 'OK'}
-  if(name==='DEL'){const present=redis.delete(key);const hashPresent=hashes.delete(key);return Number(present||hashPresent)}
+  if(name==='DEL'){const present=redis.delete(key);const hashPresent=hashes.delete(key);const setPresent=sets.delete(key);return Number(present||hashPresent||setPresent)}
   if(name==='GETDEL'){const value=redis.get(key)??null;redis.delete(key);return value}
   if(name==='INCR'){const n=Number(redis.get(key)||0)+1;redis.set(key,String(n));return n}
   if(name==='EXPIRE')return 1;
+  if(name==='SADD'){if(!sets.has(key))sets.set(key,new Set());const before=sets.get(key).size;sets.get(key).add(args[1]);return Number(sets.get(key).size>before)}
+  if(name==='SREM')return Number(sets.get(key)?.delete(args[1])||false);
+  if(name==='SMEMBERS')return Array.from(sets.get(key)||[]);
   if(name==='HSET'){
    if(!hashes.has(key))hashes.set(key,new Map());
    hashes.get(key).set(args[1],args[2]);return 1;
@@ -83,7 +86,7 @@ async function createHarness(){
   for(const key of Object.keys(process.env))if(!(key in originalEnv))delete process.env[key];
   Object.assign(process.env,originalEnv);
  }
- return {auth,vehicles,reports,req,login,restore,redis,hashes,mails,network};
+ return {auth,vehicles,reports,req,login,restore,redis,hashes,sets,mails,network};
 }
 
 test('preview portal blocks public vehicle access and cross-origin posts',async()=>{
@@ -189,5 +192,20 @@ test('production environment blocks every customer API route',async()=>{
   assert.equal((await h.req(h.auth,'GET')).statusCode,404);
   assert.equal((await h.req(h.vehicles,'GET')).statusCode,404);
   assert.equal((await h.req(h.reports,'GET')).statusCode,404);
+ }finally{h.restore()}
+});
+
+
+test('deleting account data signs out other active browser sessions too',async()=>{
+ const h=await createHarness();
+ try{
+  const browserA=await h.login('multi@example.test');
+  const browserB=await h.login('multi@example.test');
+  assert.notEqual(browserA,browserB);
+  assert.equal((await h.req(h.vehicles,'GET',{},browserA)).statusCode,200);
+  assert.equal((await h.req(h.vehicles,'GET',{},browserB)).statusCode,200);
+  assert.equal((await h.req(h.vehicles,'POST',{action:'delete_account_data'},browserA)).statusCode,200);
+  assert.equal((await h.req(h.vehicles,'GET',{},browserA)).statusCode,401);
+  assert.equal((await h.req(h.vehicles,'GET',{},browserB)).statusCode,401);
  }finally{h.restore()}
 });
