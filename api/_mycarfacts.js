@@ -102,14 +102,23 @@ async function session(req){
 async function issueSession(res,email){
  const raw=crypto.randomBytes(32).toString('hex');
  const key=PREFIX+':session:'+digest('session',raw);
- await cmd('SET',key,JSON.stringify({email,uid:userKey(email)}),'EX',SESSION_SECONDS);
+ const uid=userKey(email);
+ await cmd('SET',key,JSON.stringify({email,uid}),'EX',SESSION_SECONDS);
+ await cmd('SADD',sessionIndexKey(uid),digest('session',raw));
+ await cmd('EXPIRE',sessionIndexKey(uid),SESSION_SECONDS);
  res.setHeader('Set-Cookie',cookie(raw));
 }
 async function revoke(req,res){
  const raw=cookieFrom(req);
- if(raw)await cmd('DEL',PREFIX+':session:'+digest('session',raw));
+ if(raw){
+  const current=await session(req);
+  const hash=digest('session',raw);
+  await cmd('DEL',PREFIX+':session:'+hash);
+  if(current)await cmd('SREM',sessionIndexKey(current.uid),hash);
+ }
  res.setHeader('Set-Cookie',clearCookie());
 }
+const sessionIndexKey=uid=>PREFIX+':session-index:'+uid;
 const userVehiclesKey=uid=>PREFIX+':vehicles:'+uid;
 const userReportsKey=uid=>PREFIX+':reports:'+uid;
 function redisPairs(value){
@@ -144,5 +153,5 @@ module.exports={
  digest,userKey,cookieFrom,storageReady,mailReady,portalReady,
  onlyPreview,validOrigin,rateLimit,sendCode,session,issueSession,revoke,
  reply,publicSession,authorized,redisPairs,safeObjectEntries,
- userVehiclesKey,userReportsKey,cmd
+ userVehiclesKey,userReportsKey,sessionIndexKey,cmd
 };
