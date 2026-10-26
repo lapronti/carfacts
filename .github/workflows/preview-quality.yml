@@ -1,0 +1,40 @@
+name: Carfacts preview quality
+on:
+  push:
+    branches:
+      - test/vwe-interdata
+  pull_request:
+    branches:
+      - test/vwe-interdata
+
+permissions:
+  contents: read
+
+jobs:
+  offline-regression:
+    name: Offline VWE contracts and browser checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: "true"
+      VERCEL_ENV: "test-offline"
+      CARFACTS_E2E_PORT: "4179"
+    steps:
+      - name: Checkout reviewed code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Strict TypeScript contracts
+        run: npm run typecheck
+      - name: Zod offline contract tests
+        run: npm run test:contracts
+      - name: Install Chromium for local browser tests
+        run: npx playwright install --with-deps chromium
+      - name: Run browser regression with all external APIs blocked
+        run: npm run test:e2e
