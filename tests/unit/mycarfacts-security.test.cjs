@@ -47,6 +47,10 @@ async function createHarness(){
  process.env.SMTP_PORT='465';
  process.env.MAIL_USER='carfacts@example.test';
  process.env.MAIL_PASSWORD='synthetic';
+ process.env.CARFACTS_PORTAL_ALLOWED_EMAILS=[
+  'first@example.test','alice@example.test','bob@example.test','one@example.test',
+  'two@example.test','report@example.test','limited@example.test','multi@example.test'
+ ].join(',');
  Module._load=function(name,parent,isMain){
   if(name==='nodemailer'&&parent?.filename===path.resolve(BASE,'_mycarfacts.js'))return fakeMailer;
   if(name==='./_analytics'&&parent?.filename===path.resolve(BASE,'_mycarfacts.js'))
@@ -207,5 +211,32 @@ test('deleting account data signs out other active browser sessions too',async()
   assert.equal((await h.req(h.vehicles,'POST',{action:'delete_account_data'},browserA)).statusCode,200);
   assert.equal((await h.req(h.vehicles,'GET',{},browserA)).statusCode,401);
   assert.equal((await h.req(h.vehicles,'GET',{},browserB)).statusCode,401);
+ }finally{h.restore()}
+});
+
+
+test('unapproved preview email never receives an OTP and cannot authenticate',async()=>{
+ const h=await createHarness();
+ try{
+  const request=await h.req(h.auth,'POST',{action:'request_code',email:'unauthorized@example.test'});
+  assert.equal(request.statusCode,200);
+  assert.equal(h.mails.length,0);
+  const denied=await h.req(h.auth,'POST',{action:'verify_code',
+   email:'unauthorized@example.test',code:'123456'});
+  assert.equal(denied.statusCode,401);
+ }finally{h.restore()}
+});
+
+test('incomplete SMTP in preview keeps login disabled rather than sending a code',async()=>{
+ const h=await createHarness();
+ try{
+  delete process.env.MAIL_PASSWORD;
+  const status=await h.req(h.auth,'GET');
+  assert.equal(status.statusCode,200);
+  assert.equal(status.data.enabled,false);
+  assert.match(status.data.reason,/e-mailinstellingen/);
+  const request=await h.req(h.auth,'POST',{action:'request_code',email:'first@example.test'});
+  assert.equal(request.statusCode,503);
+  assert.equal(h.mails.length,0);
  }finally{h.restore()}
 });
