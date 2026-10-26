@@ -26,7 +26,7 @@ Er is geen Supabase-database voor Carfacts aangesloten. Het enige gekoppelde Sup
 Voor de opslag:
 - KV_REST_API_URL of UPSTASH_REDIS_REST_URL
 - KV_REST_API_TOKEN of UPSTASH_REDIS_REST_TOKEN
-- CARFACTS_PORTAL_SECRET (aanbevolen: afzonderlijk willekeurig geheim van minstens 24 tekens). De bestaande preview-adminsecret kan tijdelijk dienen als fallback, uitsluitend via cryptografisch domeingescheiden HMAC.
+- CARFACTS_PORTAL_SECRET (verplicht: aparte willekeurige geheime sleutel van minstens 24 tekens, al gekoppeld aan de testbranch). De adminsecret is geen fallback.
 
 Voor de mailcode-login:
 - SMTP_HOST
@@ -34,14 +34,22 @@ Voor de mailcode-login:
 - MAIL_USER
 - MAIL_PASSWORD
 - CARFACTS_PORTAL_MAIL_FROM (optioneel; afzender moet toegestaan zijn).
+- CARFACTS_PORTAL_ALLOWED_EMAILS (verplicht: komma-gescheiden testadressen; momenteel beperkt tot het expliciet voor deze test aangewezen adres).
 
-Deze SMTP-instellingen zijn alleen bij het Vercel Production-target gevonden en bewust niet gekopieerd. Daardoor is aanmelden in Preview nog niet actief. De pagina laat dit zien en biedt een voorbeeldmodus. Configureer bij voorkeur een apart testpostvak met eigen e-mailcredentials, SPF/DKIM en mailquota. Gebruik geen echte klantgegevens bij testen.
+De productieserver heeft SMTP_HOST, SMTP_PORT en MAIL_USER; het MAIL_PASSWORD is door Vercel als gevoelig geheim afgeschermd en kan niet naar Preview worden overgenomen. Een poging om production-SMTP-instellingen naar Preview te kopiëren werd door de beveiligingscontroles geblokkeerd. Er zijn daarom geen productiegeheimen gekopieerd.
+
+CARFACTS_PORTAL_SECRET en CARFACTS_PORTAL_ALLOWED_EMAILS zijn nu al op Preview ingesteld, alleen voor branch test/vwe-interdata.
+
+Voor volledige activatie moet de projecteigenaar in Vercel onder Project Settings > Environment Variables de vier SMTP-waarden handmatig instellen, met target Preview en Git branch test/vwe-interdata. Gebruik bij voorkeur een aparte testmailbox met eigen credentials en controleer SPF/DKIM, afzenderadres, mailquota en de juiste TLS-poort. Redeploy daarna een Preview-build, omdat wijzigingen aan Vercel-environment-variables niet automatisch op al actieve deployments worden toegepast.
+
+De inlogknop blijft uitgeschakeld zolang de mailconfiguratie ontbreekt; de voorbeeldmodus is wel volledig toegankelijk. Gebruik geen echte klantgegevens bij testen.
 
 ## Beveiliging en privacy
 
 - Admin- en klantensessies zijn volledig gescheiden.
 - De client bewaart geen sessietokens in localStorage of sessionStorage.
 - Alle mutaties vereisen een geverifieerde klantensessie plus gelijke HTTPS-Origin.
+- Preview-aanmeldingen zijn beperkt tot expliciet toegestane testadressen. De API onthult niet of een adres op de allowlist staat.
 - E-mail- en IP-rate limiting voor OTP, beperkte codepogingen.
 - Een OTP wordt na correcte controle met Redis GETDEL atomair opgebruikt.
 - Geen e-mailadressen in Redis-sleutelnamen of beveiligingslogs.
@@ -66,4 +74,4 @@ GitHub Actions voert deze controles uit op de testbranch. Tests gebruiken uitslu
 
 ## Nog nodig voor een live klantentest
 
-Stel de eigen Preview-SMTP-variabelen in Vercel in. Test dan een echte e-mailcode en controleer de mailbox-/domeininstellingen. Voor PRO-rapporten zijn later expliciet geverifieerde betaalrechten, rapporttoegang en een aparte Carfacts-database nodig.
+Stel de vier Preview-SMTP-variabelen veilig in Vercel in (niet via GitHub en niet in chat). Test daarna pas een echte e-mailcode vanaf het toegestane testaccount, en controleer de mailbox-/domeininstellingen. Voor PRO-rapporten zijn later expliciet geverifieerde betaalrechten, rapporttoegang en een aparte Carfacts-database nodig.
