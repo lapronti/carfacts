@@ -139,7 +139,7 @@ header{margin-bottom:16px;padding-bottom:15px;border-bottom:1px solid var(--line
 <p>Zoek gebruikte auto-onderdelen in Nederland en Europa vanuit Carfacts. Vergelijk meerdere bronnen vanuit één overzicht en open de originele advertenties bij de aanbieder.</p>
 </section>
 <div class="parts-workspace"><aside class="parts-sidebar" aria-label="Zoekfilters"><div class="unified-search-intro"><h2>Onderdelen zoeken</h2><p>Zoek op motorcode, onderdeelnummer, versnellingsbakcode of vrije tekst. Combineer velden voor gerichtere resultaten.</p></div><div id="vehicleLookupStatus" class="vehicle-lookup-status" role="status"></div><div id="vehicleSummary" class="vehicle-summary hidden"></div><div class="parts-search-tabs" role="tablist" aria-label="Zoekmethode"><button type="button" data-mode="plate">Kenteken</button><button type="button" data-mode="brand">Merk</button><button type="button" data-mode="part" class="active">Artikelnummer</button><button type="button" data-mode="engine">Motorcode</button><button type="button" data-mode="gearbox">Versnellingsbakcode</button><button type="button" data-mode="vin">Chassisnummer (VIN)</button><button type="button" data-mode="kba">KBA-nummer</button><button type="button" data-mode="other">Overige voertuigen</button></div><form id="searchForm" class="search-form">
-<div class="parts-mode-input"><label for="modeSearch">Zoek op artikelnummer<input id="modeSearch" type="text" autocomplete="off" maxlength="180" placeholder="Bijv. 2K0857551"></label></div><div class="cf-search-fields" id="legacySearchFields" hidden><label for="searchEngine">Motorcode<input id="searchEngine" type="text" autocomplete="off" maxlength="30" placeholder="Bijv. DFSD"></label><label for="searchPart">Onderdeelnummer / OEM<input id="searchPart" type="text" autocomplete="off" maxlength="80" placeholder="Bijv. 04E906023AG"></label><label for="searchGearbox">Versnellingsbaknummer / bakcode<input id="searchGearbox" type="text" autocomplete="off" maxlength="40" placeholder="Bijv. SWS"></label><label for="query">Vrij zoeken<input id="query" type="search" maxlength="180" placeholder="Bijv. VW Caddy turbo of kenteken + onderdeel"></label></div>
+<div class="parts-mode-input"><label for="modeSearch">Zoek op artikelnummer<input id="modeSearch" type="text" autocomplete="off" maxlength="180" placeholder="Bijv. 2K0857551"></label></div><div class="cf-search-fields" id="legacySearchFields" hidden aria-hidden="true"><label for="searchEngine">Motorcode<input id="searchEngine" type="text" autocomplete="off" maxlength="30" placeholder="Bijv. DFSD"></label><label for="searchPart">Onderdeelnummer / OEM<input id="searchPart" type="text" autocomplete="off" maxlength="80" placeholder="Bijv. 04E906023AG"></label><label for="searchGearbox">Versnellingsbaknummer / bakcode<input id="searchGearbox" type="text" autocomplete="off" maxlength="40" placeholder="Bijv. SWS"></label><label for="query">Vrij zoeken<input id="query" type="search" maxlength="180" placeholder="Bijv. VW Caddy turbo of kenteken + onderdeel"></label></div>
 <select id="scope" aria-label="Zoekgebied"><option value="NL">Nederland</option><option value="DE">Duitsland</option><option value="PL">Polen</option><option value="LT">Litouwen</option><option value="BE">België</option><option value="EU">Europa</option><option value="INT" selected>Internationaal</option><option value="CUSTOM">Zelf landen kiezen</option></select>
 <button type="submit" id="partsSearchSubmit">ZOEKEN MET ARTIKELNUMMER →</button>
 </form>
@@ -359,35 +359,101 @@ function updatePager(){
  if((visiblePage+1)*size>=filteredEbayItems().length&&ebayCountries.some(c=>ebayHasMore[c]))await loadEbayPages();
  if((visiblePage+1)*size<filteredEbayItems().length){visiblePage++;renderEbayResults();document.getElementById("resultsHeading").scrollIntoView({block:"start"});}
  });
-document.getElementById("sortResults").addEventListener("change",()=>{if(queryInput.value.trim())document.getElementById("searchForm").requestSubmit()});
+document.getElementById("sortResults").addEventListener("change",()=>{if(modeInput.value.trim())document.getElementById("searchForm").requestSubmit()});
 document.getElementById("pageSize").addEventListener("change",()=>{visiblePage=0;renderEbayResults()});
 function makeUrl(domain,term,country,sourceKey){const countryText=country&&country!=="INT"?" "+countryNames[country]:"";const sourcePrefix=domain?"site:"+domain+" ":"Eurostock gebruikte auto-onderdelen ";const q=sourcePrefix+term+countryText+" auto onderdeel";return "https://www.google.com/search?q="+encodeURIComponent(q)}
 function createCard(sourceKey,country,term){const s=sourceInfo[sourceKey];const countryLabel=country==="INT"?"Internationaal":countryNames[country];const url=makeUrl(s.domain,term,country,sourceKey);const card=document.createElement("article");card.className="result";const top=document.createElement("div");top.className="result-title";const icon=document.createElement("div");icon.className="source-icon";icon.textContent=s.name.split(/[. ]/)[0].slice(0,2).toUpperCase();const text=document.createElement("div");const title=document.createElement("h3");title.textContent=s.name;const desc=document.createElement("p");desc.textContent=s.note+" · zoekgebied: "+countryLabel; text.append(title,desc);top.append(icon,text);const foot=document.createElement("div");foot.className="result-footer";const pill=document.createElement("span");pill.className="pill";pill.textContent="Externe zoeklink";const a=document.createElement("a");a.className="link-btn";a.href=url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Open zoekresultaten ↗";foot.append(pill,a);card.append(top,foot);return card}
-const modeInput=document.getElementById("modeSearch");const modeLabels={plate:["Kenteken","Bijv. VDZ-39-P"],brand:["Merk","Bijv. Volkswagen Caddy"],part:["Artikelnummer","Bijv. 2K0857551"],engine:["Motorcode","Bijv. DFSD"],gearbox:["Versnellingsbakcode","Bijv. SWS"],vin:["Chassisnummer (VIN)","17 tekens"],kba:["KBA-nummer","Bijv. 0603"],other:["Overige voertuigen","Bijv. VW Caddy turbo"]};let searchMode="part";document.querySelectorAll(".parts-search-tabs button").forEach(b=>b.addEventListener("click",()=>{searchMode=b.dataset.mode;document.querySelectorAll(".parts-search-tabs button").forEach(x=>x.classList.toggle("active",x===b));const [label,placeholder]=modeLabels[searchMode];document.querySelector('label[for="modeSearch"]').firstChild.textContent="Zoek op "+label.toLowerCase();modeInput.placeholder=placeholder;modeInput.value="";document.getElementById("partsSearchSubmit").textContent="ZOEKEN MET "+label.toUpperCase()+" →";}));
-document.getElementById("searchForm").addEventListener("submit",async e=>{
- e.preventDefault();
- const value=modeInput.value.trim();if(!value){modeInput.focus();return}
- document.getElementById("searchEngine").value=searchMode==="engine"?value:"";document.getElementById("searchPart").value=searchMode==="part"?value:"";document.getElementById("searchGearbox").value=searchMode==="gearbox"?value:"";queryInput.value=["plate","brand","vin","kba","other"].includes(searchMode)?value:"";
- const smart=parseSmartSearch(queryInput.value);
- if(!smart.part&&!smart.plate)return;
- let term=[...codes,smart.part].filter(Boolean).join(" ");
+const modeInput=document.getElementById("modeSearch");
+const searchStatus=document.getElementById("status");
+const modeLabels={
+ plate:["Kenteken","Bijv. VDZ-39-P"],
+ brand:["Merk en model","Bijv. Volkswagen Caddy"],
+ part:["Onderdeelnummer / OEM","Bijv. 2G1857004N2G"],
+ engine:["Motorcode","Bijv. DFSD"],
+ gearbox:["Versnellingsbakcode","Bijv. SWS"],
+ vin:["Chassisnummer (VIN)","17 tekens"],
+ kba:["KBA-nummer","Bijv. 0603 / BZD"],
+ other:["Vrij zoeken","Bijv. VW Caddy turbo"]
+};
+let searchMode="part";
+const modeTabs=[...document.querySelectorAll(".parts-search-tabs button")];
+modeTabs.forEach(button=>{
+ button.setAttribute("role","tab");
+ button.setAttribute("aria-selected",String(button.dataset.mode===searchMode));
+ button.addEventListener("click",()=>{
+  searchMode=button.dataset.mode;
+  modeTabs.forEach(tab=>{
+   const active=tab===button;
+   tab.classList.toggle("active",active);
+   tab.setAttribute("aria-selected",String(active));
+  });
+  const [label,placeholder]=modeLabels[searchMode];
+  document.querySelector('label[for="modeSearch"]').firstChild.textContent="Zoek op "+label.toLowerCase();
+  modeInput.placeholder=placeholder;
+  modeInput.value="";
+  searchStatus.textContent="";
+  document.getElementById("partsSearchSubmit").textContent="ZOEKEN MET "+label.toUpperCase()+" →";
+  modeInput.focus();
+ });
+});
+document.querySelector('label[for="modeSearch"]').firstChild.textContent="Zoek op onderdeelnummer / OEM";
+modeInput.placeholder=modeLabels.part[1];
+document.getElementById("partsSearchSubmit").textContent="ZOEK OP ONDERDEELNUMMER →";
+document.getElementById("searchForm").addEventListener("submit",async event=>{
+ event.preventDefault();
+ const value=modeInput.value.trim().replace(/\s+/g," ");
+ if(!value){
+  searchStatus.textContent="Vul eerst een "+modeLabels[searchMode][0].toLowerCase()+" in.";
+  modeInput.focus();
+  return;
+ }
+ // OEM- and gearbox codes must never be misinterpreted as Dutch number plates.
+ const smart=searchMode==="plate"
+  ?parseSmartSearch(value)
+  :{plate:null,part:value,vin:searchMode==="vin"};
+ if(searchMode==="plate"&&!smart.plate){
+  searchStatus.textContent="Vul een geldig kenteken in, bijvoorbeeld VDZ-39-P.";
+  modeInput.focus();return;
+ }
+ if(searchMode==="vin"&&!/^[A-HJ-NPR-Z0-9]{17}$/i.test(value)){
+  searchStatus.textContent="Vul een geldig chassisnummer van 17 tekens in.";
+  modeInput.focus();return;
+ }
+ // Keep old fields in sync for backward compatibility; those fields are hidden.
+ document.getElementById("searchEngine").value=searchMode==="engine"?value:"";
+ document.getElementById("searchPart").value=searchMode==="part"?value:"";
+ document.getElementById("searchGearbox").value=searchMode==="gearbox"?value:"";
+ queryInput.value=["plate","brand","vin","kba","other"].includes(searchMode)?value:"";
+ let term=smart.part;
  if(smart.plate){
   const vehicle=await lookupVehicle(smart.plate);
-  if(!smart.part&&!codes.length){document.getElementById('status').textContent='Voeg een onderdeelnaam of code toe voor gericht zoeken.';return}
-  term=[vehicle?vehicleSearchPrefix(vehicle):smart.plate,...codes,smart.part].filter(Boolean).join(' ');
- }else{selectedVehicle=null;vehicleSummary.replaceChildren();vehicleSummary.classList.add('hidden');plateStatus.textContent=''}
+  if(!vehicle){
+   searchStatus.textContent="Kenteken niet gevonden. Probeer het opnieuw of zoek op een onderdeelnummer.";
+   return;
+  }
+  term=[vehicleSearchPrefix(vehicle),smart.part||"auto onderdelen"].filter(Boolean).join(" ");
+ }else{
+  selectedVehicle=null;
+  vehicleSummary.replaceChildren();
+  vehicleSummary.classList.add("hidden");
+  plateStatus.textContent="";
+ }
  let countries=selectedCountries();
  if(["NL","DE","PL","LT","BE"].includes(scope.value))countries=[scope.value];
  if(scope.value==="EU"||scope.value==="INT")countries=Object.keys(countryNames);
- if(scope.value==="CUSTOM"&&!countries.length){document.getElementById("status").textContent="Selecteer minimaal één land.";return}
+ if(scope.value==="CUSTOM"&&!countries.length){
+  searchStatus.textContent="Selecteer minimaal één land.";return;
+ }
  const src=selectedSources(countries);
- if(!src.length){document.getElementById("status").textContent="Voor deze landen zijn nog geen bronnen beschikbaar.";return}
- if(window.cfTrack)window.cfTrack('parts_search',{term:smart.vin?'VIN-zoekopdracht':term});
+ if(!src.length){
+  searchStatus.textContent="Voor deze landen zijn nog geen bronnen beschikbaar.";return;
+ }
+ if(window.cfTrack)window.cfTrack("parts_search",{term:smart.vin?"VIN-zoekopdracht":term});
  const root=document.getElementById("results");root.replaceChildren();let count=0;
  document.getElementById("filterCountry").replaceChildren(new Option("Alle landen",""));
  const ebaySelected=src.includes("ebay");
  src.filter(k=>k!=="ebay").forEach(k=>{const source=sourceInfo[k];const relevant=countries.filter(c=>source.country.includes(c));relevant.forEach(c=>{root.append(createCard(k,c,term));count++})});
- document.getElementById("resultsHeading").textContent=selectedVehicle?'Onderdelen voor '+vehicleSearchPrefix(selectedVehicle)+' · '+[...codes,smart.part].filter(Boolean).join(' '):'Zoekopdracht: '+term;
+ document.getElementById("resultsHeading").textContent=selectedVehicle?'Onderdelen voor '+vehicleSearchPrefix(selectedVehicle)+(smart.part?' · '+smart.part:''):'Zoekresultaten voor: '+term;
  document.getElementById("resultsSub").textContent=(selectedVehicle?'Kenteken '+selectedVehicle.plate+' · Controleer de passendheid met OEM-nummer of VIN. ':'')+"eBay-resultaten worden rechtstreeks geladen; overige bronnen openen zoeklinks.";
  ebaySearchId++;liveEbayItems=[];visiblePage=0;document.getElementById("filterCountry").value="";document.getElementById("pagination").classList.add("hidden");ebayTerm=term;ebayCountries=ebaySelected?countries.filter(c=>ebaySupported.includes(c)):[];
  ebayPages={};ebayHasMore={};ebayCountries.forEach(c=>{ebayPages[c]=0;ebayHasMore[c]=true;});
