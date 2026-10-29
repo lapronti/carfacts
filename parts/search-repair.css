@@ -1,0 +1,190 @@
+/* Carfacts Parts — responsive repair, shared by preview and production.
+   The existing preview dashboard layout stays intact; production gets a full-width
+   clean search workspace. Explicit [hidden] prevents author display:grid
+   from overriding the native hidden attribute. */
+#legacySearchFields[hidden],
+.cf-search-fields[hidden],
+[hidden].parts-mode-input,
+.parts-search-tabs [hidden] {display:none!important}
+#legacySearchFields{min-width:0}
+.parts-mode-input{min-width:0;grid-column:1/-1}
+.parts-mode-input label{display:block;overflow-wrap:normal;word-break:normal;white-space:normal}
+.parts-mode-input #modeSearch{display:block;min-width:0;width:100%;max-width:100%;height:48px;margin:10px 0 0;box-sizing:border-box}
+.parts-search-tabs button{white-space:normal;overflow-wrap:break-word;line-height:1.35;min-height:40px}
+#partsSearchSubmit{width:100%;min-width:0;min-height:48px;white-space:normal;line-height:1.4}
+.results-toolbar{min-width:0}
+.results-toolbar label{min-width:0}
+.results-section{min-width:0}
+#status{min-height:1em;overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){.parts-workspace *{scroll-behavior:auto!important}}
+
+/* Live-site visual overhaul. Preview uses its own dashboard stylesheet. */
+body:not(.cf-parts-dashboard){background:#f4f8fb!important;color:#19364c!important}
+body:not(.cf-parts-dashboard) .wrap.cf-shell{
+ width:100%!important;max-width:1560px!important;min-width:0;
+ margin:0 auto!important;padding:26px clamp(16px,3vw,46px) 65px!important;
+}
+body:not(.cf-parts-dashboard) .cf-header{
+ display:flex!important;align-items:center!important;gap:20px!important;
+ background:#fff!important;border:1px solid #e1eaf2!important;
+ box-shadow:none!important;border-radius:16px!important;padding:17px 23px!important;
+ margin-bottom:20px!important
+}
+body:not(.cf-parts-dashboard) .cf-header .cf-nav{flex-wrap:wrap;gap:6px!important}
+body:not(.cf-parts-dashboard) .cf-header .cf-nav a[aria-current=page]{
+ border-color:#99dbd1!important;background:#e8f8f3!important;color:#0c756f!important
+}
+body:not(.cf-parts-dashboard) .hero{
+ background:linear-gradient(112deg,#0c2c42,#174f62)!important;
+ padding:32px clamp(22px,3vw,38px)!important;
+ border:0!important;border-radius:20px!important;
+ box-shadow:none!important;margin-bottom:24px!important;
+}
+body:not(.cf-parts-dashboard) .hero h1{
+ color:#fff!important;line-height:1.19!important;
+ font-size:clamp(26px,3vw,38px)!important;margin:10px 0 12px!important
+}
+body:not(.cf-parts-dashboard) .hero .eyebrow{color:#65dfce!important}
+body:not(.cf-parts-dashboard) .hero p{color:#c4d9e4!important;max-width:810px}
+body:not(.cf-parts-dashboard) .parts-workspace{
+ display:grid!important;grid-template-columns:minmax(325px,365px) minmax(0,1fr)!important;
+ gap:24px!important;align-items:start!important;max-width:none!important;min-width:0
+}
+body:not(.cf-parts-dashboard) .parts-sidebar{
+ min-width:0;max-width:none!important;width:auto!important;
+ background:#fff!important;color:#19364c!important;
+ padding:20px!important;border:1px solid #e1eaf2!important;
+ border-radius:17px!important;box-shadow:none!important;
+ display:flex!important;flex-direction:column!important;gap:13px!important
+}
+body:not(.cf-parts-dashboard) .parts-sidebar .unified-search-intro{
+ margin:0 0 3px!important;border:0!important;padding:0!important
+}
+body:not(.cf-parts-dashboard) .unified-search-intro h2{
+ color:#143c51!important;font-size:20px!important;letter-spacing:-.5px
+}
+body:not(.cf-parts-dashboard) .unified-search-intro p{
+ font-size:12px!important;color:#647d8e!important;line-height:1.5
+}
+body:not(.cf-parts-dashboard) .parts-search-tabs{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:7px!important;padding:0!important;margin:4px 0!important;
+ background:transparent!important;border:0!important
+}
+body:not(.cf-parts-dashboard) .parts-search-tabs button{
+ display:flex;align-items:center;justify-content:center;
+ width:100%;min-width:0;min-height:43px;
+ border:1px solid #dce6ed!important;border-radius:9px!important;
+ background:#f5f9fb!important;color:#365668!important;
+ font-size:12px!important;font-weight:720!important;
+ margin:0!important;padding:10px 8px!important;
+ transition:background .15s
+}
+body:not(.cf-parts-dashboard) .parts-search-tabs button.active,
+body:not(.cf-parts-dashboard) .parts-search-tabs button[aria-selected=true]{
+ background:#def5ef!important;border-color:#8bd6ca!important;
+ color:#0b776a!important;box-shadow:inset 0 0 0 1px #8bd6ca!important
+}
+body:not(.cf-parts-dashboard) .parts-sidebar .search-form{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ gap:12px!important;min-width:0;width:100%;max-width:none!important;
+ background:#f9fcfe!important;border:1px solid #e0e9ef!important;
+ padding:18px!important;margin:0!important;border-radius:13px!important
+}
+body:not(.cf-parts-dashboard) .parts-mode-input label{
+ color:#35566b!important;font-size:13px!important;font-weight:750!important
+}
+body:not(.cf-parts-dashboard) .parts-sidebar .search-form input,
+body:not(.cf-parts-dashboard) .parts-sidebar .search-form select{
+ display:block;border:1px solid #cfdfea!important;
+ border-radius:10px!important;background:#fff!important;
+ color:#19364c!important;width:100%!important;min-width:0;
+ min-height:45px!important;padding:12px 13px!important;font-size:14px!important
+}
+body:not(.cf-parts-dashboard) .parts-sidebar .search-form input:focus-visible,
+body:not(.cf-parts-dashboard) .parts-sidebar .search-form select:focus-visible{
+ outline:3px solid #8ee2d4!important;outline-offset:1px
+}
+body:not(.cf-parts-dashboard) .parts-sidebar .search-form button[type=submit]{
+ display:block;width:100%;min-height:49px;border:0!important;
+ background:#0b958a!important;color:#fff!important;
+ border-radius:10px!important;font-size:13px!important;
+ font-weight:850!important;padding:13px 15px!important
+}
+body:not(.cf-parts-dashboard) .parts-sidebar .search-form button[type=submit]:hover{
+ background:#087e74!important
+}
+body:not(.cf-parts-dashboard) .parts-sidebar .search-hint{
+ font-size:11px!important;color:#70889a!important;line-height:1.55;
+ margin:0!important
+}
+body:not(.cf-parts-dashboard) .parts-sidebar .filters{margin:0!important}
+body:not(.cf-parts-dashboard) .parts-sidebar .panel{
+ background:#f9fcfd!important;border:1px solid #e4edf2!important;
+ padding:15px!important;box-shadow:none!important;
+ border-radius:12px!important
+}
+body:not(.cf-parts-dashboard) .results-section{
+ display:block;min-width:0;width:100%;margin:0!important
+}
+body:not(.cf-parts-dashboard) .results-section .section-head{
+ display:flex;align-items:flex-start;flex-wrap:wrap;gap:12px;
+ border:1px solid #e1eaf2!important;background:#fff;
+ padding:21px 22px;border-radius:16px;margin:0 0 15px!important
+}
+body:not(.cf-parts-dashboard) .results-section .section-head h2{
+ font-size:19px!important;color:#18384b!important
+}
+body:not(.cf-parts-dashboard) .results-section .section-head p{
+ color:#647d8e!important;font-size:12px!important
+}
+body:not(.cf-parts-dashboard) .results-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+body:not(.cf-parts-dashboard) .results-toolbar label{
+ color:#577287;font-size:12px;display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap
+}
+body:not(.cf-parts-dashboard) .results-toolbar :is(input,select){
+ min-height:39px;max-width:100%;padding:9px 11px!important;
+ border:1px solid #cfdee8!important;background:#fff!important;
+ border-radius:9px!important;color:#2a4b5b!important;font-size:12px!important
+}
+body:not(.cf-parts-dashboard) .results{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ gap:14px!important;min-width:0
+}
+body:not(.cf-parts-dashboard) .result{
+ background:#fff!important;border:1px solid #e1eaf2!important;
+ border-radius:15px!important;box-shadow:none!important;min-width:0;overflow:hidden
+}
+body:not(.cf-parts-dashboard) .results .empty{
+ background:#fff!important;border-color:#d5e2ea!important;
+ padding:34px 22px!important;border-radius:14px!important;
+ line-height:1.7!important
+}
+body:not(.cf-parts-dashboard) .link-btn{
+ border-radius:9px!important;background:#0d8c80!important;color:white!important
+}
+body:not(.cf-parts-dashboard) .notice{
+ background:#fff9ee!important;border:1px solid #f0dfb9!important;
+ box-shadow:none!important;border-radius:13px!important;
+ padding:16px 19px!important;color:#755b2f!important;line-height:1.6
+}
+body:not(.cf-parts-dashboard) .footer{padding:16px;color:#7b91a0}
+@media(max-width:1400px){
+ body:not(.cf-parts-dashboard) .results{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:1150px){
+ body:not(.cf-parts-dashboard) .parts-workspace{grid-template-columns:minmax(0,1fr)!important}
+ body:not(.cf-parts-dashboard) .parts-sidebar{width:100%!important}
+ body:not(.cf-parts-dashboard) .parts-sidebar .parts-search-tabs{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+ body:not(.cf-parts-dashboard) .parts-sidebar .search-form{max-width:680px!important}
+}
+@media(max-width:700px){
+ body:not(.cf-parts-dashboard) .wrap.cf-shell{padding:15px 12px 35px!important}
+ body:not(.cf-parts-dashboard) .hero{padding:22px 20px!important}
+ body:not(.cf-parts-dashboard) .parts-sidebar{padding:16px!important}
+ body:not(.cf-parts-dashboard) .parts-sidebar .parts-search-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body:not(.cf-parts-dashboard) .results{grid-template-columns:minmax(0,1fr)!important}
+ body:not(.cf-parts-dashboard) .results-section .section-head{padding:17px}
+ body:not(.cf-parts-dashboard) .cf-header{flex-wrap:wrap!important;padding:14px!important}
+ body:not(.cf-parts-dashboard) .cf-header .cf-nav{width:100%}
+}
